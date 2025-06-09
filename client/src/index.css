@@ -24,10 +24,18 @@
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
   
-  /* Custom colors for CampusNest theme */
+  /* Custom colors for IT ServiceDesk theme */
   --gray-50: hsl(210, 40%, 98%);
   --gray-600: hsl(216, 12%, 44%);
   --gray-900: hsl(220, 26%, 18%);
+  --blue-50: hsl(214, 100%, 97%);
+  --blue-600: hsl(221, 83%, 53%);
+  --green-50: hsl(138, 76%, 97%);
+  --green-600: hsl(142, 71%, 45%);
+  --red-50: hsl(0, 86%, 97%);
+  --red-600: hsl(0, 72%, 51%);
+  --yellow-50: hsl(55, 92%, 95%);
+  --yellow-600: hsl(32, 95%, 44%);
 }
 
 .dark {

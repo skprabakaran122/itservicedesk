@@ -2,51 +2,148 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import { insertTicketSchema, insertChangeSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get all properties
-  app.get("/api/properties", async (req, res) => {
+  // Ticket routes
+  app.get("/api/tickets", async (req, res) => {
     try {
-      const properties = await storage.getProperties();
-      res.json(properties);
+      const tickets = await storage.getTickets();
+      res.json(tickets);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch properties" });
+      res.status(500).json({ message: "Failed to fetch tickets" });
     }
   });
 
-  // Get property by ID
-  app.get("/api/properties/:id", async (req, res) => {
+  app.get("/api/tickets/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const property = await storage.getProperty(id);
-      if (!property) {
-        return res.status(404).json({ message: "Property not found" });
+      const ticket = await storage.getTicket(id);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
       }
-      res.json(property);
+      res.json(ticket);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch property" });
+      res.status(500).json({ message: "Failed to fetch ticket" });
     }
   });
 
-  // Search properties with filters
-  app.get("/api/properties/search", async (req, res) => {
+  app.post("/api/tickets", async (req, res) => {
+    try {
+      const ticketData = insertTicketSchema.parse(req.body);
+      const ticket = await storage.createTicket(ticketData);
+      res.status(201).json(ticket);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid ticket data" });
+    }
+  });
+
+  app.patch("/api/tickets/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = insertTicketSchema.partial().parse(req.body);
+      const ticket = await storage.updateTicket(id, updates);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      res.json(ticket);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid update data" });
+    }
+  });
+
+  app.get("/api/tickets/search", async (req, res) => {
     try {
       const schema = z.object({
-        location: z.string().optional(),
-        minRent: z.string().transform(val => val ? parseInt(val) : undefined).optional(),
-        maxRent: z.string().transform(val => val ? parseInt(val) : undefined).optional(),
-        amenities: z.string().optional().transform(val => val ? val.split(',') : undefined),
+        status: z.string().optional(),
+        priority: z.string().optional(),
+        category: z.string().optional(),
+        assignedTo: z.string().optional(),
       });
 
       const filters = schema.parse(req.query);
-      const properties = await storage.searchProperties(filters);
-      res.json(properties);
+      const tickets = await storage.searchTickets(filters);
+      res.json(tickets);
     } catch (error) {
       res.status(400).json({ message: "Invalid search parameters" });
     }
   });
 
-  // Chat support endpoint
+  // Change routes
+  app.get("/api/changes", async (req, res) => {
+    try {
+      const changes = await storage.getChanges();
+      res.json(changes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch changes" });
+    }
+  });
+
+  app.get("/api/changes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const change = await storage.getChange(id);
+      if (!change) {
+        return res.status(404).json({ message: "Change not found" });
+      }
+      res.json(change);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch change" });
+    }
+  });
+
+  app.post("/api/changes", async (req, res) => {
+    try {
+      const changeData = insertChangeSchema.parse(req.body);
+      const change = await storage.createChange(changeData);
+      res.status(201).json(change);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid change data" });
+    }
+  });
+
+  app.patch("/api/changes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = insertChangeSchema.partial().parse(req.body);
+      const change = await storage.updateChange(id, updates);
+      if (!change) {
+        return res.status(404).json({ message: "Change not found" });
+      }
+      res.json(change);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid update data" });
+    }
+  });
+
+  app.get("/api/changes/search", async (req, res) => {
+    try {
+      const schema = z.object({
+        status: z.string().optional(),
+        priority: z.string().optional(),
+        category: z.string().optional(),
+        requestedBy: z.string().optional(),
+      });
+
+      const filters = schema.parse(req.query);
+      const changes = await storage.searchChanges(filters);
+      res.json(changes);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid search parameters" });
+    }
+  });
+
+  // User routes
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // IT Support chatbot endpoint
   app.post("/api/chat", async (req, res) => {
     try {
       const schema = z.object({
@@ -55,17 +152,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { message } = schema.parse(req.body);
       
-      // Simple chatbot responses
-      let response = "I'm here to help you find the perfect student housing! Can you tell me more about what you're looking for?";
+      // IT Support chatbot responses
+      let response = "Hello! I'm your IT Support assistant. How can I help you today? I can assist with tickets, password resets, software issues, and more.";
       
-      if (message.toLowerCase().includes("pet")) {
-        response = "Great! I can help you find pet-friendly housing. I see we have properties like Telegraph Ave House that welcome pets. Would you like to see more pet-friendly options?";
-      } else if (message.toLowerCase().includes("budget") || message.toLowerCase().includes("cheap") || message.toLowerCase().includes("affordable")) {
-        response = "I understand budget is important for students! We have options starting from $650/month. Would you like me to show you properties under a specific price range?";
-      } else if (message.toLowerCase().includes("gym") || message.toLowerCase().includes("fitness")) {
-        response = "Looking for fitness amenities? Berkeley Student Commons and Campus View Studios both have gym facilities. Would you like to see more properties with fitness centers?";
-      } else if (message.toLowerCase().includes("parking")) {
-        response = "Parking is definitely important! Several of our properties offer parking, including Berkeley Student Commons. Would you like me to filter properties with parking included?";
+      if (message.toLowerCase().includes("password") || message.toLowerCase().includes("reset")) {
+        response = "I can help you with password reset requests. You can submit a ticket for password reset, or if it's urgent, contact the IT helpdesk at ext. 1234. Would you like me to create a ticket for you?";
+      } else if (message.toLowerCase().includes("ticket") || message.toLowerCase().includes("issue") || message.toLowerCase().includes("problem")) {
+        response = "I can help you create a new support ticket. Please describe your issue, and I'll guide you through the process. What type of problem are you experiencing? (Hardware, Software, Network, or Access)";
+      } else if (message.toLowerCase().includes("software") || message.toLowerCase().includes("install")) {
+        response = "For software installation requests, please create a ticket with details about what software you need and why. Include your department and manager approval if required.";
+      } else if (message.toLowerCase().includes("network") || message.toLowerCase().includes("internet") || message.toLowerCase().includes("wifi")) {
+        response = "Network issues can be frustrating! For connectivity problems, try restarting your device first. If that doesn't work, I can help you create a high-priority ticket.";
+      } else if (message.toLowerCase().includes("hardware") || message.toLowerCase().includes("computer") || message.toLowerCase().includes("laptop")) {
+        response = "Hardware issues need immediate attention. Please create a ticket with details about the problem, and our technicians will respond quickly. Is your device under warranty?";
+      } else if (message.toLowerCase().includes("change") || message.toLowerCase().includes("request")) {
+        response = "For change requests (system updates, new access, etc.), please provide details about what needs to be changed and the business justification. I can help you submit a formal change request.";
       }
 
       res.json({ response });
