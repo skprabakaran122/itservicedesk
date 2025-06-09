@@ -90,14 +90,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/tickets/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updates = insertTicketSchema.partial().parse(req.body);
-      const ticket = await storage.updateTicket(id, updates);
+      const { notes, userId, ...updates } = req.body;
+      const ticket = await storage.updateTicketWithHistory(id, updates, userId || 1, notes);
       if (!ticket) {
         return res.status(404).json({ message: "Ticket not found" });
       }
       res.json(ticket);
     } catch (error) {
       res.status(400).json({ message: "Invalid update data" });
+    }
+  });
+
+  app.get("/api/tickets/:id/history", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const history = await storage.getTicketHistory(id);
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch ticket history" });
+    }
+  });
+
+  app.post("/api/tickets/:id/comments", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { notes, userId } = req.body;
+      const history = await storage.createTicketHistory({
+        ticketId: id,
+        action: 'comment_added',
+        userId: userId || 1,
+        notes,
+      });
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add comment" });
     }
   });
 
@@ -154,14 +180,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/changes/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updates = insertChangeSchema.partial().parse(req.body);
-      const change = await storage.updateChange(id, updates);
+      const { notes, userId, ...updates } = req.body;
+      const change = await storage.updateChangeWithHistory(id, updates, userId || 1, notes);
       if (!change) {
         return res.status(404).json({ message: "Change not found" });
       }
       res.json(change);
     } catch (error) {
       res.status(400).json({ message: "Invalid update data" });
+    }
+  });
+
+  app.get("/api/changes/:id/history", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const history = await storage.getChangeHistory(id);
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch change history" });
+    }
+  });
+
+  app.post("/api/changes/:id/comments", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { notes, userId } = req.body;
+      const history = await storage.createChangeHistory({
+        changeId: id,
+        action: 'comment_added',
+        userId: userId || 1,
+        notes,
+      });
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add comment" });
     }
   });
 

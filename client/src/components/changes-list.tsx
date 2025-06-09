@@ -2,16 +2,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Change } from "@shared/schema";
-import { Clock, User, AlertTriangle, Calendar } from "lucide-react";
+import { Clock, User, AlertTriangle, Calendar, Eye } from "lucide-react";
 import { format } from "date-fns";
+import { ChangeDetailsModal } from "./change-details-modal";
+import { useState } from "react";
 
 interface ChangesListProps {
   changes: Change[];
   getStatusColor: (status: string) => string;
   getPriorityColor: (priority: string) => string;
+  currentUser: any;
 }
 
-export function ChangesList({ changes, getStatusColor, getPriorityColor }: ChangesListProps) {
+export function ChangesList({ changes, getStatusColor, getPriorityColor, currentUser }: ChangesListProps) {
+  const [selectedChange, setSelectedChange] = useState<Change | null>(null);
+  
   const sortedChanges = [...changes].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
@@ -113,7 +118,13 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor }: Chang
                 )}
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setSelectedChange(change)}
+                  className="flex items-center gap-1"
+                >
+                  <Eye className="h-3 w-3" />
                   View Details
                 </Button>
                 {change.status === 'pending' && (
@@ -140,6 +151,17 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor }: Chang
             <p className="text-gray-600 dark:text-gray-400">Create your first change request to get started.</p>
           </CardContent>
         </Card>
+      )}
+
+      {selectedChange && (
+        <ChangeDetailsModal
+          change={selectedChange}
+          isOpen={!!selectedChange}
+          onClose={() => setSelectedChange(null)}
+          currentUser={currentUser}
+          getStatusColor={getStatusColor}
+          getPriorityColor={getPriorityColor}
+        />
       )}
     </div>
   );
