@@ -1,4 +1,6 @@
 import { tickets, changes, users, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // Ticket methods
@@ -32,167 +34,124 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
 }
 
-export class MemStorage implements IStorage {
-  private tickets: Map<number, Ticket>;
-  private changes: Map<number, Change>;
-  private users: Map<number, User>;
-  private currentTicketId: number;
-  private currentChangeId: number;
-  private currentUserId: number;
-
+export class DatabaseStorage implements IStorage {
   constructor() {
-    this.tickets = new Map();
-    this.changes = new Map();
-    this.users = new Map();
-    this.currentTicketId = 1;
-    this.currentChangeId = 1;
-    this.currentUserId = 1;
-    
-    // Initialize with sample data
     this.initializeData();
   }
 
   private async initializeData() {
-    // Sample users
-    const sampleUsers: InsertUser[] = [
-      { username: "john.doe", email: "john.doe@company.com", password: "password123", role: "technician", name: "John Doe" },
-      { username: "jane.smith", email: "jane.smith@company.com", password: "password123", role: "admin", name: "Jane Smith" },
-      { username: "mike.wilson", email: "mike.wilson@company.com", password: "password123", role: "manager", name: "Mike Wilson" },
-      { username: "sarah.jones", email: "sarah.jones@company.com", password: "password123", role: "user", name: "Sarah Jones" },
-    ];
+    try {
+      // Check if users exist, if not create sample users
+      const existingUsers = await this.getUsers();
+      if (existingUsers.length === 0) {
+        const sampleUsers: InsertUser[] = [
+          { username: "john.doe", email: "john.doe@company.com", password: "password123", role: "technician", name: "John Doe" },
+          { username: "jane.smith", email: "jane.smith@company.com", password: "password123", role: "admin", name: "Jane Smith" },
+          { username: "mike.wilson", email: "mike.wilson@company.com", password: "password123", role: "manager", name: "Mike Wilson" },
+          { username: "sarah.jones", email: "sarah.jones@company.com", password: "password123", role: "user", name: "Sarah Jones" },
+        ];
 
-    for (const user of sampleUsers) {
-      await this.createUser(user);
-    }
+        for (const user of sampleUsers) {
+          await this.createUser(user);
+        }
 
-    // Sample tickets
-    const sampleTickets: InsertTicket[] = [
-      {
-        title: "Computer won't start",
-        description: "My workstation computer is not turning on when I press the power button. No lights or fans are running.",
-        status: "open",
-        priority: "high",
-        category: "hardware",
-        product: "Dell OptiPlex 7090",
-        assignedTo: "John Doe",
-        requesterId: 4,
-      },
-      {
-        title: "Software installation request",
-        description: "Need Adobe Photoshop installed on my workstation for the marketing team projects.",
-        status: "in-progress",
-        priority: "medium",
-        category: "software",
-        product: "Adobe Creative Suite",
-        assignedTo: "John Doe",
-        requesterId: 3,
-      },
-      {
-        title: "Network connectivity issues",
-        description: "Internet connection is very slow and intermittent. Cannot access shared drives or email consistently.",
-        status: "resolved",
-        priority: "high",
-        category: "network",
-        product: null,
-        assignedTo: "Jane Smith",
-        requesterId: 4,
-      },
-      {
-        title: "Office 365 access issue",
-        description: "Cannot access Office 365 applications and getting authentication errors.",
-        status: "closed",
-        priority: "low",
-        category: "product",
-        product: "Microsoft Office 365",
-        assignedTo: "John Doe",
-        requesterId: 3,
-      },
-    ];
+        // Create sample tickets
+        const sampleTickets: InsertTicket[] = [
+          {
+            title: "Computer won't start",
+            description: "My laptop won't turn on when I press the power button. I've tried holding it for 10 seconds but nothing happens.",
+            status: "open",
+            priority: "high",
+            category: "hardware",
+            product: "Dell Laptop",
+            assignedTo: "John Doe",
+            requesterId: 4,
+          },
+          {
+            title: "Email not syncing",
+            description: "Outlook is not receiving new emails. Last email received was yesterday at 3 PM.",
+            status: "in-progress",
+            priority: "medium",
+            category: "software",
+            product: "Microsoft Outlook",
+            assignedTo: "John Doe",
+            requesterId: 4,
+          },
+          {
+            title: "VPN connection issues",
+            description: "Cannot connect to company VPN from home. Getting 'authentication failed' error.",
+            status: "resolved",
+            priority: "medium",
+            category: "network",
+            product: "Cisco VPN",
+            assignedTo: "Jane Smith",
+            requesterId: 3,
+          },
+        ];
 
-    for (const ticket of sampleTickets) {
-      await this.createTicket(ticket);
-    }
+        for (const ticket of sampleTickets) {
+          await this.createTicket(ticket);
+        }
 
-    // Sample changes
-    const sampleChanges: InsertChange[] = [
-      {
-        title: "Server OS Upgrade",
-        description: "Upgrade main file server from Windows Server 2019 to Windows Server 2022",
-        status: "pending",
-        priority: "high",
-        category: "system",
-        requestedBy: "Jane Smith",
-        riskLevel: "high",
-        rollbackPlan: "Restore from VM snapshot taken before upgrade",
-        plannedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-      },
-      {
-        title: "Firewall Rule Update",
-        description: "Add new firewall rules to allow access to new application server",
-        status: "approved",
-        priority: "medium",
-        category: "infrastructure",
-        requestedBy: "John Doe",
-        approvedBy: "Mike Wilson",
-        riskLevel: "medium",
-        rollbackPlan: "Remove added rules and restore previous configuration",
-        plannedDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
-      },
-      {
-        title: "Email System Maintenance",
-        description: "Scheduled maintenance window for email server updates and optimization",
-        status: "completed",
-        priority: "medium",
-        category: "system",
-        requestedBy: "Jane Smith",
-        approvedBy: "Mike Wilson",
-        implementedBy: "Jane Smith",
-        riskLevel: "low",
-        rollbackPlan: "Restore from backup if issues arise",
-        completedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      },
-    ];
+        // Create sample changes
+        const sampleChanges: InsertChange[] = [
+          {
+            title: "Server OS Upgrade",
+            description: "Upgrade production servers from Windows Server 2019 to Windows Server 2022",
+            status: "pending",
+            priority: "high",
+            category: "infrastructure",
+            riskLevel: "high",
+            requestedBy: "Mike Wilson",
+            approvedBy: "Jane Smith",
+            plannedDate: new Date("2024-02-15"),
+            implementedBy: null,
+          },
+          {
+            title: "New Firewall Rules",
+            description: "Implement new firewall rules to block social media access during work hours",
+            status: "approved",
+            priority: "medium",
+            category: "security",
+            riskLevel: "medium",
+            requestedBy: "Jane Smith",
+            approvedBy: "Jane Smith",
+            plannedDate: new Date("2024-02-10"),
+            implementedBy: "John Doe",
+          },
+        ];
 
-    for (const change of sampleChanges) {
-      await this.createChange(change);
+        for (const change of sampleChanges) {
+          await this.createChange(change);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to initialize database data:", error);
     }
   }
 
   // Ticket methods
   async getTickets(): Promise<Ticket[]> {
-    return Array.from(this.tickets.values());
+    return await db.select().from(tickets).orderBy(tickets.createdAt);
   }
 
   async getTicket(id: number): Promise<Ticket | undefined> {
-    return this.tickets.get(id);
+    const [ticket] = await db.select().from(tickets).where(eq(tickets.id, id));
+    return ticket;
   }
 
   async createTicket(insertTicket: InsertTicket): Promise<Ticket> {
-    const id = this.currentTicketId++;
-    const now = new Date();
-    const ticket: Ticket = { 
-      ...insertTicket, 
-      assignedTo: insertTicket.assignedTo || null,
-      product: insertTicket.product || null,
-      id, 
-      createdAt: now, 
-      updatedAt: now 
-    };
-    this.tickets.set(id, ticket);
+    const [ticket] = await db.insert(tickets).values(insertTicket).returning();
     return ticket;
   }
 
   async updateTicket(id: number, updates: Partial<InsertTicket>): Promise<Ticket | undefined> {
-    const ticket = this.tickets.get(id);
-    if (!ticket) return undefined;
-    
-    const updatedTicket: Ticket = {
-      ...ticket,
-      ...updates,
-      updatedAt: new Date(),
-    };
-    this.tickets.set(id, updatedTicket);
-    return updatedTicket;
+    const [ticket] = await db
+      .update(tickets)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(tickets.id, id))
+      .returning();
+    return ticket;
   }
 
   async searchTickets(filters: {
@@ -201,55 +160,42 @@ export class MemStorage implements IStorage {
     category?: string;
     assignedTo?: string;
   }): Promise<Ticket[]> {
-    const allTickets = Array.from(this.tickets.values());
+    const conditions = [];
     
-    return allTickets.filter(ticket => {
-      if (filters.status && ticket.status !== filters.status) return false;
-      if (filters.priority && ticket.priority !== filters.priority) return false;
-      if (filters.category && ticket.category !== filters.category) return false;
-      if (filters.assignedTo && ticket.assignedTo !== filters.assignedTo) return false;
-      return true;
-    });
+    if (filters.status) conditions.push(eq(tickets.status, filters.status));
+    if (filters.priority) conditions.push(eq(tickets.priority, filters.priority));
+    if (filters.category) conditions.push(eq(tickets.category, filters.category));
+    if (filters.assignedTo) conditions.push(eq(tickets.assignedTo, filters.assignedTo));
+
+    if (conditions.length === 0) {
+      return await this.getTickets();
+    }
+
+    return await db.select().from(tickets).where(and(...conditions));
   }
 
   // Change methods
   async getChanges(): Promise<Change[]> {
-    return Array.from(this.changes.values());
+    return await db.select().from(changes).orderBy(changes.createdAt);
   }
 
   async getChange(id: number): Promise<Change | undefined> {
-    return this.changes.get(id);
+    const [change] = await db.select().from(changes).where(eq(changes.id, id));
+    return change;
   }
 
   async createChange(insertChange: InsertChange): Promise<Change> {
-    const id = this.currentChangeId++;
-    const now = new Date();
-    const change: Change = { 
-      ...insertChange, 
-      approvedBy: insertChange.approvedBy || null,
-      implementedBy: insertChange.implementedBy || null,
-      plannedDate: insertChange.plannedDate || null,
-      completedDate: insertChange.completedDate || null,
-      rollbackPlan: insertChange.rollbackPlan || null,
-      id, 
-      createdAt: now, 
-      updatedAt: now 
-    };
-    this.changes.set(id, change);
+    const [change] = await db.insert(changes).values(insertChange).returning();
     return change;
   }
 
   async updateChange(id: number, updates: Partial<InsertChange>): Promise<Change | undefined> {
-    const change = this.changes.get(id);
-    if (!change) return undefined;
-    
-    const updatedChange: Change = {
-      ...change,
-      ...updates,
-      updatedAt: new Date(),
-    };
-    this.changes.set(id, updatedChange);
-    return updatedChange;
+    const [change] = await db
+      .update(changes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(changes.id, id))
+      .returning();
+    return change;
   }
 
   async searchChanges(filters: {
@@ -258,42 +204,39 @@ export class MemStorage implements IStorage {
     category?: string;
     requestedBy?: string;
   }): Promise<Change[]> {
-    const allChanges = Array.from(this.changes.values());
+    const conditions = [];
     
-    return allChanges.filter(change => {
-      if (filters.status && change.status !== filters.status) return false;
-      if (filters.priority && change.priority !== filters.priority) return false;
-      if (filters.category && change.category !== filters.category) return false;
-      if (filters.requestedBy && change.requestedBy !== filters.requestedBy) return false;
-      return true;
-    });
+    if (filters.status) conditions.push(eq(changes.status, filters.status));
+    if (filters.priority) conditions.push(eq(changes.priority, filters.priority));
+    if (filters.category) conditions.push(eq(changes.category, filters.category));
+    if (filters.requestedBy) conditions.push(eq(changes.requestedBy, filters.requestedBy));
+
+    if (conditions.length === 0) {
+      return await this.getChanges();
+    }
+
+    return await db.select().from(changes).where(and(...conditions));
   }
 
   // User methods
   async getUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
+    return await db.select().from(users).orderBy(users.createdAt);
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { 
-      ...insertUser, 
-      id,
-      createdAt: new Date()
-    };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
