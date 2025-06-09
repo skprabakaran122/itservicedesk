@@ -55,10 +55,10 @@ export class MemStorage implements IStorage {
   private async initializeData() {
     // Sample users
     const sampleUsers: InsertUser[] = [
-      { username: "john.doe", email: "john.doe@company.com", password: "password123", role: "technician", name: "John Doe", createdAt: new Date() },
-      { username: "jane.smith", email: "jane.smith@company.com", password: "password123", role: "admin", name: "Jane Smith", createdAt: new Date() },
-      { username: "mike.wilson", email: "mike.wilson@company.com", password: "password123", role: "manager", name: "Mike Wilson", createdAt: new Date() },
-      { username: "sarah.jones", email: "sarah.jones@company.com", password: "password123", role: "user", name: "Sarah Jones", createdAt: new Date() },
+      { username: "john.doe", email: "john.doe@company.com", password: "password123", role: "technician", name: "John Doe" },
+      { username: "jane.smith", email: "jane.smith@company.com", password: "password123", role: "admin", name: "Jane Smith" },
+      { username: "mike.wilson", email: "mike.wilson@company.com", password: "password123", role: "manager", name: "Mike Wilson" },
+      { username: "sarah.jones", email: "sarah.jones@company.com", password: "password123", role: "user", name: "Sarah Jones" },
     ];
 
     for (const user of sampleUsers) {
@@ -289,7 +289,7 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser, 
       id,
-      createdAt: insertUser.createdAt || new Date()
+      createdAt: new Date()
     };
     this.users.set(id, user);
     return user;

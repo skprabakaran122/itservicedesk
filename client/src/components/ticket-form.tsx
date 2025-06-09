@@ -16,15 +16,15 @@ import { insertTicketSchema } from "@shared/schema";
 const formSchema = insertTicketSchema.extend({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  requesterName: z.string().min(1, "Requester name is required"),
-  requesterEmail: z.string().email("Valid email is required"),
+  requesterId: z.number().min(1, "Please select a requester"),
 });
 
 interface TicketFormProps {
   onClose: () => void;
+  currentUser?: any;
 }
 
-export function TicketForm({ onClose }: TicketFormProps) {
+export function TicketForm({ onClose, currentUser }: TicketFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -37,8 +37,8 @@ export function TicketForm({ onClose }: TicketFormProps) {
       priority: "medium",
       category: "software",
       assignedTo: "",
-      requesterName: "",
-      requesterEmail: "",
+      product: "",
+      requesterId: currentUser?.id || 1,
     },
   });
 
@@ -80,33 +80,10 @@ export function TicketForm({ onClose }: TicketFormProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="requesterName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="requesterEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email Address</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="john.doe@company.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Creating ticket for: <span className="font-medium">{currentUser?.name || 'Current User'}</span>
+              </p>
             </div>
 
             <FormField

@@ -13,7 +13,12 @@ import { ChangesList } from "../components/changes-list";
 import ITChatbot from "../components/it-chatbot";
 import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users } from "lucide-react";
 
-export default function Dashboard() {
+interface DashboardProps {
+  currentUser: any;
+  onLogout: () => void;
+}
+
+export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
   const [showTicketForm, setShowTicketForm] = useState(false);
   const [showChangeForm, setShowChangeForm] = useState(false);
 
