@@ -6,7 +6,7 @@ export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  status: varchar("status", { length: 20 }).notNull(), // open, in-progress, resolved, closed
+  status: varchar("status", { length: 20 }).notNull(), // pending, open, in-progress, resolved, closed
   priority: varchar("priority", { length: 20 }).notNull(), // low, medium, high, critical
   category: varchar("category", { length: 50 }).notNull(), // hardware, software, network, access, product
   product: varchar("product", { length: 100 }), // specific product name
@@ -69,6 +69,47 @@ export const insertUserSchema = createInsertSchema(users).omit({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Ticket history for tracking changes
+export const ticketHistory = pgTable("ticket_history", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").notNull().references(() => tickets.id),
+  action: varchar("action", { length: 50 }).notNull(), // created, updated, assigned, status_changed, etc.
+  field: varchar("field", { length: 50 }), // which field was changed
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  userId: integer("user_id").notNull().references(() => users.id),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  notes: text("notes"),
+});
+
+export const insertTicketHistorySchema = createInsertSchema(ticketHistory).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertTicketHistory = z.infer<typeof insertTicketHistorySchema>;
+export type TicketHistory = typeof ticketHistory.$inferSelect;
+
+// Change history for tracking change workflow
+export const changeHistory = pgTable("change_history", {
+  id: serial("id").primaryKey(),
+  changeId: integer("change_id").notNull().references(() => changes.id),
+  action: varchar("action", { length: 50 }).notNull(), // submitted, reviewed, approved, rejected, implemented, etc.
+  userId: integer("user_id").notNull().references(() => users.id),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  notes: text("notes"),
+  previousStatus: varchar("previous_status", { length: 20 }),
+  newStatus: varchar("new_status", { length: 20 }),
+});
+
+export const insertChangeHistorySchema = createInsertSchema(changeHistory).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertChangeHistory = z.infer<typeof insertChangeHistorySchema>;
+export type ChangeHistory = typeof changeHistory.$inferSelect;
 
 // Session storage table for authentication
 export const sessions = pgTable(

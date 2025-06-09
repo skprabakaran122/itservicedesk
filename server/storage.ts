@@ -1,6 +1,6 @@
-import { tickets, changes, users, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser } from "@shared/schema";
+import { tickets, changes, users, ticketHistory, changeHistory, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 export interface IStorage {
   // Ticket methods
@@ -32,6 +32,12 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // History methods
+  getTicketHistory(ticketId: number): Promise<TicketHistory[]>;
+  createTicketHistory(history: InsertTicketHistory): Promise<TicketHistory>;
+  getChangeHistory(changeId: number): Promise<ChangeHistory[]>;
+  createChangeHistory(history: InsertChangeHistory): Promise<ChangeHistory>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -236,6 +242,83 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  // History methods
+  async getTicketHistory(ticketId: number): Promise<TicketHistory[]> {
+    return await db.select().from(ticketHistory)
+      .where(eq(ticketHistory.ticketId, ticketId))
+      .orderBy(desc(ticketHistory.timestamp));
+  }
+
+  async createTicketHistory(history: InsertTicketHistory): Promise<TicketHistory> {
+    const [entry] = await db.insert(ticketHistory).values(history).returning();
+    return entry;
+  }
+
+  async getChangeHistory(changeId: number): Promise<ChangeHistory[]> {
+    return await db.select().from(changeHistory)
+      .where(eq(changeHistory.changeId, changeId))
+      .orderBy(desc(changeHistory.timestamp));
+  }
+
+  async createChangeHistory(history: InsertChangeHistory): Promise<ChangeHistory> {
+    const [entry] = await db.insert(changeHistory).values(history).returning();
+    return entry;
+  }
+
+  // Enhanced update methods with history tracking
+  async updateTicketWithHistory(id: number, updates: Partial<InsertTicket>, userId: number, notes?: string): Promise<Ticket | undefined> {
+    const existingTicket = await this.getTicket(id);
+    if (!existingTicket) return undefined;
+
+    const [updatedTicket] = await db
+      .update(tickets)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(tickets.id, id))
+      .returning();
+
+    // Create history entries for changes
+    for (const [field, newValue] of Object.entries(updates)) {
+      if (field !== 'updatedAt' && existingTicket[field as keyof Ticket] !== newValue) {
+        await this.createTicketHistory({
+          ticketId: id,
+          action: `updated_${field}`,
+          field,
+          oldValue: String(existingTicket[field as keyof Ticket] || ''),
+          newValue: String(newValue || ''),
+          userId,
+          notes,
+        });
+      }
+    }
+
+    return updatedTicket;
+  }
+
+  async updateChangeWithHistory(id: number, updates: Partial<InsertChange>, userId: number, notes?: string): Promise<Change | undefined> {
+    const existingChange = await this.getChange(id);
+    if (!existingChange) return undefined;
+
+    const [updatedChange] = await db
+      .update(changes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(changes.id, id))
+      .returning();
+
+    // Create history entry for status changes
+    if (updates.status && existingChange.status !== updates.status) {
+      await this.createChangeHistory({
+        changeId: id,
+        action: 'status_changed',
+        userId,
+        notes,
+        previousStatus: existingChange.status,
+        newStatus: updates.status,
+      });
+    }
+
+    return updatedChange;
   }
 }
 
