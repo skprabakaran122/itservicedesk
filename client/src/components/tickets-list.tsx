@@ -1,23 +1,27 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Ticket, User } from "@shared/schema";
-import { Clock, User as UserIcon, AlertCircle, Package } from "lucide-react";
+import { Clock, User as UserIcon, AlertCircle, Package, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { TicketDetailsModal } from "./ticket-details-modal";
 
 interface TicketsListProps {
   tickets: Ticket[];
   getStatusColor: (status: string) => string;
   getPriorityColor: (priority: string) => string;
+  currentUser: any;
 }
 
-export function TicketsList({ tickets, getStatusColor, getPriorityColor }: TicketsListProps) {
+export function TicketsList({ tickets, getStatusColor, getPriorityColor, currentUser }: TicketsListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   
   const { data: users = [] } = useQuery<User[]>({
     queryKey: ["/api/users"],
@@ -133,13 +137,20 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor }: Ticke
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="open">Open</SelectItem>
                     <SelectItem value="in-progress">In Progress</SelectItem>
                     <SelectItem value="resolved">Resolved</SelectItem>
                     <SelectItem value="closed">Closed</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setSelectedTicket(ticket)}
+                  className="flex items-center gap-1"
+                >
+                  <Eye className="h-3 w-3" />
                   View Details
                 </Button>
               </div>
@@ -156,6 +167,17 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor }: Ticke
             <p className="text-gray-600 dark:text-gray-400">Create your first support ticket to get started.</p>
           </CardContent>
         </Card>
+      )}
+
+      {selectedTicket && (
+        <TicketDetailsModal
+          ticket={selectedTicket}
+          isOpen={!!selectedTicket}
+          onClose={() => setSelectedTicket(null)}
+          currentUser={currentUser}
+          getStatusColor={getStatusColor}
+          getPriorityColor={getPriorityColor}
+        />
       )}
     </div>
   );

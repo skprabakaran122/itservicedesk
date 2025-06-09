@@ -191,6 +191,7 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
             tickets={tickets} 
             getStatusColor={getStatusColor}
             getPriorityColor={getPriorityColor}
+            currentUser={currentUser}
           />
         </TabsContent>
 
