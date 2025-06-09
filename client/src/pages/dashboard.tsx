@@ -200,6 +200,7 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
             changes={changes}
             getStatusColor={getStatusColor}
             getPriorityColor={getPriorityColor}
+            currentUser={currentUser}
           />
         </TabsContent>
       </Tabs>
