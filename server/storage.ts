@@ -55,10 +55,10 @@ export class MemStorage implements IStorage {
   private async initializeData() {
     // Sample users
     const sampleUsers: InsertUser[] = [
-      { username: "john.doe", email: "john.doe@company.com", role: "technician", name: "John Doe" },
-      { username: "jane.smith", email: "jane.smith@company.com", role: "admin", name: "Jane Smith" },
-      { username: "mike.wilson", email: "mike.wilson@company.com", role: "manager", name: "Mike Wilson" },
-      { username: "sarah.jones", email: "sarah.jones@company.com", role: "user", name: "Sarah Jones" },
+      { username: "john.doe", email: "john.doe@company.com", password: "password123", role: "technician", name: "John Doe", createdAt: new Date() },
+      { username: "jane.smith", email: "jane.smith@company.com", password: "password123", role: "admin", name: "Jane Smith", createdAt: new Date() },
+      { username: "mike.wilson", email: "mike.wilson@company.com", password: "password123", role: "manager", name: "Mike Wilson", createdAt: new Date() },
+      { username: "sarah.jones", email: "sarah.jones@company.com", password: "password123", role: "user", name: "Sarah Jones", createdAt: new Date() },
     ];
 
     for (const user of sampleUsers) {
@@ -73,9 +73,9 @@ export class MemStorage implements IStorage {
         status: "open",
         priority: "high",
         category: "hardware",
+        product: "Dell OptiPlex 7090",
         assignedTo: "John Doe",
-        requesterName: "Sarah Jones",
-        requesterEmail: "sarah.jones@company.com",
+        requesterId: 4,
       },
       {
         title: "Software installation request",
@@ -83,9 +83,9 @@ export class MemStorage implements IStorage {
         status: "in-progress",
         priority: "medium",
         category: "software",
+        product: "Adobe Creative Suite",
         assignedTo: "John Doe",
-        requesterName: "Mike Wilson",
-        requesterEmail: "mike.wilson@company.com",
+        requesterId: 3,
       },
       {
         title: "Network connectivity issues",
@@ -93,19 +93,19 @@ export class MemStorage implements IStorage {
         status: "resolved",
         priority: "high",
         category: "network",
+        product: null,
         assignedTo: "Jane Smith",
-        requesterName: "Sarah Jones",
-        requesterEmail: "sarah.jones@company.com",
+        requesterId: 4,
       },
       {
-        title: "Password reset request",
-        description: "Forgot my password and need it reset for my domain account.",
+        title: "Office 365 access issue",
+        description: "Cannot access Office 365 applications and getting authentication errors.",
         status: "closed",
         priority: "low",
-        category: "access",
+        category: "product",
+        product: "Microsoft Office 365",
         assignedTo: "John Doe",
-        requesterName: "Mike Wilson",
-        requesterEmail: "mike.wilson@company.com",
+        requesterId: 3,
       },
     ];
 
@@ -173,6 +173,7 @@ export class MemStorage implements IStorage {
     const ticket: Ticket = { 
       ...insertTicket, 
       assignedTo: insertTicket.assignedTo || null,
+      product: insertTicket.product || null,
       id, 
       createdAt: now, 
       updatedAt: now 
@@ -285,7 +286,11 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      createdAt: insertUser.createdAt || new Date()
+    };
     this.users.set(id, user);
     return user;
   }

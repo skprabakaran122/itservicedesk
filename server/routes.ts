@@ -5,6 +5,44 @@ import { z } from "zod";
 import { insertTicketSchema, insertChangeSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user || user.password !== password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
+    } catch (error) {
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const userData = req.body;
+      const existingUser = await storage.getUserByUsername(userData.username);
+      
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      const user = await storage.createUser({
+        ...userData,
+        createdAt: new Date()
+      });
+      
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json({ user: userWithoutPassword });
+    } catch (error) {
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
   // Ticket routes
   app.get("/api/tickets", async (req, res) => {
     try {

@@ -8,10 +8,10 @@ export const tickets = pgTable("tickets", {
   description: text("description").notNull(),
   status: varchar("status", { length: 20 }).notNull(), // open, in-progress, resolved, closed
   priority: varchar("priority", { length: 20 }).notNull(), // low, medium, high, critical
-  category: varchar("category", { length: 50 }).notNull(), // hardware, software, network, access
+  category: varchar("category", { length: 50 }).notNull(), // hardware, software, network, access, product
+  product: varchar("product", { length: 100 }), // specific product name
   assignedTo: text("assigned_to"),
-  requesterName: text("requester_name").notNull(),
-  requesterEmail: text("requester_email").notNull(),
+  requesterId: integer("requester_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -56,12 +56,15 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
+  password: text("password").notNull(),
   role: varchar("role", { length: 20 }).notNull(), // admin, technician, manager, user
   name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
+  createdAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

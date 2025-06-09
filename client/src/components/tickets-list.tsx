@@ -1,9 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Ticket } from "@shared/schema";
-import { Clock, User, Mail, AlertCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Ticket, User } from "@shared/schema";
+import { Clock, User as UserIcon, AlertCircle, Package } from "lucide-react";
 import { format } from "date-fns";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface TicketsListProps {
   tickets: Ticket[];
@@ -12,9 +16,51 @@ interface TicketsListProps {
 }
 
 export function TicketsList({ tickets, getStatusColor, getPriorityColor }: TicketsListProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      const response = await apiRequest("PATCH", `/api/tickets/${id}`, { status });
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Ticket status updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update ticket status",
+        variant: "destructive",
+      });
+    },
+  });
+
   const sortedTickets = [...tickets].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+
+  const getRequesterName = (requesterId: number) => {
+    const user = users.find(u => u.id === requesterId);
+    return user ? user.name : `User ${requesterId}`;
+  };
+
+  const getRequesterEmail = (requesterId: number) => {
+    const user = users.find(u => u.id === requesterId);
+    return user ? user.email : `user${requesterId}@company.com`;
+  };
+
+  const handleStatusUpdate = (ticketId: number, newStatus: string) => {
+    updateStatusMutation.mutate({ id: ticketId, status: newStatus });
+  };
 
   return (
     <div className="space-y-4">
@@ -46,17 +92,19 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor }: Ticke
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <User className="h-4 w-4" />
-                <span>{ticket.requesterName}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <Mail className="h-4 w-4" />
-                <span>{ticket.requesterEmail}</span>
+                <UserIcon className="h-4 w-4" />
+                <span>{getRequesterName(ticket.requesterId)}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <AlertCircle className="h-4 w-4" />
                 <span className="capitalize">{ticket.category}</span>
               </div>
+              {ticket.product && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Package className="h-4 w-4" />
+                  <span>{ticket.product}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <Clock className="h-4 w-4" />
                 <span>{format(new Date(ticket.createdAt), 'MMM dd, yyyy HH:mm')}</span>
@@ -73,14 +121,26 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor }: Ticke
 
             <div className="flex justify-between items-center">
               <div className="text-xs text-gray-500 dark:text-gray-500">
-                Last updated: {format(new Date(ticket.updatedAt), 'MMM dd, yyyy HH:mm')}
+                Requester: {getRequesterEmail(ticket.requesterId)} • Last updated: {format(new Date(ticket.updatedAt), 'MMM dd, yyyy HH:mm')}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <Select
+                  value={ticket.status}
+                  onValueChange={(newStatus) => handleStatusUpdate(ticket.id, newStatus)}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="resolved">Resolved</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button variant="outline" size="sm">
                   View Details
-                </Button>
-                <Button size="sm" className="bg-primary hover:bg-primary/90">
-                  Update Status
                 </Button>
               </div>
             </div>
