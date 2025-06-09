@@ -1,0 +1,146 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Change } from "@shared/schema";
+import { Clock, User, AlertTriangle, Calendar } from "lucide-react";
+import { format } from "date-fns";
+
+interface ChangesListProps {
+  changes: Change[];
+  getStatusColor: (status: string) => string;
+  getPriorityColor: (priority: string) => string;
+}
+
+export function ChangesList({ changes, getStatusColor, getPriorityColor }: ChangesListProps) {
+  const sortedChanges = [...changes].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const getRiskColor = (risk: string) => {
+    switch (risk.toLowerCase()) {
+      case "high":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "low":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {sortedChanges.map((change) => (
+        <Card key={change.id} className="hover:shadow-md transition-shadow">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+                  CHG-{change.id} - {change.title}
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  {change.description.length > 150 
+                    ? `${change.description.substring(0, 150)}...` 
+                    : change.description
+                  }
+                </CardDescription>
+              </div>
+              <div className="flex flex-col items-end gap-2 ml-4">
+                <Badge className={getPriorityColor(change.priority)}>
+                  {change.priority.toUpperCase()}
+                </Badge>
+                <Badge variant="secondary" className={getStatusColor(change.status)}>
+                  {change.status.replace('-', ' ').toUpperCase()}
+                </Badge>
+                <Badge variant="outline" className={getRiskColor(change.riskLevel)}>
+                  {change.riskLevel.toUpperCase()} RISK
+                </Badge>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <User className="h-4 w-4" />
+                <span>Requested by: {change.requestedBy}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="capitalize">{change.category}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Clock className="h-4 w-4" />
+                <span>{format(new Date(change.createdAt), 'MMM dd, yyyy HH:mm')}</span>
+              </div>
+              {change.plannedDate && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Calendar className="h-4 w-4" />
+                  <span>Planned: {format(new Date(change.plannedDate), 'MMM dd, yyyy')}</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              {change.approvedBy && (
+                <div className="text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Approved by: </span>
+                  <span className="font-medium text-gray-900 dark:text-white">{change.approvedBy}</span>
+                </div>
+              )}
+              {change.implementedBy && (
+                <div className="text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Implemented by: </span>
+                  <span className="font-medium text-gray-900 dark:text-white">{change.implementedBy}</span>
+                </div>
+              )}
+            </div>
+
+            {change.rollbackPlan && (
+              <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">Rollback Plan:</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{change.rollbackPlan}</p>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center">
+              <div className="text-xs text-gray-500 dark:text-gray-500">
+                Last updated: {format(new Date(change.updatedAt), 'MMM dd, yyyy HH:mm')}
+                {change.completedDate && (
+                  <span className="ml-2">
+                    • Completed: {format(new Date(change.completedDate), 'MMM dd, yyyy')}
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm">
+                  View Details
+                </Button>
+                {change.status === 'pending' && (
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                    Approve
+                  </Button>
+                )}
+                {change.status === 'approved' && (
+                  <Button size="sm" className="bg-primary hover:bg-primary/90">
+                    Start Implementation
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      
+      {changes.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No change requests found</h3>
+            <p className="text-gray-600 dark:text-gray-400">Create your first change request to get started.</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

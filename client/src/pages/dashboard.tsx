@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Ticket, Change } from "@shared/schema";
-import { TicketForm } from "@/components/ticket-form";
-import { ChangeForm } from "@/components/change-form";
-import { TicketsList } from "@/components/tickets-list";
-import { ChangesList } from "@/components/changes-list";
+import { TicketForm } from "../components/ticket-form";
+import { ChangeForm } from "../components/change-form";
+import { TicketsList } from "../components/tickets-list";
+import { ChangesList } from "../components/changes-list";
+import ITChatbot from "../components/it-chatbot";
 import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users } from "lucide-react";
 
 export default function Dashboard() {
@@ -205,6 +206,9 @@ export default function Dashboard() {
       {showChangeForm && (
         <ChangeForm onClose={() => setShowChangeForm(false)} />
       )}
+
+      {/* IT Support Chatbot */}
+      <ITChatbot />
     </div>
   );
 }
