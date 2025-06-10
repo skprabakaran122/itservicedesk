@@ -12,6 +12,7 @@ import { Clock, User as UserIcon, Package, AlertCircle, MessageSquare, History, 
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { FileUpload } from "./file-upload";
 
 interface TicketDetailsModalProps {
   ticket: Ticket;
@@ -352,6 +353,17 @@ export function TicketDetailsModal({
                     {newStatus === 'resolved' && !notes.trim() && (
                       <p className="text-sm text-red-500 mt-1">Notes are required when resolving a ticket</p>
                     )}
+                  </div>
+
+                  {/* File Upload Section */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Add Attachments</label>
+                    <FileUpload 
+                      ticketId={ticket.id}
+                      onAttachmentAdded={() => {
+                        queryClient.invalidateQueries({ queryKey: ["/api/attachments", { ticketId: ticket.id }] });
+                      }}
+                    />
                   </div>
 
                   <div className="flex gap-2">
