@@ -1,8 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Target, TrendingUp, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, Target, TrendingUp, AlertTriangle, RefreshCw } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface SLAMetrics {
   totalTickets: number;
@@ -32,9 +35,37 @@ interface SLAMetrics {
 }
 
 export function SLADashboard() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
   const { data: slaMetrics, isLoading } = useQuery<SLAMetrics>({
     queryKey: ["/api/sla/metrics"],
     refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["/api/auth/me"],
+  });
+
+  const refreshSLAMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/sla/refresh");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "SLA metrics refreshed successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/sla/metrics"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to refresh SLA metrics",
+        variant: "destructive",
+      });
+    },
   });
 
   if (isLoading) {
@@ -83,9 +114,23 @@ export function SLADashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">SLA Performance Dashboard</h2>
-        <Badge variant="outline" className="text-sm">
-          Total Tickets: {slaMetrics.totalTickets}
-        </Badge>
+        <div className="flex items-center gap-3">
+          {currentUser?.user && (currentUser.user.role === 'admin' || currentUser.user.role === 'manager') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refreshSLAMutation.mutate()}
+              disabled={refreshSLAMutation.isPending}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshSLAMutation.isPending ? 'animate-spin' : ''}`} />
+              {refreshSLAMutation.isPending ? 'Refreshing...' : 'Refresh Metrics'}
+            </Button>
+          )}
+          <Badge variant="outline" className="text-sm">
+            Total Tickets: {slaMetrics.totalTickets}
+          </Badge>
+        </div>
       </div>
 
       {/* Overall Performance Cards */}
