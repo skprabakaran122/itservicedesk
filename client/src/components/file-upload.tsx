@@ -36,6 +36,10 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
               base64Length: base64.length,
               fileName: file.name
             });
+            
+            // Temporary alert to verify base64 conversion is working
+            alert(`Base64 conversion successful! Length: ${base64.length} chars`);
+            
             resolve(base64);
           } catch (error) {
             console.error('Base64 conversion error:', error);
