@@ -23,8 +23,6 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      alert(`Starting upload for: ${file.name}, size: ${file.size} bytes`);
-      
       // Convert file to base64
       const base64Content = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -33,25 +31,12 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
             const result = reader.result as string;
             // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
             const base64 = result.split(',')[1];
-            console.log('Base64 conversion successful:', {
-              originalSize: file.size,
-              base64Length: base64.length,
-              fileName: file.name
-            });
-            
-            // Temporary alert to verify base64 conversion is working
-            alert(`Base64 conversion successful! Length: ${base64.length} chars`);
-            
             resolve(base64);
           } catch (error) {
-            console.error('Base64 conversion error:', error);
             reject(error);
           }
         };
-        reader.onerror = () => {
-          console.error('FileReader error');
-          reject(new Error('Failed to read file'));
-        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
         reader.readAsDataURL(file);
       });
 

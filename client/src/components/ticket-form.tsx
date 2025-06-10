@@ -57,11 +57,28 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
       // Upload attachments if any
       if (attachments.length > 0) {
         for (const file of attachments) {
+          // Convert file to base64
+          const base64Content = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const result = reader.result as string;
+                const base64 = result.split(',')[1];
+                resolve(base64);
+              } catch (error) {
+                reject(error);
+              }
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(file);
+          });
+
           const attachmentData = {
             fileName: `${Date.now()}_${file.name}`,
             originalName: file.name,
             fileSize: file.size,
             mimeType: file.type,
+            fileContent: base64Content,
             ticketId: ticket.id,
           };
           await apiRequest("POST", "/api/attachments", attachmentData);
