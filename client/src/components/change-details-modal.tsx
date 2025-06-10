@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Change, ChangeHistory, User } from "@shared/schema";
-import { Calendar, Users, Shield, AlertTriangle, History, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Calendar, Users, Shield, AlertTriangle, History, CheckCircle, XCircle, Clock, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";

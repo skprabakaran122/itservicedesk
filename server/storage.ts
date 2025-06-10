@@ -382,7 +382,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAttachment(id: number): Promise<boolean> {
     const result = await db.delete(attachments).where(eq(attachments.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 }
 
