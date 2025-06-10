@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Settings, Users } from "lucide-react";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  username: z.string().min(1, "Username or email is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -66,7 +66,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     onError: () => {
       toast({
         title: "Error",
-        description: "Invalid username or password",
+        description: "Invalid username/email or password",
         variant: "destructive",
       });
     },
@@ -140,9 +140,9 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>Username or Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your username" {...field} />
+                          <Input placeholder="Enter your username or email" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
