@@ -1,4 +1,4 @@
-import { tickets, changes, users, ticketHistory, changeHistory, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory } from "@shared/schema";
+import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -38,6 +38,18 @@ export interface IStorage {
   createTicketHistory(history: InsertTicketHistory): Promise<TicketHistory>;
   getChangeHistory(changeId: number): Promise<ChangeHistory[]>;
   createChangeHistory(history: InsertChangeHistory): Promise<ChangeHistory>;
+  
+  // Product methods
+  getProducts(): Promise<Product[]>;
+  getProduct(id: number): Promise<Product | undefined>;
+  createProduct(product: InsertProduct): Promise<Product>;
+  updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | undefined>;
+  deleteProduct(id: number): Promise<boolean>;
+  
+  // Attachment methods
+  getAttachments(ticketId?: number, changeId?: number): Promise<Attachment[]>;
+  createAttachment(attachment: InsertAttachment): Promise<Attachment>;
+  deleteAttachment(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -319,6 +331,58 @@ export class DatabaseStorage implements IStorage {
     }
 
     return updatedChange;
+  }
+
+  // Product methods
+  async getProducts(): Promise<Product[]> {
+    return await db.select().from(products).orderBy(products.name);
+  }
+
+  async getProduct(id: number): Promise<Product | undefined> {
+    const [product] = await db.select().from(products).where(eq(products.id, id));
+    return product;
+  }
+
+  async createProduct(insertProduct: InsertProduct): Promise<Product> {
+    const [product] = await db.insert(products).values(insertProduct).returning();
+    return product;
+  }
+
+  async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | undefined> {
+    const [product] = await db
+      .update(products)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(products.id, id))
+      .returning();
+    return product;
+  }
+
+  async deleteProduct(id: number): Promise<boolean> {
+    const result = await db.delete(products).where(eq(products.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Attachment methods
+  async getAttachments(ticketId?: number, changeId?: number): Promise<Attachment[]> {
+    const conditions = [];
+    if (ticketId) conditions.push(eq(attachments.ticketId, ticketId));
+    if (changeId) conditions.push(eq(attachments.changeId, changeId));
+    
+    if (conditions.length === 0) {
+      return await db.select().from(attachments).orderBy(desc(attachments.createdAt));
+    }
+    
+    return await db.select().from(attachments).where(and(...conditions)).orderBy(desc(attachments.createdAt));
+  }
+
+  async createAttachment(insertAttachment: InsertAttachment): Promise<Attachment> {
+    const [attachment] = await db.insert(attachments).values(insertAttachment).returning();
+    return attachment;
+  }
+
+  async deleteAttachment(id: number): Promise<boolean> {
+    const result = await db.delete(attachments).where(eq(attachments.id, id));
+    return result.rowCount > 0;
   }
 }
 

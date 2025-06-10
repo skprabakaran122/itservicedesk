@@ -113,6 +113,47 @@ export type InsertChangeHistory = z.infer<typeof insertChangeHistorySchema>;
 export type ChangeHistory = typeof changeHistory.$inferSelect;
 
 // Session storage table for authentication
+// Products table for admin management
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  category: varchar("category", { length: 50 }).notNull(),
+  description: text("description"),
+  isActive: varchar("is_active", { length: 10 }).notNull().default("true"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertProductSchema = createInsertSchema(products).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Product = typeof products.$inferSelect;
+
+// File attachments table
+export const attachments = pgTable("attachments", {
+  id: serial("id").primaryKey(),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  originalName: varchar("original_name", { length: 255 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  ticketId: integer("ticket_id").references(() => tickets.id),
+  changeId: integer("change_id").references(() => changes.id),
+  uploadedBy: integer("uploaded_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAttachmentSchema = createInsertSchema(attachments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
+export type Attachment = typeof attachments.$inferSelect;
+
 export const sessions = pgTable(
   "sessions",
   {
