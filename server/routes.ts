@@ -347,7 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (message.toLowerCase().includes("network") || message.toLowerCase().includes("internet") || message.toLowerCase().includes("wifi")) {
         response = "Network issues can be frustrating! For connectivity problems, try restarting your device first. If that doesn't work, I can help you create a high-priority ticket.";
       } else if (message.toLowerCase().includes("hardware") || message.toLowerCase().includes("computer") || message.toLowerCase().includes("laptop")) {
-        response = "Hardware issues need immediate attention. Please create a ticket with details about the problem, and our technicians will respond quickly. Is your device under warranty?";
+        response = "Hardware issues need immediate attention. Please create a ticket with details about the problem, and our agents will respond quickly. Is your device under warranty?";
       } else if (message.toLowerCase().includes("change") || message.toLowerCase().includes("request")) {
         response = "For change requests (system updates, new access, etc.), please provide details about what needs to be changed and the business justification. I can help you submit a formal change request.";
       }

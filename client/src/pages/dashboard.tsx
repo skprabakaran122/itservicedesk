@@ -246,6 +246,12 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
         <TabsList>
           <TabsTrigger value="tickets">Support Tickets</TabsTrigger>
           <TabsTrigger value="changes">Change Requests</TabsTrigger>
+          {currentUser?.role === 'admin' && (
+            <TabsTrigger value="admin">
+              <Settings className="h-4 w-4 mr-2" />
+              Admin Console
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="tickets">
@@ -265,6 +271,12 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
             currentUser={currentUser}
           />
         </TabsContent>
+
+        {currentUser?.role === 'admin' && (
+          <TabsContent value="admin">
+            <AdminConsole currentUser={currentUser} />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Forms */}
