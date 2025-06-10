@@ -175,6 +175,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
       email: user.email,
       name: user.name,
       role: user.role as "user" | "agent" | "manager" | "admin",
+      assignedProducts: user.assignedProducts || [],
     });
     setIsEditDialogOpen(true);
   };
@@ -418,6 +419,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                   <TableHead>Username</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Assigned Products</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -432,6 +434,19 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                         {getRoleIcon(user.role)}
                         {user.role}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {user.assignedProducts && user.assignedProducts.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {user.assignedProducts.map(product => (
+                            <Badge key={product} variant="secondary" className="text-xs">
+                              {product}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 italic">No products assigned</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
@@ -538,6 +553,41 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                     </FormItem>
                   )}
                 />
+                
+                {/* Product Assignment for Agents and Managers */}
+                {(editForm.watch("role") === "agent" || editForm.watch("role") === "manager") && (
+                  <FormField
+                    control={editForm.control}
+                    name="assignedProducts"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assigned Products</FormLabel>
+                        <div className="space-y-2">
+                          {products.map((product) => (
+                            <div key={product.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`product-${product.id}`}
+                                checked={field.value?.includes(product.name) || false}
+                                onCheckedChange={(checked) => {
+                                  const currentProducts = field.value || [];
+                                  if (checked) {
+                                    field.onChange([...currentProducts, product.name]);
+                                  } else {
+                                    field.onChange(currentProducts.filter(p => p !== product.name));
+                                  }
+                                }}
+                              />
+                              <label htmlFor={`product-${product.id}`} className="text-sm font-medium">
+                                {product.name}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                     Cancel
