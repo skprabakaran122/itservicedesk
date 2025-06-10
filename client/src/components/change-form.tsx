@@ -19,6 +19,20 @@ import { toZonedTime, fromZonedTime } from "date-fns-tz";
 
 const IST_TIMEZONE = 'Asia/Kolkata';
 
+// Helper functions for IST timezone conversion
+const convertUTCToISTForInput = (utcDateString: string | Date | null | undefined): string => {
+  if (!utcDateString) return '';
+  const utcDate = new Date(utcDateString);
+  const istDate = toZonedTime(utcDate, IST_TIMEZONE);
+  return istDate.toISOString().slice(0, 16);
+};
+
+const convertISTInputToUTC = (istInputValue: string): string => {
+  const istDate = new Date(istInputValue);
+  const utcDate = fromZonedTime(istDate, IST_TIMEZONE);
+  return utcDate.toISOString();
+};
+
 const formSchema = insertChangeSchema.extend({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
@@ -244,17 +258,15 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Implementation Start Date</FormLabel>
+                    <FormLabel>Implementation Start Date (IST)</FormLabel>
                     <FormControl>
                       <Input
                         type="datetime-local"
                         {...field}
-                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
+                        value={convertUTCToISTForInput(field.value || null)}
                         onChange={(e) => {
                           if (e.target.value) {
-                            // Convert local datetime to ISO string for proper timezone handling
-                            const localDate = new Date(e.target.value);
-                            field.onChange(localDate.toISOString());
+                            field.onChange(convertISTInputToUTC(e.target.value));
                           } else {
                             field.onChange(null);
                           }
@@ -270,17 +282,15 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Implementation End Date</FormLabel>
+                    <FormLabel>Implementation End Date (IST)</FormLabel>
                     <FormControl>
                       <Input
                         type="datetime-local"
                         {...field}
-                        value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
+                        value={convertUTCToISTForInput(field.value || null)}
                         onChange={(e) => {
                           if (e.target.value) {
-                            // Convert local datetime to ISO string for proper timezone handling
-                            const localDate = new Date(e.target.value);
-                            field.onChange(localDate.toISOString());
+                            field.onChange(convertISTInputToUTC(e.target.value));
                           } else {
                             field.onChange(null);
                           }
