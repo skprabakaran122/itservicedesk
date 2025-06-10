@@ -135,6 +135,13 @@ export function TicketDetailsModal({
 
   // Check if user can modify ticket
   const canModifyTicket = () => {
+    console.log('Debug canModifyTicket:', {
+      userRole: currentUser?.role,
+      userId: currentUser?.id,
+      ticketRequesterId: ticket.requesterId,
+      canModify: currentUser?.role === 'user' ? ticket.requesterId === currentUser?.id : ['agent', 'manager', 'admin'].includes(currentUser?.role)
+    });
+    
     // Regular users can only modify their own tickets and only certain actions
     if (currentUser?.role === 'user') {
       return ticket.requesterId === currentUser?.id;
@@ -145,16 +152,26 @@ export function TicketDetailsModal({
 
   // Get allowed status changes for current user
   const getAllowedStatuses = () => {
+    console.log('Debug getAllowedStatuses:', {
+      userRole: currentUser?.role,
+      userId: currentUser?.id,
+      ticketRequesterId: ticket.requesterId,
+      ticketStatus: ticket.status
+    });
+    
     if (currentUser?.role === 'user') {
       // Regular users can only reopen resolved/closed tickets or close their own open tickets
       if (ticket.requesterId === currentUser?.id) {
         if (ticket.status === 'resolved' || ticket.status === 'closed') {
+          console.log('User can reopen resolved/closed ticket');
           return ['reopen']; // Can reopen resolved/closed tickets
         }
         if (ticket.status === 'open' || ticket.status === 'reopen') {
+          console.log('User can close open/reopened ticket');
           return ['closed']; // Can close their own open/reopened tickets
         }
       }
+      console.log('No status changes allowed for user');
       return []; // No status changes allowed for other cases
     }
     // Agents, managers, and admins can change to any status except reopen (unless they're the original requester)
@@ -163,6 +180,7 @@ export function TicketDetailsModal({
     if (ticket.requesterId === currentUser?.id) {
       baseStatuses.push('reopen');
     }
+    console.log('Admin/agent allowed statuses:', baseStatuses);
     return baseStatuses;
   };
 

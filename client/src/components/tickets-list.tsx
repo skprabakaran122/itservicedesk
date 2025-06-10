@@ -71,6 +71,32 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
     updateStatusMutation.mutate({ id: ticketId, status: newStatus });
   };
 
+  // Get allowed status options for a specific ticket
+  const getAllowedStatusOptions = (ticket: Ticket) => {
+    if (currentUser?.role === 'user') {
+      // Users can only modify their own tickets
+      if (ticket.requesterId !== currentUser?.id) {
+        return []; // No options for tickets they don't own
+      }
+      
+      // Users can only reopen resolved/closed tickets or close open/reopened tickets
+      if (ticket.status === 'resolved' || ticket.status === 'closed') {
+        return ['reopen'];
+      }
+      if (ticket.status === 'open' || ticket.status === 'reopen') {
+        return ['closed'];
+      }
+      return [];
+    }
+    
+    // Agents, managers, and admins can change to any status except reopen (unless they're the original requester)
+    const baseStatuses = ['pending', 'open', 'in-progress', 'resolved', 'closed'];
+    if (ticket.requesterId === currentUser?.id) {
+      baseStatuses.push('reopen');
+    }
+    return baseStatuses;
+  };
+
   return (
     <div className="space-y-4">
       {sortedTickets.map((ticket) => (
@@ -147,6 +173,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
                     <SelectItem value="in-progress">In Progress</SelectItem>
                     <SelectItem value="resolved">Resolved</SelectItem>
                     <SelectItem value="closed">Closed</SelectItem>
+                    <SelectItem value="reopen">Reopen</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button 
