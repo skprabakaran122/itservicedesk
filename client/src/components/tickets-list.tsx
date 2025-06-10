@@ -159,23 +159,25 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
                 Requester: {getRequesterEmail(ticket.requesterId)} • Last updated: {ticket.updatedAt ? format(new Date(ticket.updatedAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
               </div>
               <div className="flex gap-2 items-center">
-                <Select
-                  value={ticket.status}
-                  onValueChange={(newStatus) => handleStatusUpdate(ticket.id, newStatus)}
-                  disabled={updateStatusMutation.isPending}
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="resolved">Resolved</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                    <SelectItem value="reopen">Reopen</SelectItem>
-                  </SelectContent>
-                </Select>
+                {getAllowedStatusOptions(ticket).length > 0 && (
+                  <Select
+                    value={ticket.status}
+                    onValueChange={(newStatus) => handleStatusUpdate(ticket.id, newStatus)}
+                    disabled={updateStatusMutation.isPending}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ticket.status}>{ticket.status.replace('-', ' ').toUpperCase()} (Current)</SelectItem>
+                      {getAllowedStatusOptions(ticket).filter(status => status !== ticket.status).map(status => (
+                        <SelectItem key={status} value={status}>
+                          {status.replace('-', ' ').toUpperCase()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm" 
