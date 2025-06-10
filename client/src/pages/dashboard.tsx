@@ -277,6 +277,10 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
           />
         </TabsContent>
 
+        <TabsContent value="sla">
+          <SLADashboard />
+        </TabsContent>
+
         {currentUser?.role === 'admin' && (
           <TabsContent value="admin">
             <AdminConsole currentUser={currentUser} />

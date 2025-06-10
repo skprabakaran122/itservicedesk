@@ -226,6 +226,51 @@ export function TicketDetailsModal({
                     </p>
                   </div>
                 </div>
+
+                {/* SLA Information */}
+                {(ticket.slaTargetResponse || ticket.slaTargetResolution) && (
+                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-3">SLA Status</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {ticket.slaTargetResponse && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">Response Time</span>
+                            <Badge variant={ticket.slaResponseMet === 'met' ? 'default' : ticket.slaResponseMet === 'breached' ? 'destructive' : 'secondary'}>
+                              {ticket.slaResponseMet === 'met' ? 'Met' : ticket.slaResponseMet === 'breached' ? 'Breached' : 'Pending'}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Target: {Math.floor(ticket.slaTargetResponse / 60)}h {ticket.slaTargetResponse % 60}m
+                            {ticket.firstResponseAt && (
+                              <span className="block">
+                                Responded: {format(new Date(ticket.firstResponseAt), 'MMM dd, HH:mm')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {ticket.slaTargetResolution && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">Resolution Time</span>
+                            <Badge variant={ticket.slaResolutionMet === 'met' ? 'default' : ticket.slaResolutionMet === 'breached' ? 'destructive' : 'secondary'}>
+                              {ticket.slaResolutionMet === 'met' ? 'Met' : ticket.slaResolutionMet === 'breached' ? 'Breached' : 'Pending'}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Target: {Math.floor(ticket.slaTargetResolution / 60)}h {ticket.slaTargetResolution % 60}m
+                            {ticket.resolvedAt && (
+                              <span className="block">
+                                Resolved: {format(new Date(ticket.resolvedAt), 'MMM dd, HH:mm')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
