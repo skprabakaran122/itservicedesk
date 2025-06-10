@@ -8,12 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProductSchema, type Product, type InsertProduct } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Settings, Package } from "lucide-react";
+import { Plus, Edit, Trash2, Settings, Package, Shield } from "lucide-react";
+import { ApprovalRoutingManager } from "./approval-routing";
 
 interface AdminConsoleProps {
   currentUser: any;
@@ -154,8 +156,20 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
         </div>
       </div>
 
-      {/* Products Management */}
-      <Card>
+      <Tabs defaultValue="products" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="products">
+            <Package className="h-4 w-4 mr-2" />
+            Products
+          </TabsTrigger>
+          <TabsTrigger value="approval-routing">
+            <Shield className="h-4 w-4 mr-2" />
+            Approval Routing
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="products">
+          <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
@@ -349,6 +363,12 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
           </Form>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="approval-routing">
+          <ApprovalRoutingManager currentUser={currentUser} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

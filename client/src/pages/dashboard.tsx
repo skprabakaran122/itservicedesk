@@ -306,7 +306,7 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
       )}
 
       {showChangeForm && (
-        <ChangeForm onClose={() => setShowChangeForm(false)} />
+        <ChangeForm onClose={() => setShowChangeForm(false)} currentUser={currentUser} />
       )}
 
       {/* IT Support Chatbot */}

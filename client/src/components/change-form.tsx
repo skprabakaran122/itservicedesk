@@ -18,7 +18,6 @@ import { FileUpload } from "@/components/file-upload";
 const formSchema = insertChangeSchema.extend({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  requestedBy: z.string().min(1, "Requester name is required"),
   rollbackPlan: z.string().min(10, "Rollback plan is required"),
 });
 
