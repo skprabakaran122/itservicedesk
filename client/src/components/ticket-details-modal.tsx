@@ -41,6 +41,10 @@ export function TicketDetailsModal({
 
   const { data: history = [] } = useQuery<TicketHistory[]>({
     queryKey: ["/api/tickets", ticket.id, "history"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/tickets/${ticket.id}/history`);
+      return await response.json();
+    },
     enabled: isOpen,
   });
 
@@ -111,7 +115,6 @@ export function TicketDetailsModal({
   };
 
   const getActionDescription = (action: string, field?: string) => {
-    console.log('Action received:', action, 'Field:', field);
     if (!action) return 'Unknown action';
     
     const actionMap: Record<string, string> = {
@@ -127,9 +130,7 @@ export function TicketDetailsModal({
       'status_changed': 'changed status'
     };
 
-    const result = actionMap[action] || action.replace(/_/g, ' ').replace('updated ', 'updated ');
-    console.log('Action result:', result);
-    return result;
+    return actionMap[action] || action.replace(/_/g, ' ').replace('updated ', 'updated ');
   };
 
   const handleStatusUpdate = () => {
@@ -284,40 +285,37 @@ export function TicketDetailsModal({
                   {history.length === 0 ? (
                     <p className="text-sm text-gray-500">No activity yet</p>
                   ) : (
-                    history.map((entry, index) => {
-                      console.log('History entry:', entry);
-                      return (
-                        <div key={entry.id} className="relative">
-                          {index < history.length - 1 && (
-                            <div className="absolute left-2 top-8 bottom-0 w-px bg-gray-200 dark:bg-gray-700" />
-                          )}
-                          <div className="flex gap-3">
-                            <div className="w-4 h-4 rounded-full bg-primary flex-shrink-0 mt-1" />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm font-medium">{getUserName(entry.userId)}</span>
-                                <span className="text-xs text-gray-500">
-                                  {entry.timestamp ? format(new Date(entry.timestamp), 'MMM dd, HH:mm') : 'N/A'}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-700 dark:text-gray-300">
-                                {getActionDescription(entry.action || '', entry.field || undefined)}
-                                {entry.oldValue && entry.newValue && (
-                                  <span className="text-xs block text-gray-500 mt-1">
-                                    {entry.oldValue} → {entry.newValue}
-                                  </span>
-                                )}
-                              </p>
-                              {entry.notes && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 italic">
-                                  "{entry.notes}"
-                                </p>
-                              )}
+                    history.map((entry, index) => (
+                      <div key={entry.id} className="relative">
+                        {index < history.length - 1 && (
+                          <div className="absolute left-2 top-8 bottom-0 w-px bg-gray-200 dark:bg-gray-700" />
+                        )}
+                        <div className="flex gap-3">
+                          <div className="w-4 h-4 rounded-full bg-primary flex-shrink-0 mt-1" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-medium">{getUserName(entry.userId)}</span>
+                              <span className="text-xs text-gray-500">
+                                {entry.timestamp ? format(new Date(entry.timestamp), 'MMM dd, HH:mm') : 'N/A'}
+                              </span>
                             </div>
+                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                              {getActionDescription(entry.action || '', entry.field || undefined)}
+                              {entry.oldValue && entry.newValue && (
+                                <span className="text-xs block text-gray-500 mt-1">
+                                  {entry.oldValue} → {entry.newValue}
+                                </span>
+                              )}
+                            </p>
+                            {entry.notes && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 italic">
+                                "{entry.notes}"
+                              </p>
+                            )}
                           </div>
                         </div>
-                      );
-                    })
+                      </div>
+                    ))
                   )}
                 </div>
               </CardContent>

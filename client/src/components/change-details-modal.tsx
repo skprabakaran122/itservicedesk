@@ -40,6 +40,10 @@ export function ChangeDetailsModal({
 
   const { data: history = [] } = useQuery<ChangeHistory[]>({
     queryKey: ["/api/changes", change.id, "history"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/changes/${change.id}/history`);
+      return await response.json();
+    },
     enabled: isOpen,
   });
 
