@@ -44,6 +44,8 @@ export const changes = pgTable("changes", {
   implementedBy: text("implemented_by"),
   plannedDate: timestamp("planned_date"),
   completedDate: timestamp("completed_date"),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
   riskLevel: varchar("risk_level", { length: 20 }).notNull(), // low, medium, high
   rollbackPlan: text("rollback_plan"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

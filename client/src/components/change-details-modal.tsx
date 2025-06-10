@@ -288,13 +288,31 @@ export function ChangeDetailsModal({
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {change.plannedDate && (
                     <div>
                       <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Planned Date</h4>
                       <p className="text-sm flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         {change.plannedDate ? format(new Date(change.plannedDate), 'PPP') : 'N/A'}
+                      </p>
+                    </div>
+                  )}
+                  {change.startDate && (
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Start Date</h4>
+                      <p className="text-sm flex items-center gap-1">
+                        <Calendar className="h-4 w-4 text-green-600" />
+                        {format(new Date(change.startDate), 'PPP p')}
+                      </p>
+                    </div>
+                  )}
+                  {change.endDate && (
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">End Date</h4>
+                      <p className="text-sm flex items-center gap-1">
+                        <Calendar className="h-4 w-4 text-red-600" />
+                        {format(new Date(change.endDate), 'PPP p')}
                       </p>
                     </div>
                   )}
