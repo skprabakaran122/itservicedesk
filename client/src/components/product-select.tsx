@@ -40,7 +40,7 @@ export function ProductSelect({
             </FormControl>
             <SelectContent>
               {activeProducts.length === 0 ? (
-                <SelectItem value="" disabled>
+                <SelectItem value="no-products" disabled>
                   No products available
                 </SelectItem>
               ) : (
