@@ -31,6 +31,7 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [createdTicketId, setCreatedTicketId] = useState<number | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,15 +50,32 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
   const createTicketMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
       const response = await apiRequest("POST", "/api/tickets", data);
-      return await response.json();
+      const ticket = await response.json();
+      
+      // Upload attachments if any
+      if (attachments.length > 0) {
+        for (const file of attachments) {
+          const attachmentData = {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            ticketId: ticket.id,
+            uploadedBy: data.requesterId,
+          };
+          await apiRequest("POST", "/api/attachments", attachmentData);
+        }
+      }
+      
+      return ticket;
     },
     onSuccess: (ticket) => {
-      setCreatedTicketId(ticket.id);
       toast({
         title: "Success",
         description: "Support ticket created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attachments"] });
+      onClose();
     },
     onError: () => {
       toast({
@@ -193,39 +211,36 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
               )}
             />
 
-            {createdTicketId && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Attachments</label>
-                <FileUpload 
-                  ticketId={createdTicketId}
-                  onAttachmentAdded={() => {
-                    queryClient.invalidateQueries({ queryKey: ["/api/attachments"] });
-                  }}
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Attachments (Optional)</label>
+              <Input
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  setAttachments(files);
+                }}
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+              />
+              {attachments.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  Selected files: {attachments.map(f => f.name).join(', ')}
+                </div>
+              )}
+            </div>
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              {!createdTicketId ? (
-                <Button 
-                  type="submit" 
-                  disabled={createTicketMutation.isPending}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  {createTicketMutation.isPending ? "Creating..." : "Create Ticket"}
-                </Button>
-              ) : (
-                <Button 
-                  type="button" 
-                  onClick={onClose}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Done
-                </Button>
-              )}
+              <Button 
+                type="submit" 
+                disabled={createTicketMutation.isPending}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {createTicketMutation.isPending ? "Creating..." : "Create Ticket"}
+              </Button>
             </div>
           </form>
         </Form>

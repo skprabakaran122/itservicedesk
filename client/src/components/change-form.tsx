@@ -29,7 +29,7 @@ interface ChangeFormProps {
 export function ChangeForm({ onClose }: ChangeFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [createdChangeId, setCreatedChangeId] = useState<number | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,15 +50,32 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
   const createChangeMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
       const response = await apiRequest("POST", "/api/changes", data);
-      return await response.json();
+      const change = await response.json();
+      
+      // Upload attachments if any
+      if (attachments.length > 0) {
+        for (const file of attachments) {
+          const attachmentData = {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            changeId: change.id,
+            uploadedBy: 1, // Default user ID
+          };
+          await apiRequest("POST", "/api/attachments", attachmentData);
+        }
+      }
+      
+      return change;
     },
     onSuccess: (change) => {
-      setCreatedChangeId(change.id);
       toast({
         title: "Success",
         description: "Change request created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/changes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attachments"] });
+      onClose();
     },
     onError: () => {
       toast({
@@ -230,17 +247,24 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
               )}
             />
 
-            {createdChangeId && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Attachments</label>
-                <FileUpload 
-                  changeId={createdChangeId}
-                  onAttachmentAdded={() => {
-                    queryClient.invalidateQueries({ queryKey: ["/api/attachments"] });
-                  }}
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Attachments (Optional)</label>
+              <Input
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  setAttachments(files);
+                }}
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+              />
+              {attachments.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  Selected files: {attachments.map(f => f.name).join(', ')}
+                </div>
+              )}
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -275,23 +299,13 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              {!createdChangeId ? (
-                <Button 
-                  type="submit" 
-                  disabled={createChangeMutation.isPending}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  {createChangeMutation.isPending ? "Creating..." : "Submit Change Request"}
-                </Button>
-              ) : (
-                <Button 
-                  type="button" 
-                  onClick={onClose}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Done
-                </Button>
-              )}
+              <Button 
+                type="submit" 
+                disabled={createChangeMutation.isPending}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {createChangeMutation.isPending ? "Creating..." : "Submit Change Request"}
+              </Button>
             </div>
           </form>
         </Form>
