@@ -31,7 +31,6 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
         mimeType: file.type,
         ticketId,
         changeId,
-        uploadedBy: 1, // Current user ID
       };
 
       return await apiRequest("POST", "/api/attachments", attachmentData);

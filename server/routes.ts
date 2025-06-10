@@ -487,11 +487,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/attachments", async (req, res) => {
     try {
-      const attachmentData = insertAttachmentSchema.parse(req.body);
+      const currentUser = (req as any).session?.user;
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const attachmentData = insertAttachmentSchema.parse({
+        ...req.body,
+        uploadedBy: currentUser.id
+      });
       const attachment = await storage.createAttachment(attachmentData);
       res.status(201).json(attachment);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid attachment data" });
+    } catch (error: any) {
+      console.error('Attachment creation error:', error);
+      res.status(400).json({ message: "Invalid attachment data", error: error.message });
     }
   });
 

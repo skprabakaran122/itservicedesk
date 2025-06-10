@@ -58,11 +58,11 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
       if (attachments.length > 0) {
         for (const file of attachments) {
           const attachmentData = {
-            fileName: file.name,
+            fileName: `${Date.now()}_${file.name}`,
+            originalName: file.name,
             fileSize: file.size,
-            fileType: file.type,
+            mimeType: file.type,
             ticketId: ticket.id,
-            uploadedBy: currentUser?.id,
           };
           await apiRequest("POST", "/api/attachments", attachmentData);
         }
