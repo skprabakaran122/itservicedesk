@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { User } from "@shared/schema";
-import { UserPlus, Users, Shield, UserCheck, UserX, Edit } from "lucide-react";
+import { UserPlus, Users, Shield, UserCheck, UserX, Edit, Trash2 } from "lucide-react";
 
 const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -127,6 +127,31 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "User deleted",
+        description: "The user has been deleted successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete user",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onCreateUser = (data: z.infer<typeof createUserSchema>) => {
     createUserMutation.mutate(data);
   };
@@ -146,6 +171,21 @@ export function UserManagement({ currentUser }: UserManagementProps) {
       role: user.role as "user" | "agent" | "manager" | "admin",
     });
     setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteUser = (user: User) => {
+    if (user.id === currentUser?.id) {
+      toast({
+        title: "Error",
+        description: "You cannot delete your own account",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete user "${user.username}"? This action cannot be undone.`)) {
+      deleteUserMutation.mutate(user.id);
+    }
   };
 
   const getRoleBadgeVariant = (role: string) => {

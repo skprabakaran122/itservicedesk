@@ -253,16 +253,10 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
             SLA Metrics
           </TabsTrigger>
           {currentUser?.role === 'admin' && (
-            <>
-              <TabsTrigger value="users">
-                <Users className="h-4 w-4 mr-2" />
-                User Management
-              </TabsTrigger>
-              <TabsTrigger value="admin">
-                <Settings className="h-4 w-4 mr-2" />
-                Admin Console
-              </TabsTrigger>
-            </>
+            <TabsTrigger value="admin">
+              <Settings className="h-4 w-4 mr-2" />
+              Admin Console
+            </TabsTrigger>
           )}
         </TabsList>
 
@@ -289,14 +283,9 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
         </TabsContent>
 
         {currentUser?.role === 'admin' && (
-          <>
-            <TabsContent value="users">
-              <UserManagement currentUser={currentUser} />
-            </TabsContent>
-            <TabsContent value="admin">
-              <AdminConsole currentUser={currentUser} />
-            </TabsContent>
-          </>
+          <TabsContent value="admin">
+            <AdminConsole currentUser={currentUser} />
+          </TabsContent>
         )}
       </Tabs>
 

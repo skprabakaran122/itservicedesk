@@ -14,8 +14,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProductSchema, type Product, type InsertProduct } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Settings, Package, Shield } from "lucide-react";
+import { Plus, Edit, Trash2, Settings, Package, Shield, Users } from "lucide-react";
 import { ApprovalRoutingManager } from "./approval-routing";
+import { UserManagement } from "./user-management";
 
 interface AdminConsoleProps {
   currentUser: any;
@@ -170,6 +171,10 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
           <TabsTrigger value="products">
             <Package className="h-4 w-4 mr-2" />
             Products
+          </TabsTrigger>
+          <TabsTrigger value="users">
+            <Settings className="h-4 w-4 mr-2" />
+            User Management
           </TabsTrigger>
           <TabsTrigger value="approval-routing">
             <Shield className="h-4 w-4 mr-2" />
