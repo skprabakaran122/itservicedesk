@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertTicketSchema } from "@shared/schema";
+import { ProductSelect } from "@/components/product-select";
 
 const formSchema = insertTicketSchema.extend({
   title: z.string().min(1, "Title is required"),
