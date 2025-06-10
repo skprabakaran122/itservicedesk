@@ -109,26 +109,60 @@ export function TicketDetailsModal({
     },
   });
 
-  const handleViewAttachment = (attachment: any) => {
-    setPreviewAttachment(attachment);
+  const handleViewAttachment = async (attachment: any) => {
+    try {
+      const response = await fetch(`/api/attachments/${attachment.id}/download`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to load file');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      setPreviewAttachment({
+        ...attachment,
+        previewUrl: url
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load file preview",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDownloadAttachment = async (attachmentId: number, fileName: string) => {
     try {
-      const response = await apiRequest("GET", `/api/attachments/${attachmentId}/download`);
-      const data = await response.json();
+      const response = await fetch(`/api/attachments/${attachmentId}/download`, {
+        method: 'GET',
+        credentials: 'include', // Include session cookies
+      });
       
-      // Create a temporary link to simulate download
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+      
+      // Get the blob data
+      const blob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = `data:application/octet-stream,${encodeURIComponent('File content would be here')}`;
+      link.href = url;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
       toast({
-        title: "Download Started",
-        description: `${fileName} download initiated`,
+        title: "Download Complete",
+        description: `${fileName} downloaded successfully`,
       });
     } catch (error) {
       toast({
@@ -446,7 +480,13 @@ export function TicketDetailsModal({
 
       {/* Attachment Preview Modal */}
       {previewAttachment && (
-        <Dialog open={!!previewAttachment} onOpenChange={() => setPreviewAttachment(null)}>
+        <Dialog open={!!previewAttachment} onOpenChange={() => {
+          // Clean up the blob URL if it exists
+          if (previewAttachment.previewUrl) {
+            window.URL.revokeObjectURL(previewAttachment.previewUrl);
+          }
+          setPreviewAttachment(null);
+        }}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -455,21 +495,35 @@ export function TicketDetailsModal({
               </DialogTitle>
             </DialogHeader>
             <div className="mt-4">
-              <div className="w-full h-[600px] border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
-                <div className="text-center">
-                  <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {previewAttachment.mimeType === 'application/pdf' ? 'PDF Document' : 
-                     previewAttachment.mimeType.startsWith('image/') ? 'Image File' : 'Document'}
-                  </p>
-                  <p className="text-sm text-gray-500 mb-2">{previewAttachment.originalName}</p>
-                  <p className="text-xs text-gray-400 mb-4">
-                    {Math.round(previewAttachment.fileSize / 1024)} KB • {previewAttachment.mimeType}
-                  </p>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      File preview and download functionality available
-                    </p>
+              {previewAttachment.previewUrl ? (
+                <div className="w-full">
+                  {previewAttachment.mimeType === 'application/pdf' ? (
+                    <iframe
+                      src={previewAttachment.previewUrl}
+                      className="w-full h-[600px] border border-gray-200 dark:border-gray-700 rounded-lg"
+                      title={previewAttachment.originalName}
+                    />
+                  ) : previewAttachment.mimeType.startsWith('image/') ? (
+                    <div className="w-full max-h-[600px] overflow-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <img
+                        src={previewAttachment.previewUrl}
+                        alt={previewAttachment.originalName}
+                        className="w-full h-auto"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full h-[400px] border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                      <div className="text-center">
+                        <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <p className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">Preview Not Available</p>
+                        <p className="text-sm text-gray-500 mb-2">{previewAttachment.originalName}</p>
+                        <p className="text-xs text-gray-400 mb-4">
+                          {Math.round(previewAttachment.fileSize / 1024)} KB • {previewAttachment.mimeType}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-4 flex justify-center">
                     <Button 
                       onClick={() => handleDownloadAttachment(previewAttachment.id, previewAttachment.originalName)}
                     >
@@ -478,7 +532,14 @@ export function TicketDetailsModal({
                     </Button>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="w-full h-[400px] border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                  <div className="text-center">
+                    <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">Loading Preview...</p>
+                  </div>
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>

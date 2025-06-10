@@ -513,23 +513,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Attachment not found" });
       }
 
+      if (!attachment.fileContent) {
+        return res.status(404).json({ message: "File content not found" });
+      }
+
+      // Convert base64 back to binary
+      const fileBuffer = Buffer.from(attachment.fileContent, 'base64');
+      
       // Set appropriate headers for file download
       res.setHeader('Content-Type', attachment.mimeType);
       res.setHeader('Content-Disposition', `attachment; filename="${attachment.originalName}"`);
-      res.setHeader('Content-Length', attachment.fileSize);
+      res.setHeader('Content-Length', fileBuffer.length);
       
-      // For now, return a simple response indicating the file would be downloaded
-      // In a real implementation, you would stream the file from storage
-      res.status(200).json({ 
-        message: "File download would start here",
-        attachment: {
-          id: attachment.id,
-          name: attachment.originalName,
-          size: attachment.fileSize,
-          type: attachment.mimeType
-        }
-      });
+      // Send the actual file content
+      res.send(fileBuffer);
     } catch (error) {
+      console.error('Download error:', error);
       res.status(500).json({ message: "Failed to download attachment" });
     }
   });

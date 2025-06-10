@@ -23,12 +23,24 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      // Simulate file upload - in a real app, you'd upload to cloud storage
+      // Convert file to base64
+      const base64Content = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.readAsDataURL(file);
+      });
+
       const attachmentData = {
         fileName: `${Date.now()}_${file.name}`,
         originalName: file.name,
         fileSize: file.size,
         mimeType: file.type,
+        fileContent: base64Content,
         ticketId,
         changeId,
       };

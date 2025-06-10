@@ -191,6 +191,7 @@ export const attachments = pgTable("attachments", {
   originalName: varchar("original_name", { length: 255 }).notNull(),
   fileSize: integer("file_size").notNull(),
   mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  fileContent: text("file_content"), // Store base64 encoded file content
   ticketId: integer("ticket_id").references(() => tickets.id),
   changeId: integer("change_id").references(() => changes.id),
   uploadedBy: integer("uploaded_by").notNull(),
