@@ -15,6 +15,9 @@ import { apiRequest } from "@/lib/queryClient";
 import { insertChangeSchema } from "@shared/schema";
 import { ProductSelect } from "@/components/product-select";
 import { FileUpload } from "@/components/file-upload";
+import { toZonedTime, fromZonedTime } from "date-fns-tz";
+
+const IST_TIMEZONE = 'Asia/Kolkata';
 
 const formSchema = insertChangeSchema.extend({
   title: z.string().min(1, "Title is required"),
@@ -247,7 +250,15 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
                         type="datetime-local"
                         {...field}
                         value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            // Convert local datetime to ISO string for proper timezone handling
+                            const localDate = new Date(e.target.value);
+                            field.onChange(localDate.toISOString());
+                          } else {
+                            field.onChange(null);
+                          }
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -265,7 +276,15 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
                         type="datetime-local"
                         {...field}
                         value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            // Convert local datetime to ISO string for proper timezone handling
+                            const localDate = new Date(e.target.value);
+                            field.onChange(localDate.toISOString());
+                          } else {
+                            field.onChange(null);
+                          }
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
