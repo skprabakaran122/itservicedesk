@@ -277,7 +277,7 @@ export function TicketDetailsModal({
                               </span>
                             </div>
                             <p className="text-sm text-gray-700 dark:text-gray-300 capitalize">
-                              {entry.action.replace('_', ' ')}
+                              {entry.action ? entry.action.replace('_', ' ') : 'Unknown action'}
                               {entry.field && ` ${entry.field}`}
                               {entry.oldValue && entry.newValue && (
                                 <span className="text-xs block text-gray-500 mt-1">

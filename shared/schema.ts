@@ -29,7 +29,7 @@ export const changes = pgTable("changes", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  status: varchar("status", { length: 20 }).notNull(), // pending, approved, rejected, in-progress, completed
+  status: varchar("status", { length: 20 }).notNull(), // pending, approved, rejected, in-progress, testing, completed, failed, rollback
   priority: varchar("priority", { length: 20 }).notNull(), // low, medium, high, critical
   category: varchar("category", { length: 50 }).notNull(), // system, application, infrastructure, policy
   requestedBy: text("requested_by").notNull(),

@@ -6,6 +6,9 @@ import { Clock, User, AlertTriangle, Calendar, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { ChangeDetailsModal } from "./change-details-modal";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChangesListProps {
   changes: Change[];
@@ -16,10 +19,40 @@ interface ChangesListProps {
 
 export function ChangesList({ changes, getStatusColor, getPriorityColor, currentUser }: ChangesListProps) {
   const [selectedChange, setSelectedChange] = useState<Change | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const sortedChanges = [...changes].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      return await apiRequest("PATCH", `/api/changes/${id}`, { 
+        status, 
+        userId: currentUser?.id || 1,
+        notes: `Status changed to ${status}`
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/changes"] });
+      toast({
+        title: "Change Updated",
+        description: "Change status has been updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update change status.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStatusUpdate = (id: number, status: string) => {
+    updateStatusMutation.mutate({ id, status });
+  };
 
   const getRiskColor = (risk: string) => {
     switch (risk.toLowerCase()) {
@@ -128,13 +161,58 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                   View Details
                 </Button>
                 {change.status === 'pending' && (
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                  <Button 
+                    size="sm" 
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => handleStatusUpdate(change.id, 'approved')}
+                  >
                     Approve
                   </Button>
                 )}
                 {change.status === 'approved' && (
-                  <Button size="sm" className="bg-primary hover:bg-primary/90">
+                  <Button 
+                    size="sm" 
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => handleStatusUpdate(change.id, 'in-progress')}
+                  >
                     Start Implementation
+                  </Button>
+                )}
+                {change.status === 'in-progress' && (
+                  <Button 
+                    size="sm" 
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                    onClick={() => handleStatusUpdate(change.id, 'testing')}
+                  >
+                    Move to Testing
+                  </Button>
+                )}
+                {change.status === 'testing' && (
+                  <div className="flex gap-1">
+                    <Button 
+                      size="sm" 
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => handleStatusUpdate(change.id, 'completed')}
+                    >
+                      Complete
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-red-600 text-red-600 hover:bg-red-50"
+                      onClick={() => handleStatusUpdate(change.id, 'failed')}
+                    >
+                      Failed
+                    </Button>
+                  </div>
+                )}
+                {change.status === 'failed' && (
+                  <Button 
+                    size="sm" 
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                    onClick={() => handleStatusUpdate(change.id, 'rollback')}
+                  >
+                    Rollback
                   </Button>
                 )}
               </div>
