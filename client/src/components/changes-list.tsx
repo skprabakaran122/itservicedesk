@@ -238,9 +238,9 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                         }
                         onClick={() => canStart && handleStatusUpdate(change.id, 'in-progress')}
                         disabled={!canStart}
-                        title={!canStart ? `Implementation starts at: ${formatDateIST(change.startDate)}` : "Start Implementation"}
+                        title={!canStart && change.startDate ? `Implementation starts at: ${formatDateIST(change.startDate.toString())}` : "Start Implementation"}
                       >
-                        {canStart ? 'Start Implementation' : `Starts ${formatDateIST(change.startDate, 'MMM dd, HH:mm')}`}
+                        {canStart ? 'Start Implementation' : change.startDate ? `Starts ${formatDateIST(change.startDate.toString(), 'MMM dd, HH:mm')}` : 'Start Implementation'}
                       </Button>
                     );
                   })()

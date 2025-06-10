@@ -5,6 +5,7 @@ import { eq, and, desc, or } from "drizzle-orm";
 export interface IStorage {
   // Ticket methods
   getTickets(): Promise<Ticket[]>;
+  getTicketsForUser(userId: number): Promise<Ticket[]>;
   getTicket(id: number): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   updateTicket(id: number, updates: Partial<InsertTicket>): Promise<Ticket | undefined>;
@@ -17,6 +18,7 @@ export interface IStorage {
   
   // Change methods
   getChanges(): Promise<Change[]>;
+  getChangesForUser(userId: number): Promise<Change[]>;
   getChange(id: number): Promise<Change | undefined>;
   createChange(change: InsertChange): Promise<Change>;
   updateChange(id: number, updates: Partial<InsertChange>): Promise<Change | undefined>;
@@ -157,6 +159,24 @@ export class DatabaseStorage implements IStorage {
   // Ticket methods
   async getTickets(): Promise<Ticket[]> {
     return await db.select().from(tickets).orderBy(tickets.createdAt);
+  }
+
+  async getTicketsForUser(userId: number): Promise<Ticket[]> {
+    const user = await this.getUser(userId);
+    if (!user || user.role === 'admin') {
+      // Admins can see all tickets
+      return await this.getTickets();
+    }
+    
+    if (!user.assignedProducts || user.assignedProducts.length === 0) {
+      // Users with no assigned products see no tickets
+      return [];
+    }
+    
+    // Filter tickets by assigned products
+    return await db.select().from(tickets)
+      .where(or(...user.assignedProducts.map(product => eq(tickets.product, product))))
+      .orderBy(tickets.createdAt);
   }
 
   async getTicket(id: number): Promise<Ticket | undefined> {

@@ -69,6 +69,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   role: varchar("role", { length: 20 }).notNull(), // admin, technician, manager, user
   name: text("name").notNull(),
+  assignedProducts: text("assigned_products").array(), // Array of product names this user can access
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
