@@ -72,79 +72,9 @@ export class DatabaseStorage implements IStorage {
         for (const user of sampleUsers) {
           await this.createUser(user);
         }
-
-        // Create sample tickets
-        const sampleTickets: InsertTicket[] = [
-          {
-            title: "Computer won't start",
-            description: "My laptop won't turn on when I press the power button. I've tried holding it for 10 seconds but nothing happens.",
-            status: "open",
-            priority: "high",
-            category: "hardware",
-            product: "Dell Laptop",
-            assignedTo: "John Doe",
-            requesterId: 4,
-          },
-          {
-            title: "Email not syncing",
-            description: "Outlook is not receiving new emails. Last email received was yesterday at 3 PM.",
-            status: "in-progress",
-            priority: "medium",
-            category: "software",
-            product: "Microsoft Outlook",
-            assignedTo: "John Doe",
-            requesterId: 4,
-          },
-          {
-            title: "VPN connection issues",
-            description: "Cannot connect to company VPN from home. Getting 'authentication failed' error.",
-            status: "resolved",
-            priority: "medium",
-            category: "network",
-            product: "Cisco VPN",
-            assignedTo: "Jane Smith",
-            requesterId: 3,
-          },
-        ];
-
-        for (const ticket of sampleTickets) {
-          await this.createTicket(ticket);
-        }
-
-        // Create sample changes
-        const sampleChanges: InsertChange[] = [
-          {
-            title: "Server OS Upgrade",
-            description: "Upgrade production servers from Windows Server 2019 to Windows Server 2022",
-            status: "pending",
-            priority: "high",
-            category: "infrastructure",
-            riskLevel: "high",
-            requestedBy: "Mike Wilson",
-            approvedBy: "Jane Smith",
-            plannedDate: new Date("2024-02-15"),
-            implementedBy: null,
-          },
-          {
-            title: "New Firewall Rules",
-            description: "Implement new firewall rules to block social media access during work hours",
-            status: "approved",
-            priority: "medium",
-            category: "security",
-            riskLevel: "medium",
-            requestedBy: "Jane Smith",
-            approvedBy: "Jane Smith",
-            plannedDate: new Date("2024-02-10"),
-            implementedBy: "John Doe",
-          },
-        ];
-
-        for (const change of sampleChanges) {
-          await this.createChange(change);
-        }
       }
     } catch (error) {
-      console.error("Failed to initialize database data:", error);
+      console.error("Error initializing data:", error);
     }
   }
 

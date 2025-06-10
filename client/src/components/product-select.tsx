@@ -15,9 +15,9 @@ interface ProductSelectProps {
 export function ProductSelect({ 
   control, 
   name, 
-  label = "Product (Optional)", 
+  label = "Product", 
   placeholder = "Select affected product",
-  required = false 
+  required = true 
 }: ProductSelectProps) {
   const { data: products = [] } = useQuery<Product[]>({
     queryKey: ["/api/products"],
@@ -32,7 +32,7 @@ export function ProductSelect({
       render={({ field }) => (
         <FormItem>
           <FormLabel>{label}{required && " *"}</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select onValueChange={field.onChange} value={field.value}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder={placeholder} />
