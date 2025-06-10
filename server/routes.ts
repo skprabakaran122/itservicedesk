@@ -133,7 +133,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tickets", async (req, res) => {
     try {
-      const ticketData = insertTicketSchema.parse(req.body);
+      const currentUser = (req as any).session?.user;
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const ticketData = insertTicketSchema.parse({
+        ...req.body,
+        requesterId: currentUser.id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
       const ticket = await storage.createTicket(ticketData);
       res.status(201).json(ticket);
     } catch (error) {

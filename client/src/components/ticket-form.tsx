@@ -15,11 +15,14 @@ import { insertTicketSchema } from "@shared/schema";
 import { ProductSelect } from "@/components/product-select";
 import { FileUpload } from "@/components/file-upload";
 
-const formSchema = insertTicketSchema.extend({
+const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
+  status: z.string().default("open"),
+  priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+  category: z.enum(["software", "hardware", "network", "access", "other"]).default("software"),
+  assignedTo: z.string().optional(),
   product: z.string().min(1, "Product is required"),
-  requesterId: z.number().min(1, "Please select a requester"),
 });
 
 interface TicketFormProps {
@@ -43,7 +46,6 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
       category: "software",
       assignedTo: "",
       product: "",
-      requesterId: currentUser?.id || 1,
     },
   });
 
