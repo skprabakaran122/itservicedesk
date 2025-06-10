@@ -123,6 +123,18 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                   <span>Planned: {format(new Date(change.plannedDate), 'MMM dd, yyyy')}</span>
                 </div>
               )}
+              {change.startDate && (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <Calendar className="h-4 w-4" />
+                  <span>Start: {format(new Date(change.startDate), 'MMM dd, yyyy HH:mm')}</span>
+                </div>
+              )}
+              {change.endDate && (
+                <div className="flex items-center gap-2 text-sm text-red-600">
+                  <Calendar className="h-4 w-4" />
+                  <span>End: {format(new Date(change.endDate), 'MMM dd, yyyy HH:mm')}</span>
+                </div>
+              )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
