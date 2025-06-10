@@ -382,6 +382,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { notes, userId, ...updates } = req.body;
+      
+      // Validate implementation timing
+      if (updates.status === 'in-progress') {
+        const currentChange = await storage.getChange(id);
+        if (currentChange?.startDate) {
+          const now = new Date();
+          const startTime = new Date(currentChange.startDate);
+          
+          if (now < startTime) {
+            return res.status(400).json({ 
+              message: `Implementation cannot begin before the scheduled start time: ${startTime.toISOString()}` 
+            });
+          }
+        }
+      }
+      
       const change = await storage.updateChangeWithHistory(id, updates, userId || 1, notes);
       if (!change) {
         return res.status(404).json({ message: "Change not found" });

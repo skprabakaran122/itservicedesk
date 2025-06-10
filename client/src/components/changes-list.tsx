@@ -67,6 +67,23 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
   });
 
   const handleStatusUpdate = (id: number, status: string) => {
+    const change = sortedChanges.find(c => c.id === id);
+    
+    // Check if trying to move to implementation before start time
+    if (status === 'in-progress' && change?.startDate) {
+      const now = new Date();
+      const startTime = new Date(change.startDate);
+      
+      if (now < startTime) {
+        toast({
+          title: "Cannot Start Implementation",
+          description: `Implementation can only begin after the scheduled start time: ${formatDateIST(change.startDate)}`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     updateStatusMutation.mutate({ id, status });
   };
 
@@ -210,13 +227,23 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                   </Button>
                 )}
                 {change.status === 'approved' && (
-                  <Button 
-                    size="sm" 
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                    onClick={() => handleStatusUpdate(change.id, 'in-progress')}
-                  >
-                    Start Implementation
-                  </Button>
+                  (() => {
+                    const canStart = !change.startDate || new Date() >= new Date(change.startDate);
+                    return (
+                      <Button 
+                        size="sm" 
+                        className={canStart 
+                          ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                          : "bg-gray-400 cursor-not-allowed text-gray-200"
+                        }
+                        onClick={() => canStart && handleStatusUpdate(change.id, 'in-progress')}
+                        disabled={!canStart}
+                        title={!canStart ? `Implementation starts at: ${formatDateIST(change.startDate)}` : "Start Implementation"}
+                      >
+                        {canStart ? 'Start Implementation' : `Starts ${formatDateIST(change.startDate, 'MMM dd, HH:mm')}`}
+                      </Button>
+                    );
+                  })()
                 )}
                 {change.status === 'in-progress' && (
                   <Button 
