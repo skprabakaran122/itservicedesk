@@ -24,13 +24,27 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       // Convert file to base64
-      const base64Content = await new Promise<string>((resolve) => {
+      const base64Content = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
-          const result = reader.result as string;
-          // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
-          const base64 = result.split(',')[1];
-          resolve(base64);
+          try {
+            const result = reader.result as string;
+            // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
+            const base64 = result.split(',')[1];
+            console.log('Base64 conversion successful:', {
+              originalSize: file.size,
+              base64Length: base64.length,
+              fileName: file.name
+            });
+            resolve(base64);
+          } catch (error) {
+            console.error('Base64 conversion error:', error);
+            reject(error);
+          }
+        };
+        reader.onerror = () => {
+          console.error('FileReader error');
+          reject(new Error('Failed to read file'));
         };
         reader.readAsDataURL(file);
       });
@@ -51,10 +65,26 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
         fileSize: attachmentData.fileSize,
         mimeType: attachmentData.mimeType,
         hasFileContent: !!attachmentData.fileContent,
-        fileContentLength: attachmentData.fileContent?.length || 0
+        fileContentLength: attachmentData.fileContent?.length || 0,
+        base64Preview: attachmentData.fileContent?.substring(0, 100) + '...'
       });
 
-      return await apiRequest("POST", "/api/attachments", attachmentData);
+      // Use fetch directly instead of apiRequest to handle large payloads
+      const response = await fetch("/api/attachments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(attachmentData),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} ${errorText}`);
+      }
+
+      return response;
     },
     onSuccess: () => {
       toast({
