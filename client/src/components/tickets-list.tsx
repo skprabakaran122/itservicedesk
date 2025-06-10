@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Ticket, User } from "@shared/schema";
 import { Clock, User as UserIcon, AlertCircle, Package, Eye } from "lucide-react";
-import { format } from "date-fns";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatDateIST } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TicketDetailsModal } from "./ticket-details-modal";
@@ -142,7 +142,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
               )}
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <Clock className="h-4 w-4" />
-                <span>{format(new Date(ticket.createdAt), 'MMM dd, yyyy HH:mm')}</span>
+                <span>{formatDateIST(ticket.createdAt)}</span>
               </div>
             </div>
             
@@ -156,7 +156,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
 
             <div className="flex justify-between items-center">
               <div className="text-xs text-gray-500 dark:text-gray-500">
-                Requester: {getRequesterEmail(ticket.requesterId)} • Last updated: {ticket.updatedAt ? format(new Date(ticket.updatedAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
+                Requester: {getRequesterEmail(ticket.requesterId)} • Last updated: {ticket.updatedAt ? formatDateIST(ticket.updatedAt) : 'N/A'}
               </div>
               <div className="flex gap-2 items-center">
                 {getAllowedStatusOptions(ticket).length > 0 && (

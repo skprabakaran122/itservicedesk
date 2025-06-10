@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Ticket, TicketHistory, User } from "@shared/schema";
 import { Clock, User as UserIcon, Package, AlertCircle, MessageSquare, History, FileText, Download, Eye } from "lucide-react";
-import { format } from "date-fns";
+import { formatDateIST } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "./file-upload";
@@ -284,7 +284,7 @@ export function TicketDetailsModal({
                       <label className="text-sm font-medium text-gray-500">Created</label>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-gray-400" />
-                        <p className="text-sm">{format(new Date(ticket.createdAt), 'MMM dd, yyyy HH:mm')}</p>
+                        <p className="text-sm">{formatDateIST(ticket.createdAt)}</p>
                       </div>
                     </div>
                   </div>
