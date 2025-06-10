@@ -233,6 +233,24 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(changes).orderBy(changes.createdAt);
   }
 
+  async getChangesForUser(userId: number): Promise<Change[]> {
+    const user = await this.getUser(userId);
+    if (!user || user.role === 'admin') {
+      // Admins can see all changes
+      return await this.getChanges();
+    }
+    
+    if (!user.assignedProducts || user.assignedProducts.length === 0) {
+      // Users with no assigned products see no changes
+      return [];
+    }
+    
+    // Filter changes by assigned products
+    return await db.select().from(changes)
+      .where(or(...user.assignedProducts.map(product => eq(changes.product, product))))
+      .orderBy(changes.createdAt);
+  }
+
   async getChange(id: number): Promise<Change | undefined> {
     const [change] = await db.select().from(changes).where(eq(changes.id, id));
     return change;

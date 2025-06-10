@@ -14,8 +14,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { User } from "@shared/schema";
+import { User, Product } from "@shared/schema";
 import { UserPlus, Users, Shield, UserCheck, UserX, Edit, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -30,6 +31,7 @@ const editUserSchema = z.object({
   email: z.string().email("Valid email is required"),
   name: z.string().min(1, "Name is required"),
   role: z.enum(["user", "agent", "manager", "admin"]),
+  assignedProducts: z.array(z.string()).optional(),
 });
 
 interface UserManagementProps {
@@ -45,6 +47,10 @@ export function UserManagement({ currentUser }: UserManagementProps) {
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
     refetchInterval: 30000,
+  });
+
+  const { data: products = [] } = useQuery<Product[]>({
+    queryKey: ["/api/products"],
   });
 
   const createForm = useForm<z.infer<typeof createUserSchema>>({

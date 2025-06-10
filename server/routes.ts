@@ -162,7 +162,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ticket routes
   app.get("/api/tickets", async (req, res) => {
     try {
-      const tickets = await storage.getTickets();
+      const currentUser = (req as any).session?.user;
+      if (!currentUser) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Use product-based filtering for agents
+      const tickets = await storage.getTicketsForUser(currentUser.id);
       res.json(tickets);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch tickets" });
@@ -316,7 +322,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Change routes
   app.get("/api/changes", async (req, res) => {
     try {
-      const changes = await storage.getChanges();
+      const currentUser = (req as any).session?.user;
+      if (!currentUser) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Use product-based filtering for agents
+      const changes = await storage.getChangesForUser(currentUser.id);
       res.json(changes);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch changes" });
