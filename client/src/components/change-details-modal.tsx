@@ -101,13 +101,14 @@ export function ChangeDetailsModal({
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'submitted': return <Clock className="h-4 w-4" />;
       case 'pending': return <Clock className="h-4 w-4" />;
       case 'approved': return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'rejected': return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'implemented': return <CheckCircle className="h-4 w-4 text-blue-500" />;
+      case 'in-progress': return <Settings className="h-4 w-4 text-blue-500" />;
+      case 'testing': return <AlertTriangle className="h-4 w-4 text-orange-500" />;
       case 'completed': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'rolled-back': return <XCircle className="h-4 w-4 text-orange-500" />;
+      case 'failed': return <XCircle className="h-4 w-4 text-red-600" />;
+      case 'rollback': return <History className="h-4 w-4 text-amber-500" />;
       default: return <Clock className="h-4 w-4" />;
     }
   };

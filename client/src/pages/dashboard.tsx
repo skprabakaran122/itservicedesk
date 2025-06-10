@@ -46,8 +46,14 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       case "rejected":
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "testing":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
       case "completed":
         return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+      case "failed":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "rollback":
+        return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
     }
@@ -79,7 +85,10 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
     total: changes.length,
     pending: changes.filter(c => c.status === "pending").length,
     approved: changes.filter(c => c.status === "approved").length,
+    inProgress: changes.filter(c => c.status === "in-progress").length,
+    testing: changes.filter(c => c.status === "testing").length,
     completed: changes.filter(c => c.status === "completed").length,
+    failed: changes.filter(c => c.status === "failed").length,
   };
 
   if (ticketsLoading || changesLoading) {
@@ -178,6 +187,58 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Change Workflow Status Panel */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Change Management Workflow
+          </CardTitle>
+          <CardDescription>
+            Track changes through the complete ITIL workflow process
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border">
+              <div className="text-2xl font-bold text-yellow-600">{changeStats.pending}</div>
+              <div className="text-sm text-yellow-700 dark:text-yellow-300">Pending</div>
+              <div className="text-xs text-gray-500">Awaiting Approval</div>
+            </div>
+            <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border">
+              <div className="text-2xl font-bold text-green-600">{changeStats.approved}</div>
+              <div className="text-sm text-green-700 dark:text-green-300">Approved</div>
+              <div className="text-xs text-gray-500">Ready for Implementation</div>
+            </div>
+            <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border">
+              <div className="text-2xl font-bold text-blue-600">{changeStats.inProgress}</div>
+              <div className="text-sm text-blue-700 dark:text-blue-300">In Progress</div>
+              <div className="text-xs text-gray-500">Being Implemented</div>
+            </div>
+            <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border">
+              <div className="text-2xl font-bold text-orange-600">{changeStats.testing}</div>
+              <div className="text-sm text-orange-700 dark:text-orange-300">Testing</div>
+              <div className="text-xs text-gray-500">Under Validation</div>
+            </div>
+            <div className="text-center p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border">
+              <div className="text-2xl font-bold text-emerald-600">{changeStats.completed}</div>
+              <div className="text-sm text-emerald-700 dark:text-emerald-300">Completed</div>
+              <div className="text-xs text-gray-500">Successfully Deployed</div>
+            </div>
+            <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border">
+              <div className="text-2xl font-bold text-red-600">{changeStats.failed}</div>
+              <div className="text-sm text-red-700 dark:text-red-300">Failed</div>
+              <div className="text-xs text-gray-500">Needs Attention</div>
+            </div>
+            <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border">
+              <div className="text-2xl font-bold text-amber-600">{changes.filter(c => c.status === "rollback").length}</div>
+              <div className="text-sm text-amber-700 dark:text-amber-300">Rollback</div>
+              <div className="text-xs text-gray-500">Being Reverted</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="tickets" className="space-y-4">
