@@ -193,8 +193,9 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
         </Card>
       </div>
 
-      {/* Change Workflow Status Panel */}
-      <Card className="mb-8">
+      {/* Change Workflow Status Panel - Only for agents, managers, and admins */}
+      {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+        <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -243,7 +244,8 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
             </div>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      )}
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="tickets" className="space-y-4">
