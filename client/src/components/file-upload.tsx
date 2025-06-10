@@ -34,13 +34,7 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
         uploadedBy: 1, // Current user ID
       };
 
-      return await apiRequest("/api/attachments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(attachmentData),
-      });
+      return await apiRequest("POST", "/api/attachments", attachmentData);
     },
     onSuccess: () => {
       toast({
@@ -63,9 +57,7 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/attachments/${id}`, {
-        method: "DELETE",
-      });
+      return await apiRequest("DELETE", `/api/attachments/${id}`);
     },
     onSuccess: () => {
       toast({

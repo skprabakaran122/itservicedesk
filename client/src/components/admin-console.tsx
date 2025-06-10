@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
@@ -45,10 +45,7 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
 
   const createProductMutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
-      return await apiRequest("/api/products", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest("POST", "/api/products", data);
     },
     onSuccess: () => {
       toast({
@@ -70,10 +67,7 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
 
   const updateProductMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<InsertProduct> }) => {
-      return await apiRequest(`/api/products/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest("PATCH", `/api/products/${id}`, data);
     },
     onSuccess: () => {
       toast({
@@ -95,9 +89,7 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
 
   const deleteProductMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/products/${id}`, {
-        method: "DELETE",
-      });
+      return await apiRequest("DELETE", `/api/products/${id}`);
     },
     onSuccess: () => {
       toast({
@@ -252,6 +244,9 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
             <DialogTitle>
               {editingProduct ? "Edit Product" : "Add New Product"}
             </DialogTitle>
+            <DialogDescription>
+              {editingProduct ? "Update the product information below." : "Create a new product for ticket and change categorization."}
+            </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
