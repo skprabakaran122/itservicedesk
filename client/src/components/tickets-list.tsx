@@ -53,7 +53,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
     },
   });
 
-  const sortedTickets = [...tickets].sort((a, b) => 
+  const sortedTickets = [...filteredTickets].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 

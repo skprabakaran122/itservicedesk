@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Ticket not found" });
       }
       
-      const currentUser = req.session.user;
+      const currentUser = (req as any).session?.user;
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
