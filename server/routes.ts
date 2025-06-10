@@ -492,10 +492,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
 
+      console.log('Received attachment data:', {
+        fileName: req.body.fileName,
+        originalName: req.body.originalName,
+        fileSize: req.body.fileSize,
+        mimeType: req.body.mimeType,
+        hasFileContent: !!req.body.fileContent,
+        fileContentLength: req.body.fileContent?.length || 0
+      });
+
       const attachmentData = insertAttachmentSchema.parse({
         ...req.body,
         uploadedBy: currentUser.id
       });
+      
+      console.log('Parsed attachment data:', {
+        ...attachmentData,
+        fileContent: attachmentData.fileContent ? `${attachmentData.fileContent.length} chars` : 'missing'
+      });
+      
       const attachment = await storage.createAttachment(attachmentData);
       res.status(201).json(attachment);
     } catch (error: any) {
