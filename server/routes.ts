@@ -326,6 +326,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SLA metrics routes
+  app.get("/api/sla/metrics", async (req, res) => {
+    try {
+      const metrics = await storage.getSLAMetrics();
+      res.json(metrics);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch SLA metrics" });
+    }
+  });
+
+  app.post("/api/tickets/:id/sla-update", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.updateTicketSLA(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update SLA metrics" });
+    }
+  });
+
   // IT Support chatbot endpoint
   app.post("/api/chat", async (req, res) => {
     try {

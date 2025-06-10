@@ -11,8 +11,9 @@ import { ChangeForm } from "../components/change-form";
 import { TicketsList } from "../components/tickets-list";
 import { ChangesList } from "../components/changes-list";
 import { AdminConsole } from "../components/admin-console";
+import { SLADashboard } from "../components/sla-dashboard";
 import ITChatbot from "../components/it-chatbot";
-import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users } from "lucide-react";
+import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users, Target } from "lucide-react";
 
 interface DashboardProps {
   currentUser: any;
@@ -246,6 +247,10 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
         <TabsList>
           <TabsTrigger value="tickets">Support Tickets</TabsTrigger>
           <TabsTrigger value="changes">Change Requests</TabsTrigger>
+          <TabsTrigger value="sla">
+            <Target className="h-4 w-4 mr-2" />
+            SLA Metrics
+          </TabsTrigger>
           {currentUser?.role === 'admin' && (
             <TabsTrigger value="admin">
               <Settings className="h-4 w-4 mr-2" />

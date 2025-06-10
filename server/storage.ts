@@ -272,11 +272,26 @@ export class DatabaseStorage implements IStorage {
     const existingTicket = await this.getTicket(id);
     if (!existingTicket) return undefined;
 
+    let updatedData = { ...updates };
+
+    // Track first response time
+    if (!existingTicket.firstResponseAt && (updates.status === 'in-progress' || updates.assignedTo)) {
+      updatedData.firstResponseAt = new Date();
+    }
+
+    // Track resolution time
+    if (!existingTicket.resolvedAt && updates.status === 'resolved') {
+      updatedData.resolvedAt = new Date();
+    }
+
     const [updatedTicket] = await db
       .update(tickets)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...updatedData, updatedAt: new Date() })
       .where(eq(tickets.id, id))
       .returning();
+
+    // Update SLA metrics
+    await this.updateTicketSLA(id);
 
     // Create history entries for changes
     for (const [field, newValue] of Object.entries(updates)) {
