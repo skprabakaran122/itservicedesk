@@ -179,14 +179,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (updates.status) {
           const allowedTransitions: Record<string, string[]> = {
             'open': ['closed'],
-            'resolved': ['open'],
-            'closed': ['open']
+            'resolved': ['reopen'],
+            'closed': ['reopen'],
+            'reopen': ['closed']
           };
           
           const allowed = allowedTransitions[ticket.status] || [];
           if (!allowed.includes(updates.status)) {
             return res.status(403).json({ 
-              message: "Invalid status change. You can only reopen resolved tickets or close your own open tickets." 
+              message: "Invalid status change. You can only reopen resolved/closed tickets or close your own open tickets." 
             });
           }
         }
@@ -195,6 +196,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (updates.assignedTo || updates.priority || updates.category) {
           return res.status(403).json({ 
             message: "You cannot modify ticket assignment, priority, or category" 
+          });
+        }
+      } else {
+        // Agents, managers, and admins cannot use "reopen" status
+        // Only the original ticket requester can reopen tickets
+        if (updates.status === 'reopen' && ticket.requesterId !== currentUser.id) {
+          return res.status(403).json({ 
+            message: "Only the original ticket requester can reopen resolved tickets" 
           });
         }
       }

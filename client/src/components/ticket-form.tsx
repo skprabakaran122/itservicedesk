@@ -62,7 +62,7 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
             fileSize: file.size,
             fileType: file.type,
             ticketId: ticket.id,
-            uploadedBy: data.requesterId,
+            uploadedBy: currentUser?.id,
           };
           await apiRequest("POST", "/api/attachments", attachmentData);
         }

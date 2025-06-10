@@ -146,19 +146,24 @@ export function TicketDetailsModal({
   // Get allowed status changes for current user
   const getAllowedStatuses = () => {
     if (currentUser?.role === 'user') {
-      // Regular users can only reopen closed tickets or close their own open tickets
+      // Regular users can only reopen resolved/closed tickets or close their own open tickets
       if (ticket.requesterId === currentUser?.id) {
         if (ticket.status === 'resolved' || ticket.status === 'closed') {
-          return ['open']; // Can reopen
+          return ['reopen']; // Can reopen resolved/closed tickets
         }
-        if (ticket.status === 'open') {
-          return ['closed']; // Can close their own ticket
+        if (ticket.status === 'open' || ticket.status === 'reopen') {
+          return ['closed']; // Can close their own open/reopened tickets
         }
       }
       return []; // No status changes allowed for other cases
     }
-    // Agents, managers, and admins can change to any status
-    return ['open', 'in-progress', 'resolved', 'closed'];
+    // Agents, managers, and admins can change to any status except reopen (unless they're the original requester)
+    const baseStatuses = ['open', 'in-progress', 'resolved', 'closed'];
+    // Only original requesters can use "reopen" status
+    if (ticket.requesterId === currentUser?.id) {
+      baseStatuses.push('reopen');
+    }
+    return baseStatuses;
   };
 
   const handleStatusUpdate = () => {

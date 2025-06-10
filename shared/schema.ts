@@ -6,7 +6,7 @@ export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  status: varchar("status", { length: 20 }).notNull(), // pending, open, in-progress, resolved, closed
+  status: varchar("status", { length: 20 }).notNull(), // pending, open, in-progress, resolved, closed, reopen
   priority: varchar("priority", { length: 20 }).notNull(), // low, medium, high, critical
   category: varchar("category", { length: 50 }).notNull(), // hardware, software, network, access, product
   product: varchar("product", { length: 100 }), // specific product name
