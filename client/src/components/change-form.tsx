@@ -23,19 +23,33 @@ const IST_TIMEZONE = 'Asia/Kolkata';
 const convertUTCToISTForInput = (utcDateString: string | Date | null | undefined): string => {
   if (!utcDateString) return '';
   const utcDate = new Date(utcDateString);
-  // Add IST offset (UTC+5:30) manually
-  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
-  const istTime = new Date(utcDate.getTime() + istOffset);
-  return istTime.toISOString().slice(0, 16);
+  
+  // Convert UTC to IST by adding 5 hours 30 minutes
+  const istDate = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000));
+  
+  // Format as YYYY-MM-DDTHH:MM for datetime-local input
+  const year = istDate.getUTCFullYear();
+  const month = String(istDate.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(istDate.getUTCDate()).padStart(2, '0');
+  const hours = String(istDate.getUTCHours()).padStart(2, '0');
+  const minutes = String(istDate.getUTCMinutes()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const convertISTInputToUTC = (istInputValue: string): string => {
-  // Parse the datetime-local input and subtract IST offset to get UTC
-  const inputDate = new Date(istInputValue);
-  // Subtract IST offset (UTC+5:30) to convert to UTC
-  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
-  const utcTime = new Date(inputDate.getTime() - istOffset);
-  return utcTime.toISOString();
+  // Parse the datetime-local input as IST time
+  const [datePart, timePart] = istInputValue.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes] = timePart.split(':').map(Number);
+  
+  // Create a Date object representing the IST time
+  const istDate = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+  
+  // Subtract IST offset (5 hours 30 minutes) to get UTC
+  const utcDate = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000));
+  
+  return utcDate.toISOString();
 };
 
 const formSchema = insertChangeSchema.extend({
