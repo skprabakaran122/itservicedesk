@@ -183,7 +183,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ticket = await storage.createTicket(ticketData);
       res.status(201).json(ticket);
     } catch (error) {
-      res.status(400).json({ message: "Invalid ticket data" });
+      console.error('Ticket creation error:', error);
+      res.status(400).json({ message: "Invalid ticket data", error: error.message });
     }
   });
 
