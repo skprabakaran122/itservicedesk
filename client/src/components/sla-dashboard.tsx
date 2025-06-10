@@ -20,12 +20,14 @@ interface SLAMetrics {
   };
   averageResponseTime: number;
   averageResolutionTime: number;
-  metricsByPriority: Record<string, {
+  metricsByProduct: Record<string, {
     total: number;
     responseMet: number;
     resolutionMet: number;
     responsePercentage: number;
     resolutionPercentage: number;
+    averageResponseTime: number;
+    averageResolutionTime: number;
   }>;
 }
 
@@ -158,12 +160,11 @@ export function SLADashboard() {
       {/* Priority Breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle>SLA Performance by Priority</CardTitle>
+          <CardTitle>SLA Performance by Product</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {priorityOrder.map((priority) => {
-              const metrics = slaMetrics.metricsByPriority[priority];
+            {Object.entries(slaMetrics.metricsByProduct).map(([product, metrics]) => {
               if (!metrics || metrics.total === 0) return null;
 
               return (

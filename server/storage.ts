@@ -68,7 +68,7 @@ export interface IStorage {
     };
     averageResponseTime: number;
     averageResolutionTime: number;
-    metricsByPriority: Record<string, any>;
+    metricsByProduct: Record<string, any>;
   }>;
   updateTicketSLA(id: number): Promise<void>;
 }
@@ -449,22 +449,62 @@ export class DatabaseStorage implements IStorage {
         }, 0) / resolvedTickets.length
       : 0;
 
-    // Metrics by priority
-    const metricsByPriority = ['critical', 'high', 'medium', 'low'].reduce((acc, priority) => {
-      const priorityTickets = allTickets.filter(t => t.priority === priority);
-      acc[priority] = {
-        total: priorityTickets.length,
-        responseMet: priorityTickets.filter(t => t.slaResponseMet === 'met').length,
-        resolutionMet: priorityTickets.filter(t => t.slaResolutionMet === 'met').length,
-        responsePercentage: priorityTickets.filter(t => t.slaResponseMet !== 'pending').length > 0
-          ? (priorityTickets.filter(t => t.slaResponseMet === 'met').length / priorityTickets.filter(t => t.slaResponseMet !== 'pending').length) * 100
+    // Get all unique products
+    const allProducts = await this.getProducts();
+    const productNames = allProducts.map(p => p.name);
+    
+    // Metrics by product
+    const metricsByProduct = productNames.reduce((acc, productName) => {
+      const productTickets = allTickets.filter(t => t.product === productName);
+      acc[productName] = {
+        total: productTickets.length,
+        responseMet: productTickets.filter(t => t.slaResponseMet === 'met').length,
+        resolutionMet: productTickets.filter(t => t.slaResolutionMet === 'met').length,
+        responsePercentage: productTickets.filter(t => t.slaResponseMet !== 'pending').length > 0
+          ? (productTickets.filter(t => t.slaResponseMet === 'met').length / productTickets.filter(t => t.slaResponseMet !== 'pending').length) * 100
           : 0,
-        resolutionPercentage: priorityTickets.filter(t => t.slaResolutionMet !== 'pending').length > 0
-          ? (priorityTickets.filter(t => t.slaResolutionMet === 'met').length / priorityTickets.filter(t => t.slaResolutionMet !== 'pending').length) * 100
+        resolutionPercentage: productTickets.filter(t => t.slaResolutionMet !== 'pending').length > 0
+          ? (productTickets.filter(t => t.slaResolutionMet === 'met').length / productTickets.filter(t => t.slaResolutionMet !== 'pending').length) * 100
+          : 0,
+        averageResponseTime: productTickets.filter(t => t.firstResponseAt).length > 0
+          ? productTickets
+              .filter(t => t.firstResponseAt)
+              .reduce((sum, t) => sum + ((new Date(t.firstResponseAt!).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60)), 0) / productTickets.filter(t => t.firstResponseAt).length
+          : 0,
+        averageResolutionTime: productTickets.filter(t => t.resolvedAt).length > 0
+          ? productTickets
+              .filter(t => t.resolvedAt)
+              .reduce((sum, t) => sum + ((new Date(t.resolvedAt!).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60)), 0) / productTickets.filter(t => t.resolvedAt).length
           : 0
       };
       return acc;
     }, {} as Record<string, any>);
+
+    // Add tickets without products as "Unassigned"
+    const unassignedTickets = allTickets.filter(t => !t.product);
+    if (unassignedTickets.length > 0) {
+      metricsByProduct['Unassigned'] = {
+        total: unassignedTickets.length,
+        responseMet: unassignedTickets.filter(t => t.slaResponseMet === 'met').length,
+        resolutionMet: unassignedTickets.filter(t => t.slaResolutionMet === 'met').length,
+        responsePercentage: unassignedTickets.filter(t => t.slaResponseMet !== 'pending').length > 0
+          ? (unassignedTickets.filter(t => t.slaResponseMet === 'met').length / unassignedTickets.filter(t => t.slaResponseMet !== 'pending').length) * 100
+          : 0,
+        resolutionPercentage: unassignedTickets.filter(t => t.slaResolutionMet !== 'pending').length > 0
+          ? (unassignedTickets.filter(t => t.slaResolutionMet === 'met').length / unassignedTickets.filter(t => t.slaResolutionMet !== 'pending').length) * 100
+          : 0,
+        averageResponseTime: unassignedTickets.filter(t => t.firstResponseAt).length > 0
+          ? unassignedTickets
+              .filter(t => t.firstResponseAt)
+              .reduce((sum, t) => sum + ((new Date(t.firstResponseAt!).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60)), 0) / unassignedTickets.filter(t => t.firstResponseAt).length
+          : 0,
+        averageResolutionTime: unassignedTickets.filter(t => t.resolvedAt).length > 0
+          ? unassignedTickets
+              .filter(t => t.resolvedAt)
+              .reduce((sum, t) => sum + ((new Date(t.resolvedAt!).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60)), 0) / unassignedTickets.filter(t => t.resolvedAt).length
+          : 0
+      };
+    }
 
     return {
       totalTickets: allTickets.length,
@@ -472,7 +512,7 @@ export class DatabaseStorage implements IStorage {
       resolutionMetrics,
       averageResponseTime,
       averageResolutionTime,
-      metricsByPriority
+      metricsByProduct
     };
   }
 
