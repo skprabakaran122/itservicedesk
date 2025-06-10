@@ -339,7 +339,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/changes", async (req, res) => {
     try {
       console.log('Change creation request body:', req.body);
-      const changeData = insertChangeSchema.parse(req.body);
+      
+      // Transform date strings to Date objects
+      const transformedData = {
+        ...req.body,
+        plannedDate: req.body.plannedDate ? new Date(req.body.plannedDate) : null,
+        completedDate: req.body.completedDate ? new Date(req.body.completedDate) : null,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : null,
+      };
+      
+      const changeData = insertChangeSchema.parse(transformedData);
       
       // Create the change request
       const change = await storage.createChange(changeData);
