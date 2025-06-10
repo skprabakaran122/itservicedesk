@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Change } from "@shared/schema";
 import { Clock, User, AlertTriangle, Calendar, Eye, Package } from "lucide-react";
-import { format } from "date-fns";
+import { formatDateIST } from "@/lib/utils";
 import { ChangeDetailsModal } from "./change-details-modal";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -115,24 +115,24 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
               )}
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <Clock className="h-4 w-4" />
-                <span>{format(new Date(change.createdAt), 'MMM dd, yyyy HH:mm')}</span>
+                <span>{formatDateIST(change.createdAt, 'MMM dd, yyyy HH:mm')}</span>
               </div>
               {change.plannedDate && (
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Calendar className="h-4 w-4" />
-                  <span>Planned: {format(new Date(change.plannedDate), 'MMM dd, yyyy')}</span>
+                  <span>Planned: {formatDateIST(change.plannedDate, 'MMM dd, yyyy')}</span>
                 </div>
               )}
               {change.startDate && (
                 <div className="flex items-center gap-2 text-sm text-green-600">
                   <Calendar className="h-4 w-4" />
-                  <span>Start: {format(new Date(change.startDate), 'MMM dd, yyyy HH:mm')}</span>
+                  <span>Start: {formatDateIST(change.startDate, 'MMM dd, yyyy HH:mm')}</span>
                 </div>
               )}
               {change.endDate && (
                 <div className="flex items-center gap-2 text-sm text-red-600">
                   <Calendar className="h-4 w-4" />
-                  <span>End: {format(new Date(change.endDate), 'MMM dd, yyyy HH:mm')}</span>
+                  <span>End: {formatDateIST(change.endDate, 'MMM dd, yyyy HH:mm')}</span>
                 </div>
               )}
             </div>
@@ -161,10 +161,10 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
 
             <div className="flex justify-between items-center">
               <div className="text-xs text-gray-500 dark:text-gray-500">
-                Last updated: {change.updatedAt ? format(new Date(change.updatedAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
+                Last updated: {change.updatedAt ? formatDateIST(change.updatedAt, 'MMM dd, yyyy HH:mm') : 'N/A'}
                 {change.completedDate && (
                   <span className="ml-2">
-                    • Completed: {change.completedDate ? format(new Date(change.completedDate), 'MMM dd, yyyy') : 'N/A'}
+                    • Completed: {change.completedDate ? formatDateIST(change.completedDate, 'MMM dd, yyyy') : 'N/A'}
                   </span>
                 )}
               </div>

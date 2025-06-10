@@ -424,7 +424,7 @@ export function ChangeDetailsModal({
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-sm font-medium">{getUserName(entry.userId)}</span>
                               <span className="text-xs text-gray-500">
-                                {entry.timestamp ? format(new Date(entry.timestamp), 'MMM dd, HH:mm') : 'N/A'}
+                                {entry.timestamp ? formatDateIST(entry.timestamp, 'MMM dd, HH:mm') : 'N/A'}
                               </span>
                             </div>
                             <p className="text-sm text-gray-700 dark:text-gray-300">
