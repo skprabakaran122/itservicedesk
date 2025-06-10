@@ -23,22 +23,19 @@ const IST_TIMEZONE = 'Asia/Kolkata';
 const convertUTCToISTForInput = (utcDateString: string | Date | null | undefined): string => {
   if (!utcDateString) return '';
   const utcDate = new Date(utcDateString);
-  const istDate = toZonedTime(utcDate, IST_TIMEZONE);
-  // Format for datetime-local input (YYYY-MM-DDTHH:mm)
-  const year = istDate.getFullYear();
-  const month = String(istDate.getMonth() + 1).padStart(2, '0');
-  const day = String(istDate.getDate()).padStart(2, '0');
-  const hours = String(istDate.getHours()).padStart(2, '0');
-  const minutes = String(istDate.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  // Add IST offset (UTC+5:30) manually
+  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+  const istTime = new Date(utcDate.getTime() + istOffset);
+  return istTime.toISOString().slice(0, 16);
 };
 
 const convertISTInputToUTC = (istInputValue: string): string => {
-  // Parse the datetime-local input as if it's in IST
+  // Parse the datetime-local input and subtract IST offset to get UTC
   const inputDate = new Date(istInputValue);
-  // Treat this as IST time and convert to UTC
-  const utcDate = fromZonedTime(inputDate, IST_TIMEZONE);
-  return utcDate.toISOString();
+  // Subtract IST offset (UTC+5:30) to convert to UTC
+  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+  const utcTime = new Date(inputDate.getTime() - istOffset);
+  return utcTime.toISOString();
 };
 
 const formSchema = insertChangeSchema.extend({
