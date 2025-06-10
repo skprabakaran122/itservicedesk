@@ -567,6 +567,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/sla/refresh", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      
+      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'manager')) {
+        return res.status(403).json({ message: "Access denied. Admin or Manager role required." });
+      }
+      
+      await storage.refreshSLAMetrics();
+      res.json({ message: "SLA metrics refreshed successfully" });
+    } catch (error) {
+      console.error("Error refreshing SLA metrics:", error);
+      res.status(500).json({ message: "Failed to refresh SLA metrics" });
+    }
+  });
+
   // Approval routing endpoints
   app.get("/api/approval-routing", async (req, res) => {
     try {

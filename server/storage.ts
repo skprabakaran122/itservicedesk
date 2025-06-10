@@ -98,6 +98,7 @@ export interface IStorage {
     }>;
   }>;
   updateTicketSLA(id: number): Promise<void>;
+  refreshSLAMetrics(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -614,6 +615,41 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(tickets.id, id));
+  }
+
+  async refreshSLAMetrics(): Promise<void> {
+    console.log('[SLA] Starting monthly SLA metrics refresh...');
+    
+    // Get all tickets that need SLA recalculation
+    const allTickets = await db.select().from(tickets);
+    
+    for (const ticket of allTickets) {
+      const slaTargets = this.getSLATargets(ticket.priority);
+      
+      const slaResponseMet = this.calculateSLAStatus(
+        new Date(ticket.createdAt),
+        slaTargets.response,
+        ticket.firstResponseAt ? new Date(ticket.firstResponseAt) : undefined
+      );
+
+      const slaResolutionMet = this.calculateSLAStatus(
+        new Date(ticket.createdAt),
+        slaTargets.resolution,
+        ticket.resolvedAt ? new Date(ticket.resolvedAt) : undefined
+      );
+
+      await db.update(tickets)
+        .set({
+          slaTargetResponse: slaTargets.response,
+          slaTargetResolution: slaTargets.resolution,
+          slaResponseMet,
+          slaResolutionMet,
+          updatedAt: new Date()
+        })
+        .where(eq(tickets.id, ticket.id));
+    }
+    
+    console.log(`[SLA] Refreshed SLA metrics for ${allTickets.length} tickets`);
   }
 
   // Approval routing methods

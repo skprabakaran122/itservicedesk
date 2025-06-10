@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json({ limit: '50mb' })); // Increase JSON payload limit for file uploads
@@ -36,6 +37,30 @@ app.use((req, res, next) => {
   next();
 });
 
+// Monthly SLA Metrics Refresh Scheduler
+function startSLAScheduler() {
+  const scheduleNextRefresh = () => {
+    const now = new Date();
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0);
+    const timeUntilNextMonth = nextMonth.getTime() - now.getTime();
+    
+    log(`[SLA] Next SLA refresh scheduled for ${nextMonth.toISOString()}`);
+    
+    setTimeout(async () => {
+      try {
+        await storage.refreshSLAMetrics();
+        log('[SLA] Monthly SLA metrics refresh completed');
+      } catch (error) {
+        log(`[SLA] Error during monthly refresh: ${error}`);
+      }
+      // Schedule the next refresh
+      scheduleNextRefresh();
+    }, timeUntilNextMonth);
+  };
+  
+  scheduleNextRefresh();
+}
+
 (async () => {
   const server = await registerRoutes(app);
 
@@ -66,5 +91,8 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Start the monthly SLA scheduler
+    startSLAScheduler();
   });
 })();
