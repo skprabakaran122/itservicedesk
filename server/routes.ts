@@ -16,11 +16,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }),
     secret: process.env.SESSION_SECRET || 'your-secret-key-here',
     resave: false,
-    saveUninitialized: false,
-    name: 'sessionId', // Custom session name
+    saveUninitialized: true, // Create session for unauthenticated users
+    name: 'connect.sid', // Standard session name
     cookie: {
       secure: false, // Set to true in production with HTTPS
-      httpOnly: false, // Allow client-side access for debugging
+      httpOnly: true, // Secure cookies
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       sameSite: 'lax'
     }
@@ -73,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (err) {
           return res.status(500).json({ message: "Logout failed" });
         }
-        res.clearCookie('sessionId');
+        res.clearCookie('connect.sid');
         res.json({ message: "Logged out successfully" });
       });
     } catch (error) {
