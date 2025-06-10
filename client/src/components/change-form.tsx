@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertChangeSchema } from "@shared/schema";
@@ -291,20 +292,17 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="approvedBy"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Approved By (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Manager/Approver name" {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">Automatic Approval Routing</span>
+                </div>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  The approver will be automatically assigned based on the selected product and risk level configuration.
+                </p>
+              </div>
+              
               <FormField
                 control={form.control}
                 name="implementedBy"
