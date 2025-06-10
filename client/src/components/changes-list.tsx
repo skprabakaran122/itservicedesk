@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Change } from "@shared/schema";
-import { Clock, User, AlertTriangle, Calendar, Eye } from "lucide-react";
+import { Clock, User, AlertTriangle, Calendar, Eye, Package } from "lucide-react";
 import { format } from "date-fns";
 import { ChangeDetailsModal } from "./change-details-modal";
 import { useState } from "react";
@@ -107,6 +107,12 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                 <AlertTriangle className="h-4 w-4" />
                 <span className="capitalize">{change.category}</span>
               </div>
+              {change.product && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Package className="h-4 w-4" />
+                  <span>{change.product}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <Clock className="h-4 w-4" />
                 <span>{format(new Date(change.createdAt), 'MMM dd, yyyy HH:mm')}</span>

@@ -221,6 +221,12 @@ export function ChangeDetailsModal({
                     <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Category</h4>
                     <p className="capitalize">{change.category}</p>
                   </div>
+                  {change.product && (
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Product</h4>
+                      <p>{change.product}</p>
+                    </div>
+                  )}
                   <div>
                     <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Risk Level</h4>
                     <div className="flex items-center gap-2">
