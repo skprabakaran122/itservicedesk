@@ -386,7 +386,7 @@ export function ChangeDetailsModal({
                               </span>
                             </div>
                             <p className="text-sm text-gray-700 dark:text-gray-300">
-                              {getActionDescription(entry.action, entry.field)}
+                              {getActionDescription(entry.action)}
                               {entry.previousStatus && entry.newStatus && (
                                 <span className="text-xs block text-gray-500 mt-1">
                                   {entry.previousStatus} → {entry.newStatus}

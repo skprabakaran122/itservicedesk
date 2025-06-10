@@ -296,7 +296,7 @@ export function TicketDetailsModal({
                               </span>
                             </div>
                             <p className="text-sm text-gray-700 dark:text-gray-300">
-                              {getActionDescription(entry.action, entry.field)}
+                              {getActionDescription(entry.action || '', entry.field || undefined)}
                               {entry.oldValue && entry.newValue && (
                                 <span className="text-xs block text-gray-500 mt-1">
                                   {entry.oldValue} → {entry.newValue}

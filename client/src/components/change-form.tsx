@@ -274,7 +274,7 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
                   <FormItem>
                     <FormLabel>Approved By (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Manager/Approver name" {...field} />
+                      <Input placeholder="Manager/Approver name" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -287,7 +287,7 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
                   <FormItem>
                     <FormLabel>Implemented By (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Technician name" {...field} />
+                      <Input placeholder="Technician name" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

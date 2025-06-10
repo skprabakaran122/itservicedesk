@@ -177,7 +177,7 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
                   <FormItem>
                     <FormLabel>Assign To (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Agent name" {...field} />
+                      <Input placeholder="Agent name" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

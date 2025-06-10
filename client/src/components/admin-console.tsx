@@ -303,6 +303,7 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
                         placeholder="Enter product description"
                         className="min-h-[80px]"
                         {...field}
+                        value={field.value || ''}
                       />
                     </FormControl>
                     <FormMessage />
