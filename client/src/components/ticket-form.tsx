@@ -16,6 +16,7 @@ import { insertTicketSchema } from "@shared/schema";
 const formSchema = insertTicketSchema.extend({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
+  product: z.string().min(1, "Product is required"),
   requesterId: z.number().min(1, "Please select a requester"),
 });
 
