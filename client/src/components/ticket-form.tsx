@@ -209,13 +209,23 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                disabled={createTicketMutation.isPending}
-                className="bg-primary hover:bg-primary/90"
-              >
-                {createTicketMutation.isPending ? "Creating..." : "Create Ticket"}
-              </Button>
+              {!createdTicketId ? (
+                <Button 
+                  type="submit" 
+                  disabled={createTicketMutation.isPending}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  {createTicketMutation.isPending ? "Creating..." : "Create Ticket"}
+                </Button>
+              ) : (
+                <Button 
+                  type="button" 
+                  onClick={onClose}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Done
+                </Button>
+              )}
             </div>
           </form>
         </Form>

@@ -52,13 +52,13 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
       const response = await apiRequest("POST", "/api/changes", data);
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (change) => {
+      setCreatedChangeId(change.id);
       toast({
         title: "Success",
         description: "Change request created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/changes"] });
-      onClose();
     },
     onError: () => {
       toast({
@@ -230,6 +230,18 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
               )}
             />
 
+            {createdChangeId && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Attachments</label>
+                <FileUpload 
+                  changeId={createdChangeId}
+                  onAttachmentAdded={() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/attachments"] });
+                  }}
+                />
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -263,13 +275,23 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                disabled={createChangeMutation.isPending}
-                className="bg-primary hover:bg-primary/90"
-              >
-                {createChangeMutation.isPending ? "Creating..." : "Submit Change Request"}
-              </Button>
+              {!createdChangeId ? (
+                <Button 
+                  type="submit" 
+                  disabled={createChangeMutation.isPending}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  {createChangeMutation.isPending ? "Creating..." : "Submit Change Request"}
+                </Button>
+              ) : (
+                <Button 
+                  type="button" 
+                  onClick={onClose}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Done
+                </Button>
+              )}
             </div>
           </form>
         </Form>
