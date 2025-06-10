@@ -45,6 +45,15 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
         changeId,
       };
 
+      console.log('Frontend sending attachment data:', {
+        fileName: attachmentData.fileName,
+        originalName: attachmentData.originalName,
+        fileSize: attachmentData.fileSize,
+        mimeType: attachmentData.mimeType,
+        hasFileContent: !!attachmentData.fileContent,
+        fileContentLength: attachmentData.fileContent?.length || 0
+      });
+
       return await apiRequest("POST", "/api/attachments", attachmentData);
     },
     onSuccess: () => {
