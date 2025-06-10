@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertTicketSchema } from "@shared/schema";
 import { ProductSelect } from "@/components/product-select";
+import { FileUpload } from "@/components/file-upload";
 
 const formSchema = insertTicketSchema.extend({
   title: z.string().min(1, "Title is required"),
@@ -29,6 +30,7 @@ interface TicketFormProps {
 export function TicketForm({ onClose, currentUser }: TicketFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [createdTicketId, setCreatedTicketId] = useState<number | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,13 +51,13 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
       const response = await apiRequest("POST", "/api/tickets", data);
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (ticket) => {
+      setCreatedTicketId(ticket.id);
       toast({
         title: "Success",
         description: "Support ticket created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
-      onClose();
     },
     onError: () => {
       toast({
@@ -168,9 +170,9 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
             <ProductSelect 
               control={form.control}
               name="product"
-              label="Product (Optional)"
+              label="Product"
               placeholder="Select affected product"
-              required={false}
+              required={true}
             />
 
             <FormField
@@ -190,6 +192,18 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
                 </FormItem>
               )}
             />
+
+            {createdTicketId && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Attachments</label>
+                <FileUpload 
+                  ticketId={createdTicketId}
+                  onAttachmentAdded={() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/attachments"] });
+                  }}
+                />
+              </div>
+            )}
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={onClose}>

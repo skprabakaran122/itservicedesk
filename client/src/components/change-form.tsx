@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertChangeSchema } from "@shared/schema";
 import { ProductSelect } from "@/components/product-select";
+import { FileUpload } from "@/components/file-upload";
 
 const formSchema = insertChangeSchema.extend({
   title: z.string().min(1, "Title is required"),
@@ -28,6 +29,7 @@ interface ChangeFormProps {
 export function ChangeForm({ onClose }: ChangeFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [createdChangeId, setCreatedChangeId] = useState<number | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -187,9 +189,9 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
             <ProductSelect 
               control={form.control}
               name="product"
-              label="Product (Optional)"
+              label="Product"
               placeholder="Select affected product"
-              required={false}
+              required={true}
             />
 
             <FormField
