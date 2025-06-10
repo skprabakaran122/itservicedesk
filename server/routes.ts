@@ -3,8 +3,26 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertTicketSchema, insertChangeSchema, insertProductSchema, insertAttachmentSchema } from "@shared/schema";
+import session from "express-session";
+import MemoryStore from "memorystore";
+
+const MemoryStoreSession = MemoryStore(session);
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Session middleware
+  app.use(session({
+    store: new MemoryStoreSession({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    }),
+    secret: process.env.SESSION_SECRET || 'your-secret-key-here',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
@@ -14,6 +32,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user || user.password !== password) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
+      
+      // Store user in session
+      (req as any).session.user = user;
       
       const { password: _, ...userWithoutPassword } = user;
       res.json({ user: userWithoutPassword });
@@ -41,6 +62,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json({ user: userWithoutPassword });
     } catch (error) {
       res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    try {
+      (req as any).session.destroy((err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Logout failed" });
+        }
+        res.clearCookie('connect.sid');
+        res.json({ message: "Logged out successfully" });
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Logout failed" });
     }
   });
 
