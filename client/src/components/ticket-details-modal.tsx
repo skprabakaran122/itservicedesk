@@ -154,373 +154,335 @@ export function TicketDetailsModal({
     return user ? user.name : `User ${userId}`;
   };
 
-  const getActionDescription = (action: string, field?: string) => {
-    if (!action) return 'Unknown action';
-    
-    const actionMap: Record<string, string> = {
-      'created': 'created ticket',
-      'updated_status': 'changed status',
-      'updated_priority': 'changed priority',
-      'updated_assignedTo': 'changed assignee',
-      'updated_category': 'changed category',
-      'updated_title': 'updated title',
-      'updated_description': 'updated description',
-      'comment_added': 'added comment',
-      'assigned': 'assigned ticket',
-      'status_changed': 'changed status'
-    };
-
-    return actionMap[action] || action.replace(/_/g, ' ').replace('updated ', 'updated ');
+  const canUserReopenTicket = () => {
+    return currentUser?.id === ticket.requesterId && 
+           (ticket.status === 'resolved' || ticket.status === 'closed');
   };
 
-  // Check if user can modify ticket
-  const canModifyTicket = () => {
-    // Regular users can only modify their own tickets and only certain actions
+  const canUserModifyTicket = () => {
     if (currentUser?.role === 'user') {
-      return ticket.requesterId === currentUser?.id;
+      return currentUser?.id === ticket.requesterId;
     }
-    // Agents, managers, and admins can modify any ticket
-    return ['agent', 'manager', 'admin'].includes(currentUser?.role);
-  };
-
-  // Get allowed status changes for current user
-  const getAllowedStatuses = () => {
-    if (currentUser?.role === 'user') {
-      // Regular users can only reopen resolved/closed tickets or close their own open tickets
-      if (ticket.requesterId === currentUser?.id) {
-        if (ticket.status === 'resolved' || ticket.status === 'closed') {
-          return ['reopen']; // Can reopen resolved/closed tickets
-        }
-        if (ticket.status === 'open' || ticket.status === 'reopen') {
-          return ['closed']; // Can close their own open/reopened tickets
-        }
-      }
-      return []; // No status changes allowed for other cases
-    }
-    // Agents, managers, and admins can change to any status except reopen (unless they're the original requester)
-    const baseStatuses = ['open', 'in-progress', 'resolved', 'closed'];
-    // Only original requesters can use "reopen" status
-    if (ticket.requesterId === currentUser?.id) {
-      baseStatuses.push('reopen');
-    }
-    return baseStatuses;
+    return true; // agents, managers, admins can modify any ticket
   };
 
   const handleStatusUpdate = () => {
-    if (newStatus !== ticket.status) {
-      // Check if user has permission to change status
-      if (!canModifyTicket() || !getAllowedStatuses().includes(newStatus)) {
-        toast({
-          title: "Permission Denied",
-          description: "You don't have permission to make this change",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Require notes when changing status to resolved
-      if (newStatus === 'resolved' && !notes.trim()) {
-        toast({
-          title: "Notes Required",
-          description: "Please provide notes when resolving a ticket",
-          variant: "destructive",
-        });
-        return;
-      }
-      updateTicketMutation.mutate({ status: newStatus, notes });
+    if (newStatus === 'resolved' && !notes.trim()) {
+      toast({
+        title: "Error",
+        description: "Notes are required when resolving a ticket",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    updateTicketMutation.mutate({ status: newStatus, notes: notes.trim() || undefined });
   };
 
   const handleAddComment = () => {
-    if (notes.trim()) {
-      addCommentMutation.mutate(notes);
+    if (!notes.trim()) return;
+    addCommentMutation.mutate(notes.trim());
+  };
+
+  const getActionDescription = (action: string, field?: string) => {
+    switch (action) {
+      case 'created':
+        return 'Ticket created';
+      case 'updated':
+        return `Updated ${field || 'ticket'}`;
+      case 'status_changed':
+        return 'Status changed';
+      case 'comment':
+        return 'Added comment';
+      default:
+        return action;
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            Ticket #{ticket.id} - {ticket.title}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                {ticket.status.toUpperCase()}
+              </div>
+              <span>#{ticket.id} - {ticket.title}</span>
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Ticket Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Ticket Information</span>
-                  <div className="flex gap-2">
-                    <Badge className={getPriorityColor(ticket.priority)}>
-                      {ticket.priority.toUpperCase()}
-                    </Badge>
-                    <Badge variant="secondary" className={getStatusColor(ticket.status)}>
-                      {ticket.status.replace('-', ' ').toUpperCase()}
-                    </Badge>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-2">Description</h4>
-                  <p className="text-gray-900 dark:text-white">{ticket.description}</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Category</h4>
-                    <p className="capitalize">{ticket.category}</p>
-                  </div>
-                  {ticket.product && (
-                    <div>
-                      <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Product</h4>
-                      <p>{ticket.product}</p>
-                    </div>
-                  )}
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Requester</h4>
-                    <p>{getRequesterName(ticket.requesterId)}</p>
-                    <p className="text-sm text-gray-500">{getRequesterEmail(ticket.requesterId)}</p>
-                  </div>
-                  {ticket.assignedTo && (
-                    <div>
-                      <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Assigned To</h4>
-                      <p>{ticket.assignedTo}</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Created</h4>
-                    <p className="text-sm">
-                      {ticket.createdAt ? format(new Date(ticket.createdAt), 'PPP p') : 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Last Updated</h4>
-                    <p className="text-sm">
-                      {ticket.updatedAt ? format(new Date(ticket.updatedAt), 'PPP p') : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* SLA Information */}
-                {(ticket.slaTargetResponse || ticket.slaTargetResolution) && (
-                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-3">SLA Status</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {ticket.slaTargetResponse && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Response Time</span>
-                            <Badge variant={ticket.slaResponseMet === 'met' ? 'default' : ticket.slaResponseMet === 'breached' ? 'destructive' : 'secondary'}>
-                              {ticket.slaResponseMet === 'met' ? 'Met' : ticket.slaResponseMet === 'breached' ? 'Breached' : 'Pending'}
-                            </Badge>
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Target: {Math.floor(ticket.slaTargetResponse / 60)}h {ticket.slaTargetResponse % 60}m
-                            {ticket.firstResponseAt && (
-                              <span className="block">
-                                Responded: {format(new Date(ticket.firstResponseAt), 'MMM dd, HH:mm')}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {ticket.slaTargetResolution && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Resolution Time</span>
-                            <Badge variant={ticket.slaResolutionMet === 'met' ? 'default' : ticket.slaResolutionMet === 'breached' ? 'destructive' : 'secondary'}>
-                              {ticket.slaResolutionMet === 'met' ? 'Met' : ticket.slaResolutionMet === 'breached' ? 'Breached' : 'Pending'}
-                            </Badge>
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Target: {Math.floor(ticket.slaTargetResolution / 60)}h {ticket.slaTargetResolution % 60}m
-                            {ticket.resolvedAt && (
-                              <span className="block">
-                                Resolved: {format(new Date(ticket.resolvedAt), 'MMM dd, HH:mm')}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Update Status */}
-            {(canModifyTicket() && getAllowedStatuses().length > 0) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    {currentUser?.role === 'user' ? 'Update Your Ticket' : 'Update Ticket'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Status</label>
-                    <Select value={newStatus} onValueChange={setNewStatus}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={ticket.status}>{ticket.status.replace('-', ' ').toUpperCase()} (Current)</SelectItem>
-                        {getAllowedStatuses().filter(status => status !== ticket.status).map(status => (
-                          <SelectItem key={status} value={status}>
-                            {status.replace('-', ' ').toUpperCase()}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Notes {newStatus === 'resolved' ? '(Required)' : '(Optional)'}
-                    {newStatus === 'resolved' && <span className="text-red-500 ml-1">*</span>}
-                  </label>
-                  <Textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder={newStatus === 'resolved' ? "Describe how the issue was resolved..." : "Add notes about this update..."}
-                    className={`min-h-[100px] ${newStatus === 'resolved' && !notes.trim() ? 'border-red-300 focus:border-red-500' : ''}`}
-                  />
-                  {newStatus === 'resolved' && !notes.trim() && (
-                    <p className="text-sm text-red-500 mt-1">Notes are required when resolving a ticket</p>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleStatusUpdate}
-                    disabled={updateTicketMutation.isPending || newStatus === ticket.status}
-                  >
-                    {updateTicketMutation.isPending ? "Updating..." : "Update Status"}
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={handleAddComment}
-                    disabled={addCommentMutation.isPending || !notes.trim()}
-                  >
-                    {addCommentMutation.isPending ? "Adding..." : "Add Comment"}
-                  </Button>
-                </div>
-              </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* History Sidebar */}
-          <div className="space-y-6">
-            {/* Attachments Section */}
-            {attachments.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Ticket Details */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Attachments ({attachments.length})
+                    <AlertCircle className="h-4 w-4" />
+                    Ticket Details
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {attachments.map((attachment: any) => (
-                      <div
-                        key={attachment.id}
-                        className="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800"
-                      >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <Package className="h-4 w-4 text-gray-500" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{attachment.originalName}</p>
-                            <p className="text-xs text-gray-500">
-                              {Math.round(attachment.fileSize / 1024)} KB • {attachment.mimeType}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-1 ml-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleViewAttachment(attachment)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDownloadAttachment(attachment.id, attachment.originalName)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Download className="h-3 w-3" />
-                          </Button>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Priority</label>
+                      <div className={`inline-flex px-2 py-1 rounded text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
+                        {ticket.priority.toUpperCase()}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Category</label>
+                      <p className="text-sm">{ticket.category}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Requester</label>
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium">{getRequesterName(ticket.requesterId)}</p>
+                          <p className="text-xs text-gray-500">{getRequesterEmail(ticket.requesterId)}</p>
                         </div>
                       </div>
-                    ))}
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Created</label>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-gray-400" />
+                        <p className="text-sm">{format(new Date(ticket.createdAt), 'MMM dd, yyyy HH:mm')}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Description</label>
+                    <p className="text-sm mt-1 whitespace-pre-wrap">{ticket.description}</p>
                   </div>
                 </CardContent>
               </Card>
-            )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="h-4 w-4" />
-                  Activity History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {history.length === 0 ? (
-                    <p className="text-sm text-gray-500">No activity yet</p>
-                  ) : (
-                    history.map((entry, index) => (
-                      <div key={entry.id} className="relative">
-                        {index < history.length - 1 && (
-                          <div className="absolute left-2 top-8 bottom-0 w-px bg-gray-200 dark:bg-gray-700" />
-                        )}
-                        <div className="flex gap-3">
-                          <div className="w-4 h-4 rounded-full bg-primary flex-shrink-0 mt-1" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-medium">{getUserName(entry.userId)}</span>
-                              <span className="text-xs text-gray-500">
-                                {entry.timestamp ? format(new Date(entry.timestamp), 'MMM dd, HH:mm') : 'N/A'}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                              {getActionDescription(entry.action || '', entry.field || undefined)}
-                              {entry.oldValue && entry.newValue && (
-                                <span className="text-xs block text-gray-500 mt-1">
-                                  {entry.oldValue} → {entry.newValue}
-                                </span>
+              {/* Status Management - Only show if user can modify ticket */}
+              {canUserModifyTicket() && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Update Ticket
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Status
+                      </label>
+                      <Select value={newStatus} onValueChange={setNewStatus}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currentUser?.role === 'user' ? (
+                            <>
+                              {ticket.status === 'open' && (
+                                <SelectItem value="closed">Closed</SelectItem>
                               )}
-                            </p>
-                            {entry.notes && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 italic">
-                                "{entry.notes}"
+                              {canUserReopenTicket() && (
+                                <SelectItem value="reopen">Reopen</SelectItem>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="open">Open</SelectItem>
+                              <SelectItem value="in_progress">In Progress</SelectItem>
+                              <SelectItem value="resolved">Resolved</SelectItem>
+                              <SelectItem value="closed">Closed</SelectItem>
+                              <SelectItem value="reopen">Reopen</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Notes {newStatus === 'resolved' ? '(Required)' : '(Optional)'}
+                      {newStatus === 'resolved' && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                    <Textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder={newStatus === 'resolved' ? "Describe how the issue was resolved..." : "Add notes about this update..."}
+                      className={`min-h-[100px] ${newStatus === 'resolved' && !notes.trim() ? 'border-red-300 focus:border-red-500' : ''}`}
+                    />
+                    {newStatus === 'resolved' && !notes.trim() && (
+                      <p className="text-sm text-red-500 mt-1">Notes are required when resolving a ticket</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleStatusUpdate}
+                      disabled={updateTicketMutation.isPending || newStatus === ticket.status}
+                    >
+                      {updateTicketMutation.isPending ? "Updating..." : "Update Status"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handleAddComment}
+                      disabled={addCommentMutation.isPending || !notes.trim()}
+                    >
+                      {addCommentMutation.isPending ? "Adding..." : "Add Comment"}
+                    </Button>
+                  </div>
+                </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* History Sidebar */}
+            <div className="space-y-6">
+              {/* Attachments Section */}
+              {attachments.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Attachments ({attachments.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {attachments.map((attachment: any) => (
+                        <div
+                          key={attachment.id}
+                          className="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800"
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Package className="h-4 w-4 text-gray-500" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{attachment.originalName}</p>
+                              <p className="text-xs text-gray-500">
+                                {Math.round(attachment.fileSize / 1024)} KB • {attachment.mimeType}
                               </p>
-                            )}
+                            </div>
+                          </div>
+                          <div className="flex gap-1 ml-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewAttachment(attachment)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDownloadAttachment(attachment.id, attachment.originalName)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Download className="h-3 w-3" />
+                            </Button>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <History className="h-4 w-4" />
+                    Activity History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {history.length === 0 ? (
+                      <p className="text-sm text-gray-500">No activity yet</p>
+                    ) : (
+                      history.map((entry, index) => (
+                        <div key={entry.id} className="relative">
+                          {index < history.length - 1 && (
+                            <div className="absolute left-2 top-8 bottom-0 w-px bg-gray-200 dark:bg-gray-700" />
+                          )}
+                          <div className="flex gap-3">
+                            <div className="w-4 h-4 rounded-full bg-primary flex-shrink-0 mt-1" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium">{getUserName(entry.userId)}</span>
+                                <span className="text-xs text-gray-500">
+                                  {entry.timestamp ? format(new Date(entry.timestamp), 'MMM dd, HH:mm') : 'N/A'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-700 dark:text-gray-300">
+                                {getActionDescription(entry.action || '', entry.field || undefined)}
+                                {entry.oldValue && entry.newValue && (
+                                  <span className="text-xs block text-gray-500 mt-1">
+                                    {entry.oldValue} → {entry.newValue}
+                                  </span>
+                                )}
+                              </p>
+                              {entry.notes && (
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 italic">
+                                  "{entry.notes}"
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* Attachment Preview Modal */}
+      {previewAttachment && (
+        <Dialog open={!!previewAttachment} onOpenChange={() => setPreviewAttachment(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                {previewAttachment.originalName}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              <div className="w-full h-[600px] border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                <div className="text-center">
+                  <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {previewAttachment.mimeType === 'application/pdf' ? 'PDF Document' : 
+                     previewAttachment.mimeType.startsWith('image/') ? 'Image File' : 'Document'}
+                  </p>
+                  <p className="text-sm text-gray-500 mb-2">{previewAttachment.originalName}</p>
+                  <p className="text-xs text-gray-400 mb-4">
+                    {Math.round(previewAttachment.fileSize / 1024)} KB • {previewAttachment.mimeType}
+                  </p>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      File preview and download functionality available
+                    </p>
+                    <Button 
+                      onClick={() => handleDownloadAttachment(previewAttachment.id, previewAttachment.originalName)}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download File
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
