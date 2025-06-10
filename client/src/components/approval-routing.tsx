@@ -20,6 +20,7 @@ const routingSchema = z.object({
   productId: z.number().min(1, "Product is required"),
   riskLevel: z.enum(["low", "medium", "high"], { required_error: "Risk level is required" }),
   approverId: z.number().min(1, "Approver is required"),
+  approvalLevel: z.number().min(1, "Approval level is required").default(1),
 });
 
 interface ApprovalRoutingProps {
@@ -62,6 +63,7 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
       productId: 0,
       riskLevel: "medium",
       approverId: 0,
+      approvalLevel: 1,
     },
   });
 
@@ -139,6 +141,7 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
       productId: routing.productId,
       riskLevel: routing.riskLevel as "low" | "medium" | "high",
       approverId: routing.approverId,
+      approvalLevel: routing.approvalLevel,
     });
     setShowForm(true);
   };
@@ -204,6 +207,7 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
                 <TableRow>
                   <TableHead>Product</TableHead>
                   <TableHead>Risk Level</TableHead>
+                  <TableHead>Level</TableHead>
                   <TableHead>Approver</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -231,6 +235,11 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
                       <TableCell>
                         <Badge className={getRiskColor(routing.riskLevel)}>
                           {routing.riskLevel.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono">
+                          Level {routing.approvalLevel}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -333,33 +342,71 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="approverId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Approver</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select approver" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {approverUsers.map((user: User) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            {user.username} ({user.role})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="approvalLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Approval Level</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="1">Level 1 (Primary)</SelectItem>
+                          <SelectItem value="2">Level 2 (Secondary)</SelectItem>
+                          <SelectItem value="3">Level 3 (Final)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="approverId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Approver</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select approver" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {approverUsers.map((user: User) => (
+                            <SelectItem key={user.id} value={user.id.toString()}>
+                              {user.username} ({user.role})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="h-4 w-4 text-amber-600" />
+                  <span className="text-sm font-medium text-amber-800 dark:text-amber-200">Multilevel Approval for High Risk</span>
+                </div>
+                <p className="text-sm text-amber-700 dark:text-amber-300">
+                  For high-risk changes, configure multiple approval levels (Level 1 → Level 2 → Level 3) to ensure proper oversight and security.
+                </p>
+              </div>
 
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setShowForm(false)}>

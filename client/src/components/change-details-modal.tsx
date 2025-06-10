@@ -11,6 +11,7 @@ import { Calendar, Users, Shield, AlertTriangle, History, CheckCircle, XCircle, 
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ChangeApprovalTracker } from "./change-approval-tracker";
 
 interface ChangeDetailsModalProps {
   change: Change;
