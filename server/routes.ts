@@ -463,8 +463,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await storage.processApproval(changeId, approverId, action, comments);
       res.json(result);
-    } catch (error) {
-      res.status(400).json({ message: error.message || "Failed to process approval" });
+    } catch (error: any) {
+      res.status(400).json({ message: error?.message || "Failed to process approval" });
     }
   });
 

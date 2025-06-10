@@ -449,6 +449,12 @@ export function ChangeDetailsModal({
               </CardContent>
             </Card>
 
+            {/* Multilevel Approval Tracker */}
+            <ChangeApprovalTracker 
+              changeId={change.id}
+              currentUser={currentUser}
+            />
+
             {/* Change Workflow Guide */}
             <Card>
               <CardHeader>
