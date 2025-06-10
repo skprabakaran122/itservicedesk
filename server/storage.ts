@@ -135,8 +135,8 @@ export class DatabaseStorage implements IStorage {
       const existingUsers = await this.getUsers();
       if (existingUsers.length === 0) {
         const sampleUsers: InsertUser[] = [
-          { username: "john.doe", email: "john.doe@company.com", password: "password123", role: "technician", name: "John Doe" },
-          { username: "jane.smith", email: "jane.smith@company.com", password: "password123", role: "admin", name: "Jane Smith" },
+          { username: "john.doe", email: "john.doe@company.com", password: "password123", role: "admin", name: "John Doe" },
+          { username: "jane.smith", email: "jane.smith@company.com", password: "password123", role: "agent", name: "Jane Smith" },
           { username: "mike.wilson", email: "mike.wilson@company.com", password: "password123", role: "manager", name: "Mike Wilson" },
           { username: "sarah.jones", email: "sarah.jones@company.com", password: "password123", role: "user", name: "Sarah Jones" },
         ];
