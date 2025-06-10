@@ -156,7 +156,7 @@ export function TicketDetailsModal({
 
   const canUserReopenTicket = () => {
     return currentUser?.id === ticket.requesterId && 
-           (ticket.status === 'resolved' || ticket.status === 'closed');
+           ticket.status === 'resolved'; // Only resolved tickets can be reopened, not closed ones
   };
 
   const canUserModifyTicket = () => {

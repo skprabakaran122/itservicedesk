@@ -235,14 +235,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const allowedTransitions: Record<string, string[]> = {
             'open': ['closed'],
             'resolved': ['reopen'],
-            'closed': ['reopen'],
             'reopen': ['closed']
+            // Note: 'closed' tickets cannot be reopened - they are final
           };
           
           const allowed = allowedTransitions[ticket.status] || [];
           if (!allowed.includes(updates.status)) {
             return res.status(403).json({ 
-              message: "Invalid status change. You can only reopen resolved/closed tickets or close your own open tickets." 
+              message: "Invalid status change. You can only reopen resolved tickets or close your own open tickets. Closed tickets cannot be reopened." 
             });
           }
         }
