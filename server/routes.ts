@@ -93,6 +93,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteUser(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ success: true, message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
   // Ticket routes
   app.get("/api/tickets", async (req, res) => {
     try {
