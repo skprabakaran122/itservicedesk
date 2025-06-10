@@ -10,6 +10,7 @@ import { TicketForm } from "../components/ticket-form";
 import { ChangeForm } from "../components/change-form";
 import { TicketsList } from "../components/tickets-list";
 import { ChangesList } from "../components/changes-list";
+import { AdminConsole } from "../components/admin-console";
 import ITChatbot from "../components/it-chatbot";
 import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users } from "lucide-react";
 

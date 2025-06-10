@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertTicketSchema, insertChangeSchema } from "@shared/schema";
+import { insertTicketSchema, insertChangeSchema, insertProductSchema, insertAttachmentSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -241,6 +241,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(users);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Products management routes (Admin only)
+  app.get("/api/products", async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      res.json(products);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch products" });
+    }
+  });
+
+  app.post("/api/products", async (req, res) => {
+    try {
+      const productData = insertProductSchema.parse(req.body);
+      const product = await storage.createProduct(productData);
+      res.status(201).json(product);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid product data" });
+    }
+  });
+
+  app.patch("/api/products/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const product = await storage.updateProduct(id, updates);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      res.json(product);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid update data" });
+    }
+  });
+
+  app.delete("/api/products/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteProduct(id);
+      if (!success) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      res.json({ message: "Product deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete product" });
+    }
+  });
+
+  // Attachments routes
+  app.get("/api/attachments", async (req, res) => {
+    try {
+      const ticketId = req.query.ticketId ? parseInt(req.query.ticketId as string) : undefined;
+      const changeId = req.query.changeId ? parseInt(req.query.changeId as string) : undefined;
+      const attachments = await storage.getAttachments(ticketId, changeId);
+      res.json(attachments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch attachments" });
+    }
+  });
+
+  app.post("/api/attachments", async (req, res) => {
+    try {
+      const attachmentData = insertAttachmentSchema.parse(req.body);
+      const attachment = await storage.createAttachment(attachmentData);
+      res.status(201).json(attachment);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid attachment data" });
+    }
+  });
+
+  app.delete("/api/attachments/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteAttachment(id);
+      if (!success) {
+        return res.status(404).json({ message: "Attachment not found" });
+      }
+      res.json({ message: "Attachment deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete attachment" });
     }
   });
 
