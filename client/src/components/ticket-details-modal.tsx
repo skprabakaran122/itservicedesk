@@ -111,6 +111,7 @@ export function TicketDetailsModal({
   };
 
   const getActionDescription = (action: string, field?: string) => {
+    console.log('Action received:', action, 'Field:', field);
     if (!action) return 'Unknown action';
     
     const actionMap: Record<string, string> = {
@@ -126,7 +127,9 @@ export function TicketDetailsModal({
       'status_changed': 'changed status'
     };
 
-    return actionMap[action] || action.replace(/_/g, ' ').replace('updated ', 'updated ');
+    const result = actionMap[action] || action.replace(/_/g, ' ').replace('updated ', 'updated ');
+    console.log('Action result:', result);
+    return result;
   };
 
   const handleStatusUpdate = () => {
