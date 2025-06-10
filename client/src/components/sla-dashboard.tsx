@@ -77,7 +77,7 @@ export function SLADashboard() {
     return "bg-red-100 text-red-800";
   };
 
-  const priorityOrder = ['critical', 'high', 'medium', 'low'];
+
 
   return (
     <div className="space-y-6">
@@ -168,25 +168,17 @@ export function SLADashboard() {
               if (!metrics || metrics.total === 0) return null;
 
               return (
-                <div key={priority} className="space-y-2">
+                <div key={product} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Badge 
-                        variant="outline" 
-                        className={`capitalize ${
-                          priority === 'critical' ? 'border-red-300 text-red-700' :
-                          priority === 'high' ? 'border-orange-300 text-orange-700' :
-                          priority === 'medium' ? 'border-yellow-300 text-yellow-700' :
-                          'border-green-300 text-green-700'
-                        }`}
-                      >
-                        {priority}
+                      <Badge variant="outline" className="capitalize">
+                        {product}
                       </Badge>
                       <span className="text-sm text-muted-foreground">
                         {metrics.total} tickets
                       </span>
                     </div>
-                    <div className="flex gap-4 text-sm">
+                    <div className="flex gap-6 text-sm">
                       <div className="text-center">
                         <div className={`font-medium ${getPerformanceColor(metrics.responsePercentage)}`}>
                           {metrics.responsePercentage.toFixed(0)}%
@@ -198,6 +190,18 @@ export function SLADashboard() {
                           {metrics.resolutionPercentage.toFixed(0)}%
                         </div>
                         <div className="text-xs text-muted-foreground">Resolution</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium text-blue-600">
+                          {formatTime(metrics.averageResponseTime)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Avg Response</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium text-green-600">
+                          {formatTime(metrics.averageResolutionTime)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Avg Resolution</div>
                       </div>
                     </div>
                   </div>
