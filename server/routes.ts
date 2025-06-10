@@ -210,25 +210,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const changeData = insertChangeSchema.parse(req.body);
       
-      // Find the appropriate approver based on product and risk level
-      let approvedBy = changeData.approvedBy;
+      // Create the change request
+      const change = await storage.createChange(changeData);
+      
+      // Initialize multilevel approvals based on product and risk level
       if (changeData.product && changeData.riskLevel) {
-        // Find product ID by name
         const products = await storage.getProducts();
         const product = products.find(p => p.name === changeData.product);
         
         if (product) {
-          const approver = await storage.getApproverForChange(product.id, changeData.riskLevel);
-          if (approver) {
-            approvedBy = approver.username;
-          }
+          await storage.initializeChangeApprovals(change.id, product.id, changeData.riskLevel);
         }
       }
       
-      const change = await storage.createChange({
-        ...changeData,
-        approvedBy
-      });
       res.status(201).json(change);
     } catch (error) {
       res.status(400).json({ message: "Invalid change data" });
@@ -448,6 +442,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete approval routing" });
+    }
+  });
+
+  // Change approval endpoints
+  app.get("/api/changes/:id/approvals", async (req, res) => {
+    try {
+      const changeId = parseInt(req.params.id);
+      const approvals = await storage.getChangeApprovals(changeId);
+      res.json(approvals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch change approvals" });
+    }
+  });
+
+  app.post("/api/changes/:id/approve", async (req, res) => {
+    try {
+      const changeId = parseInt(req.params.id);
+      const { approverId, action, comments } = req.body;
+      
+      const result = await storage.processApproval(changeId, approverId, action, comments);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ message: error.message || "Failed to process approval" });
     }
   });
 

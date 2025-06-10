@@ -147,6 +147,7 @@ export const approvalRouting = pgTable("approval_routing", {
   productId: integer("product_id").notNull().references(() => products.id),
   riskLevel: varchar("risk_level", { length: 20 }).notNull(), // low, medium, high, critical
   approverId: integer("approver_id").notNull().references(() => users.id),
+  approvalLevel: integer("approval_level").notNull().default(1), // 1 = first approver, 2 = second approver, etc.
   isActive: varchar("is_active", { length: 10 }).notNull().default("true"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -160,6 +161,28 @@ export const insertApprovalRoutingSchema = createInsertSchema(approvalRouting).o
 
 export type InsertApprovalRouting = z.infer<typeof insertApprovalRoutingSchema>;
 export type ApprovalRouting = typeof approvalRouting.$inferSelect;
+
+// Change approval tracking table for multilevel approvals
+export const changeApprovals = pgTable("change_approvals", {
+  id: serial("id").primaryKey(),
+  changeId: integer("change_id").notNull().references(() => changes.id),
+  approverId: integer("approver_id").notNull().references(() => users.id),
+  approvalLevel: integer("approval_level").notNull(), // 1 = first level, 2 = second level, etc.
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, approved, rejected
+  approvedAt: timestamp("approved_at"),
+  comments: text("comments"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertChangeApprovalSchema = createInsertSchema(changeApprovals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertChangeApproval = z.infer<typeof insertChangeApprovalSchema>;
+export type ChangeApproval = typeof changeApprovals.$inferSelect;
 
 // File attachments table
 export const attachments = pgTable("attachments", {

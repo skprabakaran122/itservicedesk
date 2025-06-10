@@ -1,4 +1,4 @@
-import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting } from "@shared/schema";
+import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -57,7 +57,14 @@ export interface IStorage {
   createApprovalRouting(routing: InsertApprovalRouting): Promise<ApprovalRouting>;
   updateApprovalRouting(id: number, updates: Partial<InsertApprovalRouting>): Promise<ApprovalRouting | undefined>;
   deleteApprovalRouting(id: number): Promise<boolean>;
-  getApproverForChange(productId: number, riskLevel: string): Promise<User | undefined>;
+  getApprovalWorkflow(productId: number, riskLevel: string): Promise<ApprovalRouting[]>;
+  
+  // Change approval methods
+  getChangeApprovals(changeId: number): Promise<ChangeApproval[]>;
+  createChangeApproval(approval: InsertChangeApproval): Promise<ChangeApproval>;
+  updateChangeApproval(id: number, updates: Partial<InsertChangeApproval>): Promise<ChangeApproval | undefined>;
+  initializeChangeApprovals(changeId: number, productId: number, riskLevel: string): Promise<void>;
+  processApproval(changeId: number, approverId: number, action: 'approved' | 'rejected', comments?: string): Promise<{ approved: boolean; nextLevel?: number; completed: boolean }>;
   
   // SLA methods
   getSLAMetrics(): Promise<{
@@ -605,26 +612,102 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount || 0) > 0;
   }
 
-  async getApproverForChange(productId: number, riskLevel: string): Promise<User | undefined> {
-    const routing = await db.select({
-      approverId: approvalRouting.approverId
-    })
-    .from(approvalRouting)
-    .where(and(
-      eq(approvalRouting.productId, productId),
-      eq(approvalRouting.riskLevel, riskLevel),
-      eq(approvalRouting.isActive, 'true')
-    ))
-    .limit(1);
+  async getApprovalWorkflow(productId: number, riskLevel: string): Promise<ApprovalRouting[]> {
+    const routings = await db.select()
+      .from(approvalRouting)
+      .where(and(
+        eq(approvalRouting.productId, productId),
+        eq(approvalRouting.riskLevel, riskLevel),
+        eq(approvalRouting.isActive, 'true')
+      ))
+      .orderBy(approvalRouting.approvalLevel);
 
-    if (routing.length === 0) return undefined;
+    return routings;
+  }
 
-    const [approver] = await db.select()
-      .from(users)
-      .where(eq(users.id, routing[0].approverId))
+  // Change approval methods
+  async getChangeApprovals(changeId: number): Promise<ChangeApproval[]> {
+    return await db.select()
+      .from(changeApprovals)
+      .where(eq(changeApprovals.changeId, changeId))
+      .orderBy(changeApprovals.approvalLevel);
+  }
+
+  async createChangeApproval(insertApproval: InsertChangeApproval): Promise<ChangeApproval> {
+    const [approval] = await db.insert(changeApprovals).values({
+      ...insertApproval,
+      updatedAt: new Date()
+    }).returning();
+    return approval;
+  }
+
+  async updateChangeApproval(id: number, updates: Partial<InsertChangeApproval>): Promise<ChangeApproval | undefined> {
+    const [approval] = await db.update(changeApprovals)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(changeApprovals.id, id))
+      .returning();
+    return approval;
+  }
+
+  async initializeChangeApprovals(changeId: number, productId: number, riskLevel: string): Promise<void> {
+    const workflow = await this.getApprovalWorkflow(productId, riskLevel);
+    
+    for (const routing of workflow) {
+      await this.createChangeApproval({
+        changeId,
+        approverId: routing.approverId,
+        approvalLevel: routing.approvalLevel,
+        status: 'pending'
+      });
+    }
+  }
+
+  async processApproval(changeId: number, approverId: number, action: 'approved' | 'rejected', comments?: string): Promise<{ approved: boolean; nextLevel?: number; completed: boolean }> {
+    // Find the current approval
+    const [currentApproval] = await db.select()
+      .from(changeApprovals)
+      .where(and(
+        eq(changeApprovals.changeId, changeId),
+        eq(changeApprovals.approverId, approverId),
+        eq(changeApprovals.status, 'pending')
+      ))
       .limit(1);
 
-    return approver;
+    if (!currentApproval) {
+      throw new Error('No pending approval found for this user');
+    }
+
+    // Update the current approval
+    await this.updateChangeApproval(currentApproval.id, {
+      status: action,
+      approvedAt: new Date(),
+      comments
+    });
+
+    if (action === 'rejected') {
+      // If rejected, update the change status and stop the workflow
+      await this.updateChange(changeId, { status: 'rejected' });
+      return { approved: false, completed: true };
+    }
+
+    // Check if there are more approvals needed
+    const allApprovals = await this.getChangeApprovals(changeId);
+    const pendingApprovals = allApprovals.filter(a => a.status === 'pending');
+    
+    if (pendingApprovals.length === 0) {
+      // All approvals completed, update change status to approved
+      await this.updateChange(changeId, { status: 'approved' });
+      return { approved: true, completed: true };
+    }
+
+    // Find the next approval level
+    const nextApproval = pendingApprovals.find(a => a.approvalLevel === currentApproval.approvalLevel + 1);
+    
+    return { 
+      approved: true, 
+      nextLevel: nextApproval?.approvalLevel,
+      completed: false 
+    };
   }
 }
 
