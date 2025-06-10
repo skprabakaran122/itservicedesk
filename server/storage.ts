@@ -163,11 +163,16 @@ export class DatabaseStorage implements IStorage {
 
   async getTicketsForUser(userId: number): Promise<Ticket[]> {
     const user = await this.getUser(userId);
-    if (!user || user.role === 'admin') {
-      // Admins can see all tickets
+    if (!user) {
+      return [];
+    }
+    
+    // Only admins can see all tickets
+    if (user.role === 'admin') {
       return await this.getTickets();
     }
     
+    // For agents, managers, and users - filter by assigned products
     if (!user.assignedProducts || user.assignedProducts.length === 0) {
       // Users with no assigned products see no tickets
       return [];
@@ -235,11 +240,16 @@ export class DatabaseStorage implements IStorage {
 
   async getChangesForUser(userId: number): Promise<Change[]> {
     const user = await this.getUser(userId);
-    if (!user || user.role === 'admin') {
-      // Admins can see all changes
+    if (!user) {
+      return [];
+    }
+    
+    // Only admins can see all changes
+    if (user.role === 'admin') {
       return await this.getChanges();
     }
     
+    // For agents, managers, and users - filter by assigned products
     if (!user.assignedProducts || user.assignedProducts.length === 0) {
       // Users with no assigned products see no changes
       return [];
