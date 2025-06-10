@@ -135,6 +135,15 @@ export function TicketDetailsModal({
 
   const handleStatusUpdate = () => {
     if (newStatus !== ticket.status) {
+      // Require notes when changing status to resolved
+      if (newStatus === 'resolved' && !notes.trim()) {
+        toast({
+          title: "Notes Required",
+          description: "Please provide notes when resolving a ticket",
+          variant: "destructive",
+        });
+        return;
+      }
       updateTicketMutation.mutate({ status: newStatus, notes });
     }
   };
@@ -243,13 +252,19 @@ export function TicketDetailsModal({
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Notes (Optional)</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Notes {newStatus === 'resolved' ? '(Required)' : '(Optional)'}
+                    {newStatus === 'resolved' && <span className="text-red-500 ml-1">*</span>}
+                  </label>
                   <Textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Add notes about this update..."
-                    className="min-h-[100px]"
+                    placeholder={newStatus === 'resolved' ? "Describe how the issue was resolved..." : "Add notes about this update..."}
+                    className={`min-h-[100px] ${newStatus === 'resolved' && !notes.trim() ? 'border-red-300 focus:border-red-500' : ''}`}
                   />
+                  {newStatus === 'resolved' && !notes.trim() && (
+                    <p className="text-sm text-red-500 mt-1">Notes are required when resolving a ticket</p>
+                  )}
                 </div>
 
                 <div className="flex gap-2">

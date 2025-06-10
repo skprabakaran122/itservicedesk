@@ -193,6 +193,15 @@ export function ChangeDetailsModal({
 
   const handleStatusUpdate = () => {
     if (newStatus !== change.status && canUpdateStatus()) {
+      // Require notes when changing status to completed or rejected
+      if ((newStatus === 'completed' || newStatus === 'rejected') && !notes.trim()) {
+        toast({
+          title: "Notes Required",
+          description: `Please provide notes when ${newStatus === 'completed' ? 'completing' : 'rejecting'} a change request`,
+          variant: "destructive",
+        });
+        return;
+      }
       updateChangeMutation.mutate({ status: newStatus, notes });
     }
   };
@@ -332,13 +341,23 @@ export function ChangeDetailsModal({
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium mb-2">Notes (Optional)</label>
+                    <label className="block text-sm font-medium mb-2">
+                      Notes {(newStatus === 'completed' || newStatus === 'rejected') ? '(Required)' : '(Optional)'}
+                      {(newStatus === 'completed' || newStatus === 'rejected') && <span className="text-red-500 ml-1">*</span>}
+                    </label>
                     <Textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Add notes about this update..."
-                      className="min-h-[100px]"
+                      placeholder={
+                        newStatus === 'completed' ? "Describe what was completed..." :
+                        newStatus === 'rejected' ? "Explain why this was rejected..." :
+                        "Add notes about this update..."
+                      }
+                      className={`min-h-[100px] ${(newStatus === 'completed' || newStatus === 'rejected') && !notes.trim() ? 'border-red-300 focus:border-red-500' : ''}`}
                     />
+                    {(newStatus === 'completed' || newStatus === 'rejected') && !notes.trim() && (
+                      <p className="text-sm text-red-500 mt-1">Notes are required when {newStatus === 'completed' ? 'completing' : 'rejecting'} a change request</p>
+                    )}
                   </div>
 
                   <div className="flex gap-2">
