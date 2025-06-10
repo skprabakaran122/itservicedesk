@@ -141,6 +141,26 @@ export const insertProductSchema = createInsertSchema(products).omit({
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
 
+// Approval routing configuration table
+export const approvalRouting = pgTable("approval_routing", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id),
+  riskLevel: varchar("risk_level", { length: 20 }).notNull(), // low, medium, high, critical
+  approverId: integer("approver_id").notNull().references(() => users.id),
+  isActive: varchar("is_active", { length: 10 }).notNull().default("true"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertApprovalRoutingSchema = createInsertSchema(approvalRouting).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertApprovalRouting = z.infer<typeof insertApprovalRoutingSchema>;
+export type ApprovalRouting = typeof approvalRouting.$inferSelect;
+
 // File attachments table
 export const attachments = pgTable("attachments", {
   id: serial("id").primaryKey(),

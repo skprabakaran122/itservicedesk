@@ -1,4 +1,4 @@
-import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment } from "@shared/schema";
+import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -51,6 +51,13 @@ export interface IStorage {
   getAttachments(ticketId?: number, changeId?: number): Promise<Attachment[]>;
   createAttachment(attachment: InsertAttachment): Promise<Attachment>;
   deleteAttachment(id: number): Promise<boolean>;
+  
+  // Approval routing methods
+  getApprovalRouting(): Promise<ApprovalRouting[]>;
+  createApprovalRouting(routing: InsertApprovalRouting): Promise<ApprovalRouting>;
+  updateApprovalRouting(id: number, updates: Partial<InsertApprovalRouting>): Promise<ApprovalRouting | undefined>;
+  deleteApprovalRouting(id: number): Promise<boolean>;
+  getApproverForChange(productId: number, riskLevel: string): Promise<User | undefined>;
   
   // SLA methods
   getSLAMetrics(): Promise<{
@@ -569,6 +576,55 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(tickets.id, id));
+  }
+
+  // Approval routing methods
+  async getApprovalRouting(): Promise<ApprovalRouting[]> {
+    return await db.select().from(approvalRouting).orderBy(desc(approvalRouting.createdAt));
+  }
+
+  async createApprovalRouting(insertApprovalRouting: InsertApprovalRouting): Promise<ApprovalRouting> {
+    const [routing] = await db.insert(approvalRouting).values({
+      ...insertApprovalRouting,
+      updatedAt: new Date()
+    }).returning();
+    return routing;
+  }
+
+  async updateApprovalRouting(id: number, updates: Partial<InsertApprovalRouting>): Promise<ApprovalRouting | undefined> {
+    const [routing] = await db.update(approvalRouting)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(approvalRouting.id, id))
+      .returning();
+    return routing;
+  }
+
+  async deleteApprovalRouting(id: number): Promise<boolean> {
+    const result = await db.delete(approvalRouting)
+      .where(eq(approvalRouting.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getApproverForChange(productId: number, riskLevel: string): Promise<User | undefined> {
+    const routing = await db.select({
+      approverId: approvalRouting.approverId
+    })
+    .from(approvalRouting)
+    .where(and(
+      eq(approvalRouting.productId, productId),
+      eq(approvalRouting.riskLevel, riskLevel),
+      eq(approvalRouting.isActive, 'true')
+    ))
+    .limit(1);
+
+    if (routing.length === 0) return undefined;
+
+    const [approver] = await db.select()
+      .from(users)
+      .where(eq(users.id, routing[0].approverId))
+      .limit(1);
+
+    return approver;
   }
 }
 

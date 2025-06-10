@@ -208,8 +208,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/changes", async (req, res) => {
     try {
-      const changeData = insertChangeSchema.parse(req.body);
-      const change = await storage.createChange(changeData);
+      const { productId, riskLevel, ...changeData } = insertChangeSchema.parse(req.body);
+      
+      // Find the appropriate approver based on product and risk level
+      let approvedBy = changeData.approvedBy;
+      if (productId && riskLevel) {
+        const approver = await storage.getApproverForChange(productId, riskLevel);
+        if (approver) {
+          approvedBy = approver.username;
+        }
+      }
+      
+      const change = await storage.createChange({
+        ...changeData,
+        approvedBy
+      });
       res.status(201).json(change);
     } catch (error) {
       res.status(400).json({ message: "Invalid change data" });
