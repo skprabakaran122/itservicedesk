@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Ticket, TicketHistory, User } from "@shared/schema";
-import { Clock, User as UserIcon, Package, AlertCircle, MessageSquare, History } from "lucide-react";
+import { Clock, User as UserIcon, Package, AlertCircle, MessageSquare, History, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +43,15 @@ export function TicketDetailsModal({
     queryKey: ["/api/tickets", ticket.id, "history"],
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/tickets/${ticket.id}/history`);
+      return await response.json();
+    },
+    enabled: isOpen,
+  });
+
+  const { data: attachments = [] } = useQuery({
+    queryKey: ["/api/attachments", { ticketId: ticket.id }],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/attachments?ticketId=${ticket.id}`);
       return await response.json();
     },
     enabled: isOpen,
@@ -381,6 +390,35 @@ export function TicketDetailsModal({
 
           {/* History Sidebar */}
           <div className="space-y-6">
+            {/* Attachments Section */}
+            {attachments.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Attachments ({attachments.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {attachments.map((attachment: any) => (
+                      <div key={attachment.id} className="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-gray-500" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{attachment.originalName}</p>
+                            <p className="text-xs text-gray-500">
+                              {Math.round(attachment.fileSize / 1024)} KB • {attachment.mimeType}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
