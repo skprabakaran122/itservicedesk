@@ -118,6 +118,7 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
                         <SelectItem value="software">Software</SelectItem>
                         <SelectItem value="network">Network</SelectItem>
                         <SelectItem value="access">Access/Security</SelectItem>
+                        <SelectItem value="product">Product</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -161,6 +162,41 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="product"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select affected product" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="microsoft-office">Microsoft Office</SelectItem>
+                      <SelectItem value="windows-10">Windows 10</SelectItem>
+                      <SelectItem value="windows-11">Windows 11</SelectItem>
+                      <SelectItem value="adobe-creative-suite">Adobe Creative Suite</SelectItem>
+                      <SelectItem value="salesforce">Salesforce</SelectItem>
+                      <SelectItem value="slack">Slack</SelectItem>
+                      <SelectItem value="zoom">Zoom</SelectItem>
+                      <SelectItem value="vpn-client">VPN Client</SelectItem>
+                      <SelectItem value="antivirus">Antivirus Software</SelectItem>
+                      <SelectItem value="email-client">Email Client</SelectItem>
+                      <SelectItem value="printer-drivers">Printer Drivers</SelectItem>
+                      <SelectItem value="database-server">Database Server</SelectItem>
+                      <SelectItem value="web-browser">Web Browser</SelectItem>
+                      <SelectItem value="custom-application">Custom Application</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

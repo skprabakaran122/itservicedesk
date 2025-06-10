@@ -32,6 +32,7 @@ export const changes = pgTable("changes", {
   status: varchar("status", { length: 20 }).notNull(), // pending, approved, rejected, in-progress, testing, completed, failed, rollback
   priority: varchar("priority", { length: 20 }).notNull(), // low, medium, high, critical
   category: varchar("category", { length: 50 }).notNull(), // system, application, infrastructure, policy
+  product: varchar("product", { length: 100 }), // specific product name
   requestedBy: text("requested_by").notNull(),
   approvedBy: text("approved_by"),
   implementedBy: text("implemented_by"),
