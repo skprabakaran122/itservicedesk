@@ -70,7 +70,14 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
   const createUserMutation = useMutation({
     mutationFn: async (data: z.infer<typeof createUserSchema>) => {
-      return await apiRequest("/api/users", "POST", data);
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -92,7 +99,14 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
   const updateUserMutation = useMutation({
     mutationFn: async (data: { id: number; updates: z.infer<typeof editUserSchema> }) => {
-      return await apiRequest(`/api/users/${data.id}`, "PATCH", data.updates);
+      const response = await fetch(`/api/users/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.updates),
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });

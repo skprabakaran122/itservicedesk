@@ -33,6 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const user = await storage.createUser({
         ...userData,
+        role: "user", // Default all new registrations to user role
         createdAt: new Date()
       });
       
