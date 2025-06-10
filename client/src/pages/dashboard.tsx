@@ -129,10 +129,12 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
             <Plus className="mr-2 h-4 w-4" />
             New Ticket
           </Button>
-          <Button onClick={() => setShowChangeForm(true)} variant="outline">
-            <Plus className="mr-2 h-4 w-4" />
-            New Change
-          </Button>
+          {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+            <Button onClick={() => setShowChangeForm(true)} variant="outline">
+              <Plus className="mr-2 h-4 w-4" />
+              New Change
+            </Button>
+          )}
         </div>
       </div>
 
@@ -247,11 +249,15 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
       <Tabs defaultValue="tickets" className="space-y-4">
         <TabsList>
           <TabsTrigger value="tickets">Support Tickets</TabsTrigger>
-          <TabsTrigger value="changes">Change Requests</TabsTrigger>
-          <TabsTrigger value="sla">
-            <Target className="h-4 w-4 mr-2" />
-            SLA Metrics
-          </TabsTrigger>
+          {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+            <TabsTrigger value="changes">Change Requests</TabsTrigger>
+          )}
+          {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+            <TabsTrigger value="sla">
+              <Target className="h-4 w-4 mr-2" />
+              SLA Metrics
+            </TabsTrigger>
+          )}
           {currentUser?.role === 'admin' && (
             <TabsTrigger value="admin">
               <Settings className="h-4 w-4 mr-2" />
@@ -269,18 +275,22 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
           />
         </TabsContent>
 
-        <TabsContent value="changes">
-          <ChangesList 
-            changes={changes}
-            getStatusColor={getStatusColor}
-            getPriorityColor={getPriorityColor}
-            currentUser={currentUser}
-          />
-        </TabsContent>
+        {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+          <TabsContent value="changes">
+            <ChangesList 
+              changes={changes}
+              getStatusColor={getStatusColor}
+              getPriorityColor={getPriorityColor}
+              currentUser={currentUser}
+            />
+          </TabsContent>
+        )}
 
-        <TabsContent value="sla">
-          <SLADashboard />
-        </TabsContent>
+        {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+          <TabsContent value="sla">
+            <SLADashboard />
+          </TabsContent>
+        )}
 
         {currentUser?.role === 'admin' && (
           <TabsContent value="admin">
@@ -294,7 +304,7 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
         <TicketForm onClose={() => setShowTicketForm(false)} />
       )}
 
-      {showChangeForm && (
+      {showChangeForm && (currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
         <ChangeForm onClose={() => setShowChangeForm(false)} currentUser={currentUser} />
       )}
 
