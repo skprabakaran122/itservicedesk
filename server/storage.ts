@@ -50,11 +50,59 @@ export interface IStorage {
   getAttachments(ticketId?: number, changeId?: number): Promise<Attachment[]>;
   createAttachment(attachment: InsertAttachment): Promise<Attachment>;
   deleteAttachment(id: number): Promise<boolean>;
+  
+  // SLA methods
+  getSLAMetrics(): Promise<{
+    totalTickets: number;
+    responseMetrics: {
+      met: number;
+      breached: number;
+      pending: number;
+      percentage: number;
+    };
+    resolutionMetrics: {
+      met: number;
+      breached: number;
+      pending: number;
+      percentage: number;
+    };
+    averageResponseTime: number;
+    averageResolutionTime: number;
+    metricsByPriority: Record<string, any>;
+  }>;
+  updateTicketSLA(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
   constructor() {
     this.initializeData();
+  }
+
+  private getSLATargets(priority: string): { response: number; resolution: number } {
+    // SLA targets in minutes based on priority
+    switch (priority) {
+      case 'critical':
+        return { response: 15, resolution: 240 }; // 15 min response, 4 hours resolution
+      case 'high':
+        return { response: 60, resolution: 480 }; // 1 hour response, 8 hours resolution
+      case 'medium':
+        return { response: 240, resolution: 1440 }; // 4 hours response, 24 hours resolution
+      case 'low':
+        return { response: 480, resolution: 2880 }; // 8 hours response, 48 hours resolution
+      default:
+        return { response: 240, resolution: 1440 };
+    }
+  }
+
+  private calculateSLAStatus(createdAt: Date, targetMinutes: number, actualAt?: Date): string {
+    const now = new Date();
+    const targetTime = new Date(createdAt.getTime() + targetMinutes * 60000);
+    
+    if (actualAt) {
+      return actualAt <= targetTime ? 'met' : 'breached';
+    } else {
+      return now > targetTime ? 'breached' : 'pending';
+    }
   }
 
   private async initializeData() {
@@ -89,7 +137,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTicket(insertTicket: InsertTicket): Promise<Ticket> {
-    const [ticket] = await db.insert(tickets).values(insertTicket).returning();
+    const slaTargets = this.getSLATargets(insertTicket.priority);
+    
+    const ticketData = {
+      ...insertTicket,
+      slaTargetResponse: slaTargets.response,
+      slaTargetResolution: slaTargets.resolution,
+      slaResponseMet: 'pending',
+      slaResolutionMet: 'pending'
+    };
+    
+    const [ticket] = await db.insert(tickets).values(ticketData).returning();
     return ticket;
   }
 
@@ -313,6 +371,123 @@ export class DatabaseStorage implements IStorage {
   async deleteAttachment(id: number): Promise<boolean> {
     const result = await db.delete(attachments).where(eq(attachments.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  // SLA methods
+  async getSLAMetrics(): Promise<{
+    totalTickets: number;
+    responseMetrics: {
+      met: number;
+      breached: number;
+      pending: number;
+      percentage: number;
+    };
+    resolutionMetrics: {
+      met: number;
+      breached: number;
+      pending: number;
+      percentage: number;
+    };
+    averageResponseTime: number;
+    averageResolutionTime: number;
+    metricsByPriority: Record<string, any>;
+  }> {
+    const allTickets = await db.select().from(tickets);
+    
+    const responseMetrics = {
+      met: allTickets.filter(t => t.slaResponseMet === 'met').length,
+      breached: allTickets.filter(t => t.slaResponseMet === 'breached').length,
+      pending: allTickets.filter(t => t.slaResponseMet === 'pending').length,
+      percentage: 0
+    };
+    
+    const resolutionMetrics = {
+      met: allTickets.filter(t => t.slaResolutionMet === 'met').length,
+      breached: allTickets.filter(t => t.slaResolutionMet === 'breached').length,
+      pending: allTickets.filter(t => t.slaResolutionMet === 'pending').length,
+      percentage: 0
+    };
+
+    responseMetrics.percentage = responseMetrics.met + responseMetrics.breached > 0 
+      ? (responseMetrics.met / (responseMetrics.met + responseMetrics.breached)) * 100 
+      : 0;
+
+    resolutionMetrics.percentage = resolutionMetrics.met + resolutionMetrics.breached > 0 
+      ? (resolutionMetrics.met / (resolutionMetrics.met + resolutionMetrics.breached)) * 100 
+      : 0;
+
+    // Calculate average times
+    const respondedTickets = allTickets.filter(t => t.firstResponseAt);
+    const resolvedTickets = allTickets.filter(t => t.resolvedAt);
+
+    const averageResponseTime = respondedTickets.length > 0
+      ? respondedTickets.reduce((acc, t) => {
+          const responseTime = (new Date(t.firstResponseAt!).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60);
+          return acc + responseTime;
+        }, 0) / respondedTickets.length
+      : 0;
+
+    const averageResolutionTime = resolvedTickets.length > 0
+      ? resolvedTickets.reduce((acc, t) => {
+          const resolutionTime = (new Date(t.resolvedAt!).getTime() - new Date(t.createdAt).getTime()) / (1000 * 60);
+          return acc + resolutionTime;
+        }, 0) / resolvedTickets.length
+      : 0;
+
+    // Metrics by priority
+    const metricsByPriority = ['critical', 'high', 'medium', 'low'].reduce((acc, priority) => {
+      const priorityTickets = allTickets.filter(t => t.priority === priority);
+      acc[priority] = {
+        total: priorityTickets.length,
+        responseMet: priorityTickets.filter(t => t.slaResponseMet === 'met').length,
+        resolutionMet: priorityTickets.filter(t => t.slaResolutionMet === 'met').length,
+        responsePercentage: priorityTickets.filter(t => t.slaResponseMet !== 'pending').length > 0
+          ? (priorityTickets.filter(t => t.slaResponseMet === 'met').length / priorityTickets.filter(t => t.slaResponseMet !== 'pending').length) * 100
+          : 0,
+        resolutionPercentage: priorityTickets.filter(t => t.slaResolutionMet !== 'pending').length > 0
+          ? (priorityTickets.filter(t => t.slaResolutionMet === 'met').length / priorityTickets.filter(t => t.slaResolutionMet !== 'pending').length) * 100
+          : 0
+      };
+      return acc;
+    }, {} as Record<string, any>);
+
+    return {
+      totalTickets: allTickets.length,
+      responseMetrics,
+      resolutionMetrics,
+      averageResponseTime,
+      averageResolutionTime,
+      metricsByPriority
+    };
+  }
+
+  async updateTicketSLA(id: number): Promise<void> {
+    const ticket = await this.getTicket(id);
+    if (!ticket) return;
+
+    const slaTargets = this.getSLATargets(ticket.priority);
+    
+    const slaResponseMet = this.calculateSLAStatus(
+      new Date(ticket.createdAt),
+      slaTargets.response,
+      ticket.firstResponseAt ? new Date(ticket.firstResponseAt) : undefined
+    );
+
+    const slaResolutionMet = this.calculateSLAStatus(
+      new Date(ticket.createdAt),
+      slaTargets.resolution,
+      ticket.resolvedAt ? new Date(ticket.resolvedAt) : undefined
+    );
+
+    await db.update(tickets)
+      .set({
+        slaTargetResponse: slaTargets.response,
+        slaTargetResolution: slaTargets.resolution,
+        slaResponseMet,
+        slaResolutionMet,
+        updatedAt: new Date()
+      })
+      .where(eq(tickets.id, id));
   }
 }
 

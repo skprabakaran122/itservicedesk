@@ -14,6 +14,12 @@ export const tickets = pgTable("tickets", {
   requesterId: integer("requester_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  firstResponseAt: timestamp("first_response_at"),
+  resolvedAt: timestamp("resolved_at"),
+  slaTargetResponse: integer("sla_target_response"), // target response time in minutes
+  slaTargetResolution: integer("sla_target_resolution"), // target resolution time in minutes
+  slaResponseMet: varchar("sla_response_met", { length: 10 }), // 'met', 'breached', 'pending'
+  slaResolutionMet: varchar("sla_resolution_met", { length: 10 }), // 'met', 'breached', 'pending'
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({
