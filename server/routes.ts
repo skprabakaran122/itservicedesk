@@ -17,10 +17,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     secret: process.env.SESSION_SECRET || 'your-secret-key-here',
     resave: false,
     saveUninitialized: false,
+    name: 'sessionId', // Custom session name
     cookie: {
       secure: false, // Set to true in production with HTTPS
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      httpOnly: false, // Allow client-side access for debugging
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax'
     }
   }));
   // Authentication routes
@@ -71,11 +73,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (err) {
           return res.status(500).json({ message: "Logout failed" });
         }
-        res.clearCookie('connect.sid');
+        res.clearCookie('sessionId');
         res.json({ message: "Logged out successfully" });
       });
     } catch (error) {
       res.status(500).json({ message: "Logout failed" });
+    }
+  });
+
+  app.get("/api/auth/me", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      if (!currentUser) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const { password: _, ...userWithoutPassword } = currentUser;
+      res.json({ user: userWithoutPassword });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user session" });
     }
   });
 
@@ -168,8 +184,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tickets", async (req, res) => {
     try {
+      console.log('Session data:', (req as any).session);
+      console.log('Session ID:', (req as any).sessionID);
       const currentUser = (req as any).session?.user;
       if (!currentUser) {
+        console.log('No user in session, authentication failed');
         return res.status(401).json({ message: "Authentication required" });
       }
 
@@ -182,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const ticket = await storage.createTicket(ticketData);
       res.status(201).json(ticket);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ticket creation error:', error);
       res.status(400).json({ message: "Invalid ticket data", error: error.message });
     }

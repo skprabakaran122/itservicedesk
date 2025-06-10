@@ -26,21 +26,39 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      setCurrentUser(JSON.parse(userData));
-    }
-    setIsLoading(false);
+    // Check if user session exists on the server
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUser(data.user);
+        }
+      } catch (error) {
+        console.log('No active session');
+      }
+      setIsLoading(false);
+    };
+    
+    checkSession();
   }, []);
 
   const handleLogin = (user: any) => {
     setCurrentUser(user);
-    localStorage.setItem('currentUser', JSON.stringify(user));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.log('Logout error:', error);
+    }
     setCurrentUser(null);
-    localStorage.removeItem('currentUser');
   };
 
   if (isLoading) {
