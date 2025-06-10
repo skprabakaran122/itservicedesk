@@ -68,7 +68,15 @@ export interface IStorage {
     };
     averageResponseTime: number;
     averageResolutionTime: number;
-    metricsByProduct: Record<string, any>;
+    metricsByProduct: Record<string, {
+      total: number;
+      responseMet: number;
+      resolutionMet: number;
+      responsePercentage: number;
+      resolutionPercentage: number;
+      averageResponseTime: number;
+      averageResolutionTime: number;
+    }>;
   }>;
   updateTicketSLA(id: number): Promise<void>;
 }
@@ -405,7 +413,15 @@ export class DatabaseStorage implements IStorage {
     };
     averageResponseTime: number;
     averageResolutionTime: number;
-    metricsByPriority: Record<string, any>;
+    metricsByProduct: Record<string, {
+      total: number;
+      responseMet: number;
+      resolutionMet: number;
+      responsePercentage: number;
+      resolutionPercentage: number;
+      averageResponseTime: number;
+      averageResolutionTime: number;
+    }>;
   }> {
     const allTickets = await db.select().from(tickets);
     
