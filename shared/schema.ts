@@ -47,6 +47,7 @@ export const changes = pgTable("changes", {
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   riskLevel: varchar("risk_level", { length: 20 }).notNull(), // low, medium, high
+  changeType: varchar("change_type", { length: 20 }).notNull().default('normal'), // standard, normal, emergency
   rollbackPlan: text("rollback_plan"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

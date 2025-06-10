@@ -354,13 +354,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the change request
       const change = await storage.createChange(changeData);
       
-      // Initialize multilevel approvals based on product and risk level
-      if (changeData.product && changeData.riskLevel) {
+      // Handle Standard changes (automatically approved) or initialize approval workflow
+      if (changeData.changeType === 'standard') {
+        // Standard changes are automatically approved - update status
+        await storage.updateChange(change.id, { 
+          status: 'approved',
+          approvedBy: 'Auto-approved (Standard Change)'
+        });
+      } else if (changeData.product && changeData.riskLevel) {
+        // Initialize multilevel approvals for Normal and Emergency changes
         const products = await storage.getProducts();
         const product = products.find(p => p.name === changeData.product);
         
         if (product) {
-          await storage.initializeChangeApprovals(change.id, product.id, changeData.riskLevel);
+          await storage.initializeChangeApprovals(change.id, product.id, changeData.riskLevel, changeData.changeType);
         }
       }
       

@@ -61,6 +61,7 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
       approvedBy: "",
       implementedBy: "",
       riskLevel: "medium",
+      changeType: "normal",
       rollbackPlan: "",
     },
   });
@@ -136,7 +137,7 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
               )}
             />
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="category"
@@ -161,6 +162,31 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="changeType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Change Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select change type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard (No Approval Required)</SelectItem>
+                        <SelectItem value="normal">Normal (Requires Approval)</SelectItem>
+                        <SelectItem value="emergency">Emergency (Expedited Approval)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="priority"

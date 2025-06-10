@@ -67,7 +67,7 @@ export interface IStorage {
   getChangeApprovals(changeId: number): Promise<ChangeApproval[]>;
   createChangeApproval(approval: InsertChangeApproval): Promise<ChangeApproval>;
   updateChangeApproval(id: number, updates: Partial<InsertChangeApproval>): Promise<ChangeApproval | undefined>;
-  initializeChangeApprovals(changeId: number, productId: number, riskLevel: string): Promise<void>;
+  initializeChangeApprovals(changeId: number, productId: number, riskLevel: string, changeType?: string): Promise<void>;
   processApproval(changeId: number, approverId: number, action: 'approved' | 'rejected', comments?: string): Promise<{ approved: boolean; nextLevel?: number; completed: boolean }>;
   
   // SLA methods
@@ -716,7 +716,12 @@ export class DatabaseStorage implements IStorage {
     return approval;
   }
 
-  async initializeChangeApprovals(changeId: number, productId: number, riskLevel: string): Promise<void> {
+  async initializeChangeApprovals(changeId: number, productId: number, riskLevel: string, changeType?: string): Promise<void> {
+    // Skip approval workflow for Standard changes
+    if (changeType === 'standard') {
+      return;
+    }
+    
     const workflow = await this.getApprovalWorkflow(productId, riskLevel);
     
     for (const routing of workflow) {
