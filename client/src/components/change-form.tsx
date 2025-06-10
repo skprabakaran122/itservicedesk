@@ -56,6 +56,9 @@ const formSchema = insertChangeSchema.extend({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   rollbackPlan: z.string().min(10, "Rollback plan is required"),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  plannedDate: z.string().nullable().optional(),
 });
 
 interface ChangeFormProps {
@@ -125,8 +128,15 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log('Frontend sending change data:', data);
-    createChangeMutation.mutate(data);
+    // Convert string dates back to proper format for backend
+    const processedData = {
+      ...data,
+      startDate: data.startDate || null,
+      endDate: data.endDate || null,
+      plannedDate: data.plannedDate || null,
+    };
+    console.log('Frontend sending change data:', processedData);
+    createChangeMutation.mutate(processedData);
   };
 
   return (
