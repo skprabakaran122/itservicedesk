@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Change, ChangeHistory, User } from "@shared/schema";
 import { Calendar, Users, Shield, AlertTriangle, History, CheckCircle, XCircle, Clock, Settings } from "lucide-react";
-import { format } from "date-fns";
+import { formatDateIST } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ChangeApprovalTracker } from "./change-approval-tracker";
@@ -295,7 +295,7 @@ export function ChangeDetailsModal({
                       <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Planned Date</h4>
                       <p className="text-sm flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        {change.plannedDate ? format(new Date(change.plannedDate), 'PPP') : 'N/A'}
+                        {change.plannedDate ? formatDateIST(change.plannedDate, 'PPP') : 'N/A'}
                       </p>
                     </div>
                   )}
@@ -304,7 +304,7 @@ export function ChangeDetailsModal({
                       <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Start Date</h4>
                       <p className="text-sm flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-green-600" />
-                        {format(new Date(change.startDate), 'PPP p')}
+                        {formatDateIST(change.startDate, 'PPP p')}
                       </p>
                     </div>
                   )}
@@ -313,20 +313,20 @@ export function ChangeDetailsModal({
                       <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">End Date</h4>
                       <p className="text-sm flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-red-600" />
-                        {format(new Date(change.endDate), 'PPP p')}
+                        {formatDateIST(change.endDate, 'PPP p')}
                       </p>
                     </div>
                   )}
                   <div>
                     <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Created</h4>
                     <p className="text-sm">
-                      {change.createdAt ? format(new Date(change.createdAt), 'PPP p') : 'N/A'}
+                      {change.createdAt ? formatDateIST(change.createdAt, 'PPP p') : 'N/A'}
                     </p>
                   </div>
                   <div>
                     <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Last Updated</h4>
                     <p className="text-sm">
-                      {change.updatedAt ? format(new Date(change.updatedAt), 'PPP p') : 'N/A'}
+                      {change.updatedAt ? formatDateIST(change.updatedAt, 'PPP p') : 'N/A'}
                     </p>
                   </div>
                 </div>
