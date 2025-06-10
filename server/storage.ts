@@ -602,7 +602,7 @@ export class DatabaseStorage implements IStorage {
   async deleteApprovalRouting(id: number): Promise<boolean> {
     const result = await db.delete(approvalRouting)
       .where(eq(approvalRouting.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async getApproverForChange(productId: number, riskLevel: string): Promise<User | undefined> {

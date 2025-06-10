@@ -208,14 +208,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/changes", async (req, res) => {
     try {
-      const { productId, riskLevel, ...changeData } = insertChangeSchema.parse(req.body);
+      const changeData = insertChangeSchema.parse(req.body);
       
       // Find the appropriate approver based on product and risk level
       let approvedBy = changeData.approvedBy;
-      if (productId && riskLevel) {
-        const approver = await storage.getApproverForChange(productId, riskLevel);
-        if (approver) {
-          approvedBy = approver.username;
+      if (changeData.product && changeData.riskLevel) {
+        // Find product ID by name
+        const products = await storage.getProducts();
+        const product = products.find(p => p.name === changeData.product);
+        
+        if (product) {
+          const approver = await storage.getApproverForChange(product.id, changeData.riskLevel);
+          if (approver) {
+            approvedBy = approver.username;
+          }
         }
       }
       
@@ -395,6 +401,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to update SLA metrics" });
+    }
+  });
+
+  // Approval routing endpoints
+  app.get("/api/approval-routing", async (req, res) => {
+    try {
+      const routings = await storage.getApprovalRouting();
+      res.json(routings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch approval routing" });
+    }
+  });
+
+  app.post("/api/approval-routing", async (req, res) => {
+    try {
+      const routingData = req.body;
+      const routing = await storage.createApprovalRouting(routingData);
+      res.status(201).json(routing);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid approval routing data" });
+    }
+  });
+
+  app.patch("/api/approval-routing/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const routing = await storage.updateApprovalRouting(id, updates);
+      if (!routing) {
+        return res.status(404).json({ message: "Approval routing not found" });
+      }
+      res.json(routing);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid update data" });
+    }
+  });
+
+  app.delete("/api/approval-routing/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteApprovalRouting(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Approval routing not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete approval routing" });
     }
   });
 

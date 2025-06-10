@@ -24,9 +24,10 @@ const formSchema = insertChangeSchema.extend({
 
 interface ChangeFormProps {
   onClose: () => void;
+  currentUser?: any;
 }
 
-export function ChangeForm({ onClose }: ChangeFormProps) {
+export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -39,7 +40,7 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
       status: "pending",
       priority: "medium",
       category: "system",
-      requestedBy: "",
+      requestedBy: currentUser?.username || currentUser?.email || "Anonymous",
       approvedBy: "",
       implementedBy: "",
       riskLevel: "medium",
@@ -103,20 +104,6 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="requestedBy"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Requested By</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Your name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="title"
