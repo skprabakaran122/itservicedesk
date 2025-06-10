@@ -173,7 +173,7 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
             Products
           </TabsTrigger>
           <TabsTrigger value="users">
-            <Settings className="h-4 w-4 mr-2" />
+            <Users className="h-4 w-4 mr-2" />
             User Management
           </TabsTrigger>
           <TabsTrigger value="approval-routing">
@@ -353,6 +353,10 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
               </Form>
             </DialogContent>
           </Dialog>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <UserManagement currentUser={currentUser} />
         </TabsContent>
 
         <TabsContent value="approval-routing">
