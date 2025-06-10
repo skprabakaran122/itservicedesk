@@ -504,6 +504,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/attachments/:id/download", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const attachment = await storage.getAttachment(id);
+      
+      if (!attachment) {
+        return res.status(404).json({ message: "Attachment not found" });
+      }
+
+      // Set appropriate headers for file download
+      res.setHeader('Content-Type', attachment.mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${attachment.originalName}"`);
+      res.setHeader('Content-Length', attachment.fileSize);
+      
+      // For now, return a simple response indicating the file would be downloaded
+      // In a real implementation, you would stream the file from storage
+      res.status(200).json({ 
+        message: "File download would start here",
+        attachment: {
+          id: attachment.id,
+          name: attachment.originalName,
+          size: attachment.fileSize,
+          type: attachment.mimeType
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to download attachment" });
+    }
+  });
+
   app.delete("/api/attachments/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

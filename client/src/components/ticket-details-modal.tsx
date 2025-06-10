@@ -108,6 +108,24 @@ export function TicketDetailsModal({
     },
   });
 
+  const handleDownloadAttachment = async (attachmentId: number, fileName: string) => {
+    try {
+      const response = await apiRequest("GET", `/api/attachments/${attachmentId}/download`);
+      const data = await response.json();
+      
+      toast({
+        title: "Download Info",
+        description: `${fileName} - ${data.message}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download attachment",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getRequesterName = (requesterId: number) => {
     const user = users.find(u => u.id === requesterId);
     return user ? user.name : `User ${requesterId}`;
@@ -402,17 +420,21 @@ export function TicketDetailsModal({
                 <CardContent>
                   <div className="space-y-2">
                     {attachments.map((attachment: any) => (
-                      <div key={attachment.id} className="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+                      <button
+                        key={attachment.id}
+                        onClick={() => handleDownloadAttachment(attachment.id, attachment.originalName)}
+                        className="w-full flex items-center justify-between p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                      >
                         <div className="flex items-center gap-2">
                           <Package className="h-4 w-4 text-gray-500" />
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 text-left">
                             <p className="text-sm font-medium truncate">{attachment.originalName}</p>
                             <p className="text-xs text-gray-500">
                               {Math.round(attachment.fileSize / 1024)} KB • {attachment.mimeType}
                             </p>
                           </div>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </CardContent>

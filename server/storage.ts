@@ -50,6 +50,7 @@ export interface IStorage {
   
   // Attachment methods
   getAttachments(ticketId?: number, changeId?: number): Promise<Attachment[]>;
+  getAttachment(id: number): Promise<Attachment | undefined>;
   createAttachment(attachment: InsertAttachment): Promise<Attachment>;
   deleteAttachment(id: number): Promise<boolean>;
   
@@ -416,6 +417,11 @@ export class DatabaseStorage implements IStorage {
     }
     
     return await db.select().from(attachments).where(and(...conditions)).orderBy(desc(attachments.createdAt));
+  }
+
+  async getAttachment(id: number): Promise<Attachment | undefined> {
+    const [attachment] = await db.select().from(attachments).where(eq(attachments.id, id));
+    return attachment;
   }
 
   async createAttachment(insertAttachment: InsertAttachment): Promise<Attachment> {
