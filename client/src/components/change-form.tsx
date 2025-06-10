@@ -34,14 +34,10 @@ const convertUTCToISTForInput = (utcDateString: string | Date | null | undefined
 };
 
 const convertISTInputToUTC = (istInputValue: string): string => {
-  // Create a date in IST timezone
-  const [datePart, timePart] = istInputValue.split('T');
-  const [year, month, day] = datePart.split('-').map(Number);
-  const [hours, minutes] = timePart.split(':').map(Number);
-  
-  // Create date object representing IST time
-  const istDate = new Date(year, month - 1, day, hours, minutes);
-  const utcDate = fromZonedTime(istDate, IST_TIMEZONE);
+  // Parse the datetime-local input as if it's in IST
+  const inputDate = new Date(istInputValue);
+  // Treat this as IST time and convert to UTC
+  const utcDate = fromZonedTime(inputDate, IST_TIMEZONE);
   return utcDate.toISOString();
 };
 
