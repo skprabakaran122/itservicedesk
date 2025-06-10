@@ -24,11 +24,23 @@ const convertUTCToISTForInput = (utcDateString: string | Date | null | undefined
   if (!utcDateString) return '';
   const utcDate = new Date(utcDateString);
   const istDate = toZonedTime(utcDate, IST_TIMEZONE);
-  return istDate.toISOString().slice(0, 16);
+  // Format for datetime-local input (YYYY-MM-DDTHH:mm)
+  const year = istDate.getFullYear();
+  const month = String(istDate.getMonth() + 1).padStart(2, '0');
+  const day = String(istDate.getDate()).padStart(2, '0');
+  const hours = String(istDate.getHours()).padStart(2, '0');
+  const minutes = String(istDate.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const convertISTInputToUTC = (istInputValue: string): string => {
-  const istDate = new Date(istInputValue);
+  // Create a date in IST timezone
+  const [datePart, timePart] = istInputValue.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes] = timePart.split(':').map(Number);
+  
+  // Create date object representing IST time
+  const istDate = new Date(year, month - 1, day, hours, minutes);
   const utcDate = fromZonedTime(istDate, IST_TIMEZONE);
   return utcDate.toISOString();
 };
