@@ -125,7 +125,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
 
             <div className="flex justify-between items-center">
               <div className="text-xs text-gray-500 dark:text-gray-500">
-                Requester: {getRequesterEmail(ticket.requesterId)} • Last updated: {format(new Date(ticket.updatedAt), 'MMM dd, yyyy HH:mm')}
+                Requester: {getRequesterEmail(ticket.requesterId)} • Last updated: {ticket.updatedAt ? format(new Date(ticket.updatedAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
               </div>
               <div className="flex gap-2 items-center">
                 <Select

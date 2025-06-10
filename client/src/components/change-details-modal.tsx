@@ -251,17 +251,21 @@ export function ChangeDetailsModal({
                       <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Planned Date</h4>
                       <p className="text-sm flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        {format(new Date(change.plannedDate), 'PPP')}
+                        {change.plannedDate ? format(new Date(change.plannedDate), 'PPP') : 'N/A'}
                       </p>
                     </div>
                   )}
                   <div>
                     <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Created</h4>
-                    <p className="text-sm">{format(new Date(change.createdAt), 'PPP p')}</p>
+                    <p className="text-sm">
+                      {change.createdAt ? format(new Date(change.createdAt), 'PPP p') : 'N/A'}
+                    </p>
                   </div>
                   <div>
                     <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Last Updated</h4>
-                    <p className="text-sm">{format(new Date(change.updatedAt), 'PPP p')}</p>
+                    <p className="text-sm">
+                      {change.updatedAt ? format(new Date(change.updatedAt), 'PPP p') : 'N/A'}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -348,7 +352,7 @@ export function ChangeDetailsModal({
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-sm font-medium">{getUserName(entry.userId)}</span>
                               <span className="text-xs text-gray-500">
-                                {format(new Date(entry.timestamp), 'MMM dd, HH:mm')}
+                                {entry.timestamp ? format(new Date(entry.timestamp), 'MMM dd, HH:mm') : 'N/A'}
                               </span>
                             </div>
                             <p className="text-sm text-gray-700 dark:text-gray-300 capitalize">

@@ -110,10 +110,10 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
 
             <div className="flex justify-between items-center">
               <div className="text-xs text-gray-500 dark:text-gray-500">
-                Last updated: {format(new Date(change.updatedAt), 'MMM dd, yyyy HH:mm')}
+                Last updated: {change.updatedAt ? format(new Date(change.updatedAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
                 {change.completedDate && (
                   <span className="ml-2">
-                    • Completed: {format(new Date(change.completedDate), 'MMM dd, yyyy')}
+                    • Completed: {change.completedDate ? format(new Date(change.completedDate), 'MMM dd, yyyy') : 'N/A'}
                   </span>
                 )}
               </div>
