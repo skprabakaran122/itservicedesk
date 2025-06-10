@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertChangeSchema } from "@shared/schema";
+import { ProductSelect } from "@/components/product-select";
 
 const formSchema = insertChangeSchema.extend({
   title: z.string().min(1, "Title is required"),
@@ -183,42 +184,12 @@ export function ChangeForm({ onClose }: ChangeFormProps) {
               />
             </div>
 
-            <FormField
+            <ProductSelect 
               control={form.control}
               name="product"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Product (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select affected product" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="microsoft-office">Microsoft Office</SelectItem>
-                      <SelectItem value="windows-server">Windows Server</SelectItem>
-                      <SelectItem value="exchange-server">Exchange Server</SelectItem>
-                      <SelectItem value="active-directory">Active Directory</SelectItem>
-                      <SelectItem value="salesforce">Salesforce</SelectItem>
-                      <SelectItem value="sap">SAP</SelectItem>
-                      <SelectItem value="oracle-database">Oracle Database</SelectItem>
-                      <SelectItem value="vmware">VMware</SelectItem>
-                      <SelectItem value="cisco-network">Cisco Network Equipment</SelectItem>
-                      <SelectItem value="firewall">Firewall</SelectItem>
-                      <SelectItem value="backup-system">Backup System</SelectItem>
-                      <SelectItem value="crm-system">CRM System</SelectItem>
-                      <SelectItem value="erp-system">ERP System</SelectItem>
-                      <SelectItem value="web-server">Web Server</SelectItem>
-                      <SelectItem value="database-server">Database Server</SelectItem>
-                      <SelectItem value="security-software">Security Software</SelectItem>
-                      <SelectItem value="custom-application">Custom Application</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Product (Optional)"
+              placeholder="Select affected product"
+              required={false}
             />
 
             <FormField
