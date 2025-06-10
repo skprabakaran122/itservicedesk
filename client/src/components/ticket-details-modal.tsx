@@ -133,8 +133,46 @@ export function TicketDetailsModal({
     return actionMap[action] || action.replace(/_/g, ' ').replace('updated ', 'updated ');
   };
 
+  // Check if user can modify ticket
+  const canModifyTicket = () => {
+    // Regular users can only modify their own tickets and only certain actions
+    if (currentUser?.role === 'user') {
+      return ticket.requesterId === currentUser?.id;
+    }
+    // Agents, managers, and admins can modify any ticket
+    return ['agent', 'manager', 'admin'].includes(currentUser?.role);
+  };
+
+  // Get allowed status changes for current user
+  const getAllowedStatuses = () => {
+    if (currentUser?.role === 'user') {
+      // Regular users can only reopen closed tickets or close their own open tickets
+      if (ticket.requesterId === currentUser?.id) {
+        if (ticket.status === 'resolved' || ticket.status === 'closed') {
+          return ['open']; // Can reopen
+        }
+        if (ticket.status === 'open') {
+          return ['closed']; // Can close their own ticket
+        }
+      }
+      return []; // No status changes allowed for other cases
+    }
+    // Agents, managers, and admins can change to any status
+    return ['open', 'in-progress', 'resolved', 'closed'];
+  };
+
   const handleStatusUpdate = () => {
     if (newStatus !== ticket.status) {
+      // Check if user has permission to change status
+      if (!canModifyTicket() || !getAllowedStatuses().includes(newStatus)) {
+        toast({
+          title: "Permission Denied",
+          description: "You don't have permission to make this change",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Require notes when changing status to resolved
       if (newStatus === 'resolved' && !notes.trim()) {
         toast({
@@ -275,26 +313,30 @@ export function TicketDetailsModal({
             </Card>
 
             {/* Update Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Update Ticket</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Status</label>
-                  <Select value={newStatus} onValueChange={setNewStatus}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="open">Open</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            {(canModifyTicket() && getAllowedStatuses().length > 0) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {currentUser?.role === 'user' ? 'Update Your Ticket' : 'Update Ticket'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Status</label>
+                    <Select value={newStatus} onValueChange={setNewStatus}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ticket.status}>{ticket.status.replace('-', ' ').toUpperCase()} (Current)</SelectItem>
+                        {getAllowedStatuses().filter(status => status !== ticket.status).map(status => (
+                          <SelectItem key={status} value={status}>
+                            {status.replace('-', ' ').toUpperCase()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-2">
@@ -328,7 +370,8 @@ export function TicketDetailsModal({
                   </Button>
                 </div>
               </CardContent>
-            </Card>
+              </Card>
+            )}
           </div>
 
           {/* History Sidebar */}

@@ -145,11 +145,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { notes, userId, ...updates } = req.body;
-      const ticket = await storage.updateTicketWithHistory(id, updates, userId || 1, notes);
+      
+      // Get current ticket and user information
+      const ticket = await storage.getTicket(id);
       if (!ticket) {
         return res.status(404).json({ message: "Ticket not found" });
       }
-      res.json(ticket);
+      
+      const currentUser = req.session.user;
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Role-based access control
+      if (currentUser.role === 'user') {
+        // Regular users can only modify their own tickets
+        if (ticket.requesterId !== currentUser.id) {
+          return res.status(403).json({ message: "You can only modify your own tickets" });
+        }
+        
+        // Regular users can only change status between specific values
+        if (updates.status) {
+          const allowedTransitions: Record<string, string[]> = {
+            'open': ['closed'],
+            'resolved': ['open'],
+            'closed': ['open']
+          };
+          
+          const allowed = allowedTransitions[ticket.status] || [];
+          if (!allowed.includes(updates.status)) {
+            return res.status(403).json({ 
+              message: "Invalid status change. You can only reopen resolved tickets or close your own open tickets." 
+            });
+          }
+        }
+        
+        // Regular users cannot change assignee, priority, or category
+        if (updates.assignedTo || updates.priority || updates.category) {
+          return res.status(403).json({ 
+            message: "You cannot modify ticket assignment, priority, or category" 
+          });
+        }
+      }
+      
+      const updatedTicket = await storage.updateTicketWithHistory(id, updates, currentUser.id, notes);
+      res.json(updatedTicket);
     } catch (error) {
       res.status(400).json({ message: "Invalid update data" });
     }
