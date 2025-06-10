@@ -99,6 +99,29 @@ export function ChangeDetailsModal({
     return user ? user.name : `User ${userId}`;
   };
 
+  const getActionDescription = (action: string, field?: string) => {
+    if (!action) return 'Unknown action';
+    
+    const actionMap: Record<string, string> = {
+      'created': 'created change request',
+      'updated_status': 'changed status',
+      'updated_priority': 'changed priority',
+      'updated_riskLevel': 'changed risk level',
+      'updated_category': 'changed category',
+      'updated_title': 'updated title',
+      'updated_description': 'updated description',
+      'updated_rollbackPlan': 'updated rollback plan',
+      'updated_approvedBy': 'changed approver',
+      'updated_implementedBy': 'changed implementer',
+      'comment_added': 'added comment',
+      'approved': 'approved change',
+      'rejected': 'rejected change',
+      'status_changed': 'changed status'
+    };
+
+    return actionMap[action] || action.replace(/_/g, ' ').replace('updated ', 'updated ');
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending': return <Clock className="h-4 w-4" />;
@@ -362,8 +385,8 @@ export function ChangeDetailsModal({
                                 {entry.timestamp ? format(new Date(entry.timestamp), 'MMM dd, HH:mm') : 'N/A'}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 capitalize">
-                              {entry.action ? entry.action.replace('_', ' ') : 'Unknown action'}
+                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                              {getActionDescription(entry.action, entry.field)}
                               {entry.previousStatus && entry.newStatus && (
                                 <span className="text-xs block text-gray-500 mt-1">
                                   {entry.previousStatus} → {entry.newStatus}

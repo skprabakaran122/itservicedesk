@@ -110,6 +110,25 @@ export function TicketDetailsModal({
     return user ? user.name : `User ${userId}`;
   };
 
+  const getActionDescription = (action: string, field?: string) => {
+    if (!action) return 'Unknown action';
+    
+    const actionMap: Record<string, string> = {
+      'created': 'created ticket',
+      'updated_status': 'changed status',
+      'updated_priority': 'changed priority',
+      'updated_assignedTo': 'changed assignee',
+      'updated_category': 'changed category',
+      'updated_title': 'updated title',
+      'updated_description': 'updated description',
+      'comment_added': 'added comment',
+      'assigned': 'assigned ticket',
+      'status_changed': 'changed status'
+    };
+
+    return actionMap[action] || action.replace(/_/g, ' ').replace('updated ', 'updated ');
+  };
+
   const handleStatusUpdate = () => {
     if (newStatus !== ticket.status) {
       updateTicketMutation.mutate({ status: newStatus, notes });
@@ -276,9 +295,8 @@ export function TicketDetailsModal({
                                 {entry.timestamp ? format(new Date(entry.timestamp), 'MMM dd, HH:mm') : 'N/A'}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 capitalize">
-                              {entry.action ? entry.action.replace('_', ' ') : 'Unknown action'}
-                              {entry.field && ` ${entry.field}`}
+                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                              {getActionDescription(entry.action, entry.field)}
                               {entry.oldValue && entry.newValue && (
                                 <span className="text-xs block text-gray-500 mt-1">
                                   {entry.oldValue} → {entry.newValue}
