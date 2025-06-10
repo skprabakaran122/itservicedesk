@@ -23,6 +23,8 @@ export function FileUpload({ ticketId, changeId, attachments = [], onAttachmentA
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
+      alert(`Starting upload for: ${file.name}, size: ${file.size} bytes`);
+      
       // Convert file to base64
       const base64Content = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
