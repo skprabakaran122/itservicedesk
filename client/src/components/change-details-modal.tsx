@@ -265,6 +265,16 @@ export function ChangeDetailsModal({
                     </div>
                   )}
                   <div>
+                    <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Change Type</h4>
+                    <div className="flex items-center gap-2">
+                      {change.changeType === 'standard' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                      {change.changeType === 'emergency' && <AlertTriangle className="h-4 w-4 text-red-500" />}
+                      {(!change.changeType || change.changeType === 'normal') && <AlertTriangle className="h-4 w-4 text-blue-500" />}
+                      <span className="capitalize">{change.changeType || 'normal'}</span>
+                      {change.changeType === 'standard' && <span className="text-xs text-green-600">(No Approval Required)</span>}
+                    </div>
+                  </div>
+                  <div>
                     <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Risk Level</h4>
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-orange-500" />

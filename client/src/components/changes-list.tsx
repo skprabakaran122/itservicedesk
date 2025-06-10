@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Change } from "@shared/schema";
-import { Clock, User, AlertTriangle, Calendar, Eye, Package } from "lucide-react";
+import { Clock, User, AlertTriangle, Calendar, Eye, Package, Zap, CheckCircle, AlertCircle } from "lucide-react";
 import { formatDateIST } from "@/lib/utils";
 import { ChangeDetailsModal } from "./change-details-modal";
 import { useState } from "react";
@@ -22,6 +22,22 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  const getChangeTypeColor = (changeType: string) => {
+    switch (changeType) {
+      case 'standard': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'emergency': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      default: return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+    }
+  };
+
+  const getChangeTypeIcon = (changeType: string) => {
+    switch (changeType) {
+      case 'standard': return <CheckCircle className="h-4 w-4" />;
+      case 'emergency': return <Zap className="h-4 w-4" />;
+      default: return <AlertCircle className="h-4 w-4" />;
+    }
+  };
+
   const sortedChanges = [...changes].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
@@ -85,6 +101,12 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                 </CardDescription>
               </div>
               <div className="flex flex-col items-end gap-2 ml-4">
+                <Badge className={getChangeTypeColor(change.changeType || 'normal')}>
+                  <div className="flex items-center gap-1">
+                    {getChangeTypeIcon(change.changeType || 'normal')}
+                    {(change.changeType || 'normal').toUpperCase()}
+                  </div>
+                </Badge>
                 <Badge className={getPriorityColor(change.priority)}>
                   {change.priority.toUpperCase()}
                 </Badge>
