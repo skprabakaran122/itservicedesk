@@ -115,7 +115,7 @@ export function SLADashboard() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">SLA Performance Dashboard</h2>
         <div className="flex items-center gap-3">
-          {currentUser?.user && (currentUser.user.role === 'admin' || currentUser.user.role === 'manager') && (
+          {(currentUser as any)?.user && ((currentUser as any).user.role === 'admin' || (currentUser as any).user.role === 'manager') && (
             <Button
               variant="outline"
               size="sm"

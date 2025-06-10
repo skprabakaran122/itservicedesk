@@ -338,6 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/changes", async (req, res) => {
     try {
+      console.log('Change creation request body:', req.body);
       const changeData = insertChangeSchema.parse(req.body);
       
       // Create the change request
@@ -354,8 +355,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(201).json(change);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid change data" });
+    } catch (error: any) {
+      console.error('Change creation error:', error);
+      res.status(400).json({ message: "Invalid change data", error: error.message });
     }
   });
 

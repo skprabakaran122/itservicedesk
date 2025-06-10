@@ -88,6 +88,7 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
+    console.log('Frontend sending change data:', data);
     createChangeMutation.mutate(data);
   };
 
