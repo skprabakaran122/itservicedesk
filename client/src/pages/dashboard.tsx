@@ -12,6 +12,7 @@ import { TicketsList } from "../components/tickets-list";
 import { ChangesList } from "../components/changes-list";
 import { AdminConsole } from "../components/admin-console";
 import { SLADashboard } from "../components/sla-dashboard";
+import { UserManagement } from "../components/user-management";
 import ITChatbot from "../components/it-chatbot";
 import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users, Target } from "lucide-react";
 
