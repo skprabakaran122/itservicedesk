@@ -124,17 +124,28 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">IT Service Desk</h1>
           <p className="text-gray-600 dark:text-gray-400">Manage tickets and change requests</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowTicketForm(true)} className="bg-primary hover:bg-primary/90">
-            <Plus className="mr-2 h-4 w-4" />
-            New Ticket
-          </Button>
-          {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
-            <Button onClick={() => setShowChangeForm(true)} variant="outline">
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <Button onClick={() => setShowTicketForm(true)} className="bg-primary hover:bg-primary/90">
               <Plus className="mr-2 h-4 w-4" />
-              New Change
+              New Ticket
             </Button>
-          )}
+            {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+              <Button onClick={() => setShowChangeForm(true)} variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                New Change
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-3 border-l pl-4">
+            <div className="text-right">
+              <div className="text-sm font-medium text-gray-900 dark:text-white">{currentUser?.name}</div>
+              <div className="text-xs text-gray-500 capitalize">{currentUser?.role}</div>
+            </div>
+            <Button onClick={onLogout} variant="outline" size="sm">
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
 
