@@ -140,8 +140,8 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+    <Dialog open={true} onOpenChange={() => {}} modal={true}>
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Create Change Request</DialogTitle>
           <DialogDescription>
