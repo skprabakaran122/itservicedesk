@@ -13,7 +13,7 @@ function Router({ currentUser, onLogout }: { currentUser: any; onLogout: () => v
   return (
     <Switch>
       <Route path="/support" component={PublicTicketPage} />
-      <Route path="/" exact>
+      <Route path="/">
         {currentUser ? (
           <Dashboard currentUser={currentUser} onLogout={onLogout} />
         ) : (
@@ -80,11 +80,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        {!currentUser ? (
-          <Login onLoginSuccess={handleLogin} />
-        ) : (
-          <Router currentUser={currentUser} onLogout={handleLogout} />
-        )}
+        <Router currentUser={currentUser} onLogout={handleLogout} />
       </TooltipProvider>
     </QueryClientProvider>
   );
