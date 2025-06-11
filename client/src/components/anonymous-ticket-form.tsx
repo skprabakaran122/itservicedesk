@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, Phone, Mail, User, MessageSquare, Upload, X, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import type { Product } from "@shared/schema";
 
 const anonymousTicketSchema = z.object({
   requesterName: z.string().min(1, "Name is required"),
@@ -36,6 +37,11 @@ export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState<number | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
+
+  // Fetch products from the API
+  const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
+    queryKey: ['/api/products'],
+  });
 
   const form = useForm<AnonymousTicketForm>({
     resolver: zodResolver(anonymousTicketSchema),
@@ -333,9 +339,21 @@ export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Product/System</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Office 365, CRM" {...field} value={field.value || ''} />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={productsLoading ? "Loading products..." : "Select product"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">None/General</SelectItem>
+                          {products.filter(product => product.isActive).map((product) => (
+                            <SelectItem key={product.id} value={product.name}>
+                              {product.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
