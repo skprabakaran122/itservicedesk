@@ -212,6 +212,7 @@ export const insertAttachmentSchema = createInsertSchema(attachments).omit({
 export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
 export type Attachment = typeof attachments.$inferSelect;
 
+
 export const sessions = pgTable(
   "sessions",
   {
