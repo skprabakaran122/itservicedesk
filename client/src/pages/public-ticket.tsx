@@ -1,5 +1,5 @@
 import { AnonymousTicketForm } from "@/components/anonymous-ticket-form";
-import { AnonymousTicketSearch } from "@/components/anonymous-ticket-search";
+import { AnonymousTicketSearchNew } from "@/components/anonymous-ticket-search-new";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,7 +41,7 @@ export default function PublicTicketPage() {
           </TabsContent>
           
           <TabsContent value="search">
-            <AnonymousTicketSearch />
+            <AnonymousTicketSearchNew />
           </TabsContent>
         </Tabs>
 
