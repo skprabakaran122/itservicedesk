@@ -53,7 +53,7 @@ export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
       description: "",
       priority: "medium",
       category: "software",
-      product: "",
+      product: "general",
     },
   });
 
@@ -346,7 +346,7 @@ export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None/General</SelectItem>
+                          <SelectItem value="general">None/General</SelectItem>
                           {products.filter(product => product.isActive).map((product) => (
                             <SelectItem key={product.id} value={product.name}>
                               {product.name}
