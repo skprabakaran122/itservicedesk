@@ -12,10 +12,8 @@ import NotFound from "@/pages/not-found";
 function Router({ currentUser, onLogout }: { currentUser: any; onLogout: () => void }) {
   return (
     <Switch>
-      <Route path="/support">
-        <PublicTicketPage />
-      </Route>
-      <Route path="/">
+      <Route path="/support" component={PublicTicketPage} />
+      <Route path="/" exact>
         {currentUser ? (
           <Dashboard currentUser={currentUser} onLogout={onLogout} />
         ) : (
