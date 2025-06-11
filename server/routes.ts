@@ -227,8 +227,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Anonymous ticket submission
-  app.post("/api/tickets/anonymous", async (req, res) => {
+  // Anonymous ticket submission with file upload
+  app.post("/api/tickets/anonymous", upload.array('attachments', 5), async (req, res) => {
     try {
       const anonymousTicketSchema = z.object({
         requesterName: z.string().min(1),
@@ -248,6 +248,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...ticketData,
         requesterId: null, // No user ID for anonymous tickets
       });
+
+      // Handle file attachments
+      const files = req.files as Express.Multer.File[];
+      if (files && files.length > 0) {
+        for (const file of files) {
+          await storage.createAttachment({
+            ticketId: ticket.id,
+            changeId: null,
+            filename: file.originalname,
+            filepath: file.path,
+            filesize: file.size,
+            mimetype: file.mimetype,
+            uploadedBy: `${ticketData.requesterName} (${ticketData.requesterEmail})`
+          });
+        }
+      }
       
       res.status(201).json(ticket);
     } catch (error: any) {
