@@ -31,7 +31,6 @@ export default function PublicTicketPage() {
               <CardTitle className="text-lg">Need Immediate Help?</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-sm"><strong>Emergency Support:</strong> Call +1 (555) 123-4567</p>
               <p className="text-sm"><strong>Email:</strong> support@calpion.com</p>
               <p className="text-sm"><strong>Hours:</strong> 24/7 for critical issues</p>
             </CardContent>
