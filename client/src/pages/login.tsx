@@ -275,17 +275,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               </Button>
             </div>
 
-            {!isRegistering && (
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-2">Demo Accounts:</p>
-                <div className="space-y-1 text-xs text-blue-600 dark:text-blue-400">
-                  <div>Admin: jane.smith / password123</div>
-                  <div>Technician: john.doe / password123</div>
-                  <div>Manager: mike.wilson / password123</div>
-                  <div>User: sarah.jones / password123</div>
-                </div>
-              </div>
-            )}
+
           </CardContent>
         </Card>
       </div>
