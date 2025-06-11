@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Settings, Users } from "lucide-react";
+import { Settings, Users, Headphones } from "lucide-react";
+import { Link } from "wouter";
 import calpionLogo from "@assets/image_1749619432130.png";
 
 const loginSchema = z.object({

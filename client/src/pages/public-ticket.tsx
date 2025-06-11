@@ -1,0 +1,75 @@
+import { AnonymousTicketForm } from "@/components/anonymous-ticket-form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
+import { ArrowLeft, Headphones } from "lucide-react";
+
+export default function PublicTicketPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
+      <div className="container mx-auto max-w-4xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <Headphones className="h-12 w-12 text-blue-600" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            Calpion IT Support
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300">
+            Get help with your IT issues - no account required
+          </p>
+        </div>
+
+        {/* Main Form */}
+        <AnonymousTicketForm />
+
+        {/* Footer Information */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Need Immediate Help?</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-sm"><strong>Emergency Support:</strong> Call +1 (555) 123-4567</p>
+              <p className="text-sm"><strong>Email:</strong> support@calpion.com</p>
+              <p className="text-sm"><strong>Hours:</strong> 24/7 for critical issues</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Response Times</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-sm"><strong>Critical:</strong> Within 1 hour</p>
+              <p className="text-sm"><strong>High:</strong> Within 4 hours</p>
+              <p className="text-sm"><strong>Medium:</strong> Within 24 hours</p>
+              <p className="text-sm"><strong>Low:</strong> Within 48 hours</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Login Option */}
+        <div className="mt-8 text-center">
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle className="text-lg">Have an Account?</CardTitle>
+              <CardDescription>
+                Login to track your tickets and access additional features
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/">
+                <Button variant="outline" className="w-full">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Go to Login
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

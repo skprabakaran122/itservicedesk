@@ -11,7 +11,10 @@ export const tickets = pgTable("tickets", {
   category: varchar("category", { length: 50 }).notNull(), // hardware, software, network, access, product
   product: varchar("product", { length: 100 }), // specific product name
   assignedTo: text("assigned_to"),
-  requesterId: integer("requester_id").notNull(),
+  requesterId: integer("requester_id"),
+  requesterEmail: text("requester_email"),
+  requesterName: text("requester_name"),
+  requesterPhone: text("requester_phone"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   firstResponseAt: timestamp("first_response_at"),

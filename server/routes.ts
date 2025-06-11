@@ -188,6 +188,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Anonymous ticket submission
+  app.post("/api/tickets/anonymous", async (req, res) => {
+    try {
+      const anonymousTicketSchema = z.object({
+        requesterName: z.string().min(1),
+        requesterEmail: z.string().email(),
+        requesterPhone: z.string().optional(),
+        title: z.string().min(1),
+        description: z.string().min(1),
+        priority: z.enum(["low", "medium", "high", "critical"]),
+        category: z.enum(["software", "hardware", "network", "access", "other"]),
+        product: z.string().optional(),
+        status: z.string().default("open")
+      });
+
+      const ticketData = anonymousTicketSchema.parse(req.body);
+      
+      const ticket = await storage.createTicket({
+        ...ticketData,
+        requesterId: null, // No user ID for anonymous tickets
+      });
+      
+      res.status(201).json(ticket);
+    } catch (error: any) {
+      console.error('Anonymous ticket creation error:', error);
+      res.status(400).json({ message: "Invalid ticket data", error: error.message });
+    }
+  });
+
   app.post("/api/tickets", async (req, res) => {
     try {
       console.log('Session data:', (req as any).session);

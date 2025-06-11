@@ -6,16 +6,20 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
 import Login from "@/pages/login";
+import PublicTicketPage from "@/pages/public-ticket";
 import NotFound from "@/pages/not-found";
 
 function Router({ currentUser, onLogout }: { currentUser: any; onLogout: () => void }) {
-  if (!currentUser) {
-    return <Login onLoginSuccess={(user) => window.location.reload()} />;
-  }
-
   return (
     <Switch>
-      <Route path="/" component={() => <Dashboard currentUser={currentUser} onLogout={onLogout} />} />
+      <Route path="/support" component={PublicTicketPage} />
+      <Route path="/">
+        {currentUser ? (
+          <Dashboard currentUser={currentUser} onLogout={onLogout} />
+        ) : (
+          <Login onLoginSuccess={(user) => window.location.reload()} />
+        )}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
