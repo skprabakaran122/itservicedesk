@@ -263,7 +263,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               </Form>
             )}
 
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-2">
               <Button
                 variant="link"
                 onClick={() => setIsRegistering(!isRegistering)}
@@ -274,8 +274,19 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                   : "Don't have an account? Register"
                 }
               </Button>
+              
+              <div className="border-t pt-4">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Need help? Submit a ticket without logging in
+                </p>
+                <Link href="/support">
+                  <Button variant="outline" className="w-full">
+                    <Headphones className="h-4 w-4 mr-2" />
+                    Submit Support Request
+                  </Button>
+                </Link>
+              </div>
             </div>
-
 
           </CardContent>
         </Card>
