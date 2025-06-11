@@ -106,7 +106,7 @@ module.exports = {
     name: 'servicedesk',
     script: 'server/index.ts',
     interpreter: 'node',
-    interpreter_args: '--loader tsx',
+    interpreter_args: '--import tsx',
     instances: 1,
     exec_mode: 'fork',
     env: {
