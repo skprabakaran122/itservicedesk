@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, Phone, Mail, User, MessageSquare } from "lucide-react";
+import { CheckCircle, Phone, Mail, User, MessageSquare, Upload, X, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -35,6 +35,7 @@ export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
   const { toast } = useToast();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState<number | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
 
   const form = useForm<AnonymousTicketForm>({
     resolver: zodResolver(anonymousTicketSchema),
@@ -52,12 +53,32 @@ export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
 
   const createTicketMutation = useMutation({
     mutationFn: async (data: AnonymousTicketForm) => {
-      const ticketData = {
-        ...data,
-        status: "open",
-        requesterId: null, // Anonymous ticket
-      };
-      const response = await apiRequest("POST", "/api/tickets/anonymous", ticketData);
+      const formData = new FormData();
+      
+      // Add ticket data
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value);
+        }
+      });
+      
+      formData.append("status", "open");
+      formData.append("requesterId", "null");
+      
+      // Add attachments
+      attachments.forEach((file, index) => {
+        formData.append(`attachments`, file);
+      });
+      
+      const response = await fetch("/api/tickets/anonymous", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to create ticket");
+      }
+      
       return response.json();
     },
     onSuccess: (ticket) => {
@@ -80,6 +101,48 @@ export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
 
   const onSubmit = (data: AnonymousTicketForm) => {
     createTicketMutation.mutate(data);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const validFiles = files.filter(file => {
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      const allowedTypes = ['image/', 'application/pdf', 'text/', 'application/msword', 'application/vnd.openxmlformats-officedocument'];
+      
+      if (file.size > maxSize) {
+        toast({
+          title: "File too large",
+          description: `${file.name} is larger than 10MB`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      if (!allowedTypes.some(type => file.type.startsWith(type))) {
+        toast({
+          title: "Invalid file type",
+          description: `${file.name} is not a supported file type`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      return true;
+    });
+    
+    setAttachments(prev => [...prev, ...validFiles].slice(0, 5)); // Max 5 files
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   if (isSubmitted && ticketId) {
@@ -296,6 +359,71 @@ export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
                   </FormItem>
                 )}
               />
+
+              {/* File Attachments */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Attachments (Optional)</label>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Upload screenshots, error logs, or documents. Max 5 files, 10MB each.
+                  </p>
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,.pdf,.txt,.doc,.docx,.xls,.xlsx"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                      disabled={attachments.length >= 5}
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className={`cursor-pointer flex flex-col items-center space-y-2 ${
+                        attachments.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <Upload className="h-8 w-8 text-gray-400" />
+                      <span className="text-sm font-medium">
+                        {attachments.length >= 5 ? 'Maximum files reached' : 'Click to upload files'}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Images, PDFs, Documents (Max 10MB each)
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* File List */}
+                {attachments.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Attached Files:</p>
+                    {attachments.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <FileText className="h-5 w-5 text-blue-500" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{file.name}</p>
+                            <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeAttachment(index)}
+                          className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900"
+                        >
+                          <X className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
