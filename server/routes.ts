@@ -241,9 +241,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all tickets first
       const allTickets = await storage.getTickets();
       
-      // Filter to only include anonymous tickets (those with requesterName but no requesterId)
+      // Filter to only include anonymous tickets (those with requesterName and no requesterId)
       let anonymousTickets = allTickets.filter(ticket => 
-        ticket.requesterName && !ticket.requesterId
+        ticket.requesterName && ticket.requesterId === null
       );
 
       // Apply field-specific search
