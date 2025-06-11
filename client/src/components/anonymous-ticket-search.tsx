@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Clock, AlertCircle, CheckCircle2, User, Package, FileText, Ticket as TicketIcon } from "lucide-react";
+import { Search, Clock, AlertCircle, CheckCircle2, User, Package, FileText, Ticket as TicketIcon, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-import type { Ticket } from "@shared/schema";
+import type { Ticket, Product } from "@shared/schema";
 
 interface AnonymousTicketSearchProps {
   onClose?: () => void;
@@ -17,8 +17,14 @@ interface AnonymousTicketSearchProps {
 
 export function AnonymousTicketSearch({ onClose }: AnonymousTicketSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchBy, setSearchBy] = useState("all");
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [searchTriggered, setSearchTriggered] = useState(false);
+
+  // Fetch products for multi-select
+  const { data: products = [] } = useQuery<Product[]>({
+    queryKey: ['/api/products'],
+    retry: false,
+  });
 
   const { data: searchResults = [], isLoading, error } = useQuery<Ticket[]>({
     queryKey: ['/api/tickets/search/anonymous', searchQuery, searchBy],
