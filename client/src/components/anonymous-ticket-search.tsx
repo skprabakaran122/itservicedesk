@@ -105,7 +105,7 @@ export function AnonymousTicketSearch({ onClose }: AnonymousTicketSearchProps) {
             Search Your Tickets
           </CardTitle>
           <CardDescription>
-            Find your submitted tickets by entering your ticket number, name, or keywords from your issue description.
+            Find your submitted tickets by selecting a search criteria and entering your search terms.
           </CardDescription>
         </CardHeader>
         <CardContent>
