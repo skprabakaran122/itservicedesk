@@ -1,6 +1,6 @@
 import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or } from "drizzle-orm";
+import { eq, and, desc, or, like, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Ticket methods
@@ -232,13 +232,15 @@ export class DatabaseStorage implements IStorage {
 
     // Handle search query for text-based search
     if (filters.searchQuery) {
-      const searchTerm = `%${filters.searchQuery.toLowerCase()}%`;
+      const searchTerm = `%${filters.searchQuery}%`;
+      const numericSearch = parseInt(filters.searchQuery);
+      
       const searchConditions = or(
-        ilike(tickets.title, searchTerm),
-        ilike(tickets.description, searchTerm),
-        ilike(tickets.requesterName, searchTerm),
-        ilike(tickets.product, searchTerm),
-        eq(tickets.id.toString(), filters.searchQuery)
+        sql`LOWER(${tickets.title}) LIKE LOWER(${searchTerm})`,
+        sql`LOWER(${tickets.description}) LIKE LOWER(${searchTerm})`,
+        sql`LOWER(${tickets.requesterName}) LIKE LOWER(${searchTerm})`,
+        sql`LOWER(${tickets.product}) LIKE LOWER(${searchTerm})`,
+        isNaN(numericSearch) ? sql`false` : eq(tickets.id, numericSearch)
       );
       conditions.push(searchConditions);
     }

@@ -58,8 +58,9 @@ export function AnonymousTicketSearch({ onClose }: AnonymousTicketSearchProps) {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
+  const formatDate = (dateString: string | Date) => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return format(date, 'MMM dd, yyyy HH:mm');
   };
 
   const getStatusIcon = (status: string) => {
