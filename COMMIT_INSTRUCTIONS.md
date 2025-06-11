@@ -9,25 +9,20 @@
 - `client/src/components/ticket-form.tsx`
 - `client/src/components/change-form.tsx`
 
-## Commands to Run on Server
+## Step 1: Commit to Development Repository (Replit)
 
-### 1. Navigate to project directory
-```bash
-cd /home/ubuntu/servicedesk
-```
-
-### 2. Check current status
+### 1. Check current status
 ```bash
 git status
 ```
 
-### 3. Add the modified files
+### 2. Add the modified files
 ```bash
 git add client/src/components/ticket-form.tsx
 git add client/src/components/change-form.tsx
 ```
 
-### 4. Commit the changes
+### 3. Commit the changes
 ```bash
 git commit -m "Fix modal dialog usability issues
 
@@ -37,9 +32,32 @@ git commit -m "Fix modal dialog usability issues
 - Improve user experience for ticket and change form creation"
 ```
 
-### 5. Push to repository
+### 4. Push to GitHub repository
 ```bash
 git push origin main
+```
+
+## Step 2: Update Ubuntu Server
+
+### 1. SSH to your Ubuntu server
+```bash
+ssh your-username@54.160.177.174
+```
+
+### 2. Navigate to project directory
+```bash
+cd /home/ubuntu/servicedesk
+```
+
+### 3. Pull latest changes from GitHub
+```bash
+git pull origin main
+```
+
+### 4. Restart the application
+```bash
+pm2 restart servicedesk
+pm2 logs servicedesk --lines 10
 ```
 
 ## Expected Output
