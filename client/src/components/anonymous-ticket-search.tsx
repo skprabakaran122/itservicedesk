@@ -21,6 +21,13 @@ export function AnonymousTicketSearch({ onClose }: AnonymousTicketSearchProps) {
 
   const { data: searchResults = [], isLoading, error } = useQuery<Ticket[]>({
     queryKey: ['/api/tickets/search/anonymous', searchQuery],
+    queryFn: async () => {
+      const response = await fetch(`/api/tickets/search/anonymous?q=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) {
+        throw new Error('Failed to search tickets');
+      }
+      return response.json();
+    },
     enabled: searchTriggered && searchQuery.length >= 2,
     retry: false,
   });

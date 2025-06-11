@@ -1,8 +1,10 @@
 import { AnonymousTicketForm } from "@/components/anonymous-ticket-form";
+import { AnonymousTicketSearch } from "@/components/anonymous-ticket-search";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
-import { ArrowLeft, Headphones } from "lucide-react";
+import { ArrowLeft, Headphones, Search, Plus } from "lucide-react";
 
 export default function PublicTicketPage() {
   return (
@@ -21,8 +23,27 @@ export default function PublicTicketPage() {
           </p>
         </div>
 
-        {/* Main Form */}
-        <AnonymousTicketForm />
+        {/* Main Content with Tabs */}
+        <Tabs defaultValue="submit" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="submit" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Submit New Ticket
+            </TabsTrigger>
+            <TabsTrigger value="search" className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Search Your Tickets
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="submit">
+            <AnonymousTicketForm />
+          </TabsContent>
+          
+          <TabsContent value="search">
+            <AnonymousTicketSearch />
+          </TabsContent>
+        </Tabs>
 
         {/* Footer Information */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
