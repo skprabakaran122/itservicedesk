@@ -15,6 +15,7 @@ import { SLADashboard } from "../components/sla-dashboard";
 import { UserManagement } from "../components/user-management";
 import ITChatbot from "../components/it-chatbot";
 import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users, Target } from "lucide-react";
+import calpionLogo from "@assets/image_1749619432130.png";
 
 interface DashboardProps {
   currentUser: any;
@@ -122,9 +123,16 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">IT Service Desk</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage tickets and change requests</p>
+        <div className="flex items-center">
+          <img 
+            src={calpionLogo} 
+            alt="Calpion Logo" 
+            className="h-12 w-auto object-contain mr-4"
+          />
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">IT Service Desk</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage tickets and change requests</p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex gap-2">

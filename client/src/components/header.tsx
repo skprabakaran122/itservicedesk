@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Home, Menu, User } from "lucide-react";
+import calpionLogo from "@assets/image_1749619432130.png";
 
 export default function Header() {
   return (
@@ -8,29 +9,16 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
             <div className="flex items-center">
-              <Home className="text-2xl text-primary mr-2" />
-              <span className="text-xl font-bold text-gray-900">CampusNest</span>
+              <img 
+                src={calpionLogo} 
+                alt="Calpion Logo" 
+                className="h-8 w-auto object-contain mr-3"
+              />
+              <span className="text-xl font-bold text-gray-900">IT Service Desk</span>
             </div>
-            <nav className="hidden md:flex space-x-8">
-              <a href="#" className="text-gray-900 font-medium hover:text-primary transition-colors">
-                Browse
-              </a>
-              <a href="#" className="text-gray-600 hover:text-primary transition-colors">
-                Saved
-              </a>
-              <a href="#" className="text-gray-600 hover:text-primary transition-colors">
-                Messages
-              </a>
-            </nav>
           </div>
           
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              className="hidden md:block text-gray-600 hover:text-primary font-medium"
-            >
-              List Your Property
-            </Button>
             <div className="relative">
               <Button 
                 variant="ghost" 

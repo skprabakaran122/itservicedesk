@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Settings, Users } from "lucide-react";
+import calpionLogo from "@assets/image_1749619432130.png";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username or email is required"),
@@ -106,10 +107,12 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-              <Settings className="h-6 w-6 text-white" />
-            </div>
+          <div className="flex items-center justify-center mb-6">
+            <img 
+              src={calpionLogo} 
+              alt="Calpion Logo" 
+              className="h-16 w-auto object-contain"
+            />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             IT Service Desk
