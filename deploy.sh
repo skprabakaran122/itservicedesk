@@ -62,7 +62,17 @@ ALTER USER servicedesk_user CREATEDB;
 \q
 EOF
 
-# Get current directory
+# Clone the application repository
+echo "Cloning application repository..."
+if [ -d "servicedesk" ]; then
+    echo "Removing existing servicedesk directory..."
+    rm -rf servicedesk
+fi
+
+git clone https://github.com/skprabakaran122/itservicedesk.git servicedesk
+cd servicedesk
+
+# Get application directory
 APP_DIR=$(pwd)
 
 # Install application dependencies
