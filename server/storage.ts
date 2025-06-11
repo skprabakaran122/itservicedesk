@@ -14,6 +14,7 @@ export interface IStorage {
     priority?: string;
     category?: string;
     assignedTo?: string;
+    searchQuery?: string;
   }): Promise<Ticket[]>;
   
   // Change methods
@@ -220,6 +221,7 @@ export class DatabaseStorage implements IStorage {
     priority?: string;
     category?: string;
     assignedTo?: string;
+    searchQuery?: string;
   }): Promise<Ticket[]> {
     const conditions = [];
     
@@ -228,11 +230,24 @@ export class DatabaseStorage implements IStorage {
     if (filters.category) conditions.push(eq(tickets.category, filters.category));
     if (filters.assignedTo) conditions.push(eq(tickets.assignedTo, filters.assignedTo));
 
+    // Handle search query for text-based search
+    if (filters.searchQuery) {
+      const searchTerm = `%${filters.searchQuery.toLowerCase()}%`;
+      const searchConditions = or(
+        ilike(tickets.title, searchTerm),
+        ilike(tickets.description, searchTerm),
+        ilike(tickets.requesterName, searchTerm),
+        ilike(tickets.product, searchTerm),
+        eq(tickets.id.toString(), filters.searchQuery)
+      );
+      conditions.push(searchConditions);
+    }
+
     if (conditions.length === 0) {
       return await this.getTickets();
     }
 
-    return await db.select().from(tickets).where(and(...conditions));
+    return await db.select().from(tickets).where(and(...conditions)).orderBy(desc(tickets.createdAt));
   }
 
   // Change methods

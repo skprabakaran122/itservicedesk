@@ -227,6 +227,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Anonymous ticket search
+  app.get("/api/tickets/search/anonymous", async (req, res) => {
+    try {
+      const { q } = req.query;
+      
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        return res.status(400).json({ message: "Search query must be at least 2 characters long" });
+      }
+
+      const searchTerm = q.trim().toLowerCase();
+      
+      // Search tickets by various fields for anonymous users
+      // Only return tickets that have requester information (anonymous tickets)
+      const tickets = await storage.searchTickets({
+        searchQuery: searchTerm
+      });
+
+      // Filter to only include anonymous tickets (those with requesterName but no requesterId)
+      const anonymousTickets = tickets.filter(ticket => 
+        ticket.requesterName && !ticket.requesterId
+      );
+
+      res.json(anonymousTickets);
+    } catch (error) {
+      console.error("Error searching anonymous tickets:", error);
+      res.status(500).json({ message: "Failed to search tickets" });
+    }
+  });
+
   // Anonymous ticket submission with file upload
   app.post("/api/tickets/anonymous", upload.array('attachments', 5), async (req, res) => {
     try {
