@@ -110,7 +110,7 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={() => {}} modal={true}>
+    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }} modal={true}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Create Support Ticket</DialogTitle>
