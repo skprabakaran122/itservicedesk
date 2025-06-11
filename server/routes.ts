@@ -232,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const anonymousTicketSchema = z.object({
         requesterName: z.string().min(1),
-        requesterEmail: z.string().email(),
+        requesterEmail: z.string().optional().refine((email) => !email || z.string().email().safeParse(email).success, "Please enter a valid email address"),
         requesterPhone: z.string().optional(),
         title: z.string().min(1),
         description: z.string().min(1),
@@ -256,11 +256,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.createAttachment({
             ticketId: ticket.id,
             changeId: null,
-            filename: file.originalname,
-            filepath: file.path,
-            filesize: file.size,
-            mimetype: file.mimetype,
-            uploadedBy: `${ticketData.requesterName} (${ticketData.requesterEmail})`
+            fileName: file.filename,
+            originalName: file.originalname,
+            fileSize: file.size,
+            mimeType: file.mimetype,
+            fileContent: null, // We're storing files on disk, not in database
+            uploadedBy: null, // Anonymous upload
+            uploadedByName: `${ticketData.requesterName}${ticketData.requesterEmail ? ` (${ticketData.requesterEmail})` : ''}`
           });
         }
       }

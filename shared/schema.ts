@@ -199,7 +199,8 @@ export const attachments = pgTable("attachments", {
   fileContent: text("file_content"), // Store base64 encoded file content
   ticketId: integer("ticket_id").references(() => tickets.id),
   changeId: integer("change_id").references(() => changes.id),
-  uploadedBy: integer("uploaded_by").notNull(),
+  uploadedBy: integer("uploaded_by"),
+  uploadedByName: text("uploaded_by_name"), // For anonymous uploads
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

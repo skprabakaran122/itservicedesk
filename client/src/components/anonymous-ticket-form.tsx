@@ -16,7 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 
 const anonymousTicketSchema = z.object({
   requesterName: z.string().min(1, "Name is required"),
-  requesterEmail: z.string().email("Valid email is required"),
+  requesterEmail: z.string().optional().refine((email) => !email || z.string().email().safeParse(email).success, "Please enter a valid email address"),
   requesterPhone: z.string().optional(),
   title: z.string().min(1, "Issue title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
@@ -200,7 +200,7 @@ export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
           Submit Support Request
         </CardTitle>
         <CardDescription>
-          Create a support ticket without creating an account. We'll contact you via email with updates.
+          Create a support ticket without creating an account. Provide your email for updates, or we'll help you through other means.
         </CardDescription>
       </CardHeader>
       
@@ -234,9 +234,9 @@ export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
                   name="requesterEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address *</FormLabel>
+                      <FormLabel>Email Address (Optional)</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="your.email@company.com" {...field} />
+                        <Input type="email" placeholder="your.email@company.com" {...field} value={field.value || ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
