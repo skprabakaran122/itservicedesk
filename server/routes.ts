@@ -230,49 +230,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Anonymous ticket search
   app.get("/api/tickets/search/anonymous", async (req, res) => {
     try {
-      const { q, searchBy } = req.query;
+      const { q, products } = req.query;
       
       if (!q || typeof q !== 'string' || q.trim().length < 2) {
         return res.status(400).json({ message: "Search query must be at least 2 characters long" });
       }
 
       const searchTerm = q.trim().toLowerCase();
-      const searchField = searchBy as string || 'all';
+      const selectedProducts = products ? (products as string).split(',') : [];
       
       // Get all tickets first
       const allTickets = await storage.getTickets();
       
       // Filter to only include anonymous tickets (those with requesterName but no requesterId)
-      const anonymousTickets = allTickets.filter(ticket => 
+      let anonymousTickets = allTickets.filter(ticket => 
         ticket.requesterName && !ticket.requesterId
       );
 
-      // Apply field-specific filtering
-      const filteredTickets = anonymousTickets.filter(ticket => {
-        switch (searchField) {
-          case 'ticketNumber':
-            return ticket.id.toString().includes(q.trim()) || 
-                   `#${ticket.id}`.toLowerCase().includes(searchTerm);
-          case 'name':
-            return ticket.requesterName?.toLowerCase().includes(searchTerm) || false;
-          case 'title':
-            return ticket.title.toLowerCase().includes(searchTerm);
-          case 'description':
-            return ticket.description.toLowerCase().includes(searchTerm);
-          case 'product':
-            return ticket.product?.toLowerCase().includes(searchTerm) || false;
-          case 'all':
-          default:
-            return ticket.id.toString().includes(q.trim()) ||
-                   `#${ticket.id}`.toLowerCase().includes(searchTerm) ||
-                   ticket.title.toLowerCase().includes(searchTerm) ||
-                   ticket.description.toLowerCase().includes(searchTerm) ||
-                   (ticket.requesterName?.toLowerCase().includes(searchTerm) || false) ||
-                   (ticket.product?.toLowerCase().includes(searchTerm) || false);
-        }
+      // Apply text search across all fields
+      anonymousTickets = anonymousTickets.filter(ticket => {
+        return ticket.id.toString().includes(q.trim()) ||
+               `#${ticket.id}`.toLowerCase().includes(searchTerm) ||
+               ticket.title.toLowerCase().includes(searchTerm) ||
+               ticket.description.toLowerCase().includes(searchTerm) ||
+               (ticket.requesterName?.toLowerCase().includes(searchTerm) || false) ||
+               (ticket.product?.toLowerCase().includes(searchTerm) || false);
       });
 
-      res.json(filteredTickets);
+      // Apply product filtering if products are selected
+      if (selectedProducts.length > 0) {
+        anonymousTickets = anonymousTickets.filter(ticket => 
+          ticket.product && selectedProducts.includes(ticket.product)
+        );
+      }
+
+      res.json(anonymousTickets);
     } catch (error) {
       console.error("Error searching anonymous tickets:", error);
       res.status(500).json({ message: "Failed to search tickets" });
