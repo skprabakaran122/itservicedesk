@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-import { apiRequest } from "@/lib/queryClient";
 import type { Ticket } from "@shared/schema";
 
 interface AnonymousTicketSearchProps {
@@ -17,12 +17,17 @@ interface AnonymousTicketSearchProps {
 
 export function AnonymousTicketSearch({ onClose }: AnonymousTicketSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchBy, setSearchBy] = useState("all");
   const [searchTriggered, setSearchTriggered] = useState(false);
 
   const { data: searchResults = [], isLoading, error } = useQuery<Ticket[]>({
-    queryKey: ['/api/tickets/search/anonymous', searchQuery],
+    queryKey: ['/api/tickets/search/anonymous', searchQuery, searchBy],
     queryFn: async () => {
-      const response = await fetch(`/api/tickets/search/anonymous?q=${encodeURIComponent(searchQuery)}`);
+      const params = new URLSearchParams({
+        q: searchQuery,
+        searchBy: searchBy
+      });
+      const response = await fetch(`/api/tickets/search/anonymous?${params}`);
       if (!response.ok) {
         throw new Error('Failed to search tickets');
       }
@@ -41,6 +46,17 @@ export function AnonymousTicketSearch({ onClose }: AnonymousTicketSearchProps) {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const getPlaceholderText = () => {
+    switch (searchBy) {
+      case 'ticketNumber': return 'Enter ticket number (e.g., #24)';
+      case 'name': return 'Enter your name';
+      case 'title': return 'Enter issue title or keywords';
+      case 'description': return 'Enter issue description keywords';
+      case 'product': return 'Enter product name';
+      default: return 'Enter ticket number, name, or keywords...';
     }
   };
 
@@ -93,13 +109,26 @@ export function AnonymousTicketSearch({ onClose }: AnonymousTicketSearchProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <Select value={searchBy} onValueChange={setSearchBy}>
+              <SelectTrigger>
+                <SelectValue placeholder="Search by..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Fields</SelectItem>
+                <SelectItem value="ticketNumber">Ticket Number</SelectItem>
+                <SelectItem value="name">Your Name</SelectItem>
+                <SelectItem value="title">Issue Title</SelectItem>
+                <SelectItem value="description">Issue Details</SelectItem>
+                <SelectItem value="product">Product</SelectItem>
+              </SelectContent>
+            </Select>
             <Input
-              placeholder="Enter ticket number, your name, issue details, or product name..."
+              placeholder={getPlaceholderText()}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1"
+              className="md:col-span-2"
             />
             <Button 
               onClick={handleSearch} 
@@ -143,7 +172,7 @@ export function AnonymousTicketSearch({ onClose }: AnonymousTicketSearchProps) {
           {searchResults.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center">
-                <Ticket className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <TicketIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No tickets found</h3>
                 <p className="text-muted-foreground">
                   No tickets match your search criteria. Try different keywords or check your ticket number.
