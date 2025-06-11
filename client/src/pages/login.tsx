@@ -279,12 +279,14 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 <p className="text-sm text-muted-foreground mb-2">
                   Need help? Submit a ticket without logging in
                 </p>
-                <Link href="/support">
-                  <Button variant="outline" className="w-full">
-                    <Headphones className="h-4 w-4 mr-2" />
-                    Submit Support Request
-                  </Button>
-                </Link>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.location.href = '/support'}
+                >
+                  <Headphones className="h-4 w-4 mr-2" />
+                  Submit Support Request
+                </Button>
               </div>
             </div>
 
