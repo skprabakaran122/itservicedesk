@@ -54,14 +54,14 @@ export function AnonymousTicketSearchNew({ onClose }: AnonymousTicketSearchProps
         return response.json();
       }
     },
-    enabled: searchTriggered && ((searchBy === 'product' && selectedProducts.length > 0) || (searchBy !== 'product' && searchQuery.length >= 2)),
+    enabled: searchTriggered && ((searchBy === 'product' && selectedProducts.length > 0) || (searchBy !== 'product' && searchQuery.length >= 1)),
     retry: false,
   });
 
   const handleSearch = () => {
     if (searchBy === 'product' && selectedProducts.length > 0) {
       setSearchTriggered(true);
-    } else if (searchBy !== 'product' && searchQuery.trim().length >= 2) {
+    } else if (searchBy !== 'product' && searchQuery.trim().length >= 1) {
       setSearchTriggered(true);
     }
   };
@@ -211,9 +211,9 @@ export function AnonymousTicketSearchNew({ onClose }: AnonymousTicketSearchProps
           </div>
           
           {/* Validation message */}
-          {searchBy !== 'product' && searchQuery.length > 0 && searchQuery.length < 2 && (
+          {searchBy !== 'product' && searchQuery.length === 0 && (
             <p className="text-sm text-muted-foreground mt-2">
-              Please enter at least 2 characters to search
+              Please enter at least 1 character to search
             </p>
           )}
           

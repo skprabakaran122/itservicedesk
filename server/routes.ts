@@ -232,8 +232,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { q, searchBy = 'all' } = req.query;
       
-      if (!q || typeof q !== 'string' || q.trim().length < 2) {
-        return res.status(400).json({ message: "Search query must be at least 2 characters long" });
+      if (!q || typeof q !== 'string' || q.trim().length < 1) {
+        return res.status(400).json({ message: "Search query must be at least 1 character long" });
       }
 
       const searchTerm = q.trim().toLowerCase();
