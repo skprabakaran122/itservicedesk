@@ -17,6 +17,7 @@ interface AnonymousTicketSearchProps {
 
 export function AnonymousTicketSearchNew({ onClose }: AnonymousTicketSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchBy, setSearchBy] = useState("ticketNumber");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [searchTriggered, setSearchTriggered] = useState(false);
 
@@ -27,31 +28,52 @@ export function AnonymousTicketSearchNew({ onClose }: AnonymousTicketSearchProps
   });
 
   const { data: searchResults = [], isLoading, error } = useQuery<Ticket[]>({
-    queryKey: ['/api/tickets/search/anonymous', searchQuery, selectedProducts],
+    queryKey: ['/api/tickets/search/anonymous', searchQuery, searchBy, selectedProducts],
     queryFn: async () => {
-      const params = new URLSearchParams({
-        q: searchQuery,
-        searchBy: 'all'
-      });
-      
-      // Add selected products as filter
-      if (selectedProducts.length > 0) {
-        params.append('products', selectedProducts.join(','));
+      if (searchBy === 'product' && selectedProducts.length > 0) {
+        // For product search, use the selected products
+        const params = new URLSearchParams({
+          q: selectedProducts.join(','),
+          searchBy: 'product'
+        });
+        const response = await fetch(`/api/tickets/search/anonymous?${params}`);
+        if (!response.ok) {
+          throw new Error('Failed to search tickets');
+        }
+        return response.json();
+      } else {
+        // For other search types, use the search query
+        const params = new URLSearchParams({
+          q: searchQuery,
+          searchBy: searchBy
+        });
+        const response = await fetch(`/api/tickets/search/anonymous?${params}`);
+        if (!response.ok) {
+          throw new Error('Failed to search tickets');
+        }
+        return response.json();
       }
-      
-      const response = await fetch(`/api/tickets/search/anonymous?${params}`);
-      if (!response.ok) {
-        throw new Error('Failed to search tickets');
-      }
-      return response.json();
     },
-    enabled: searchTriggered && searchQuery.length >= 2,
+    enabled: searchTriggered && ((searchBy === 'product' && selectedProducts.length > 0) || (searchBy !== 'product' && searchQuery.length >= 2)),
     retry: false,
   });
 
   const handleSearch = () => {
-    if (searchQuery.trim().length >= 2) {
+    if (searchBy === 'product' && selectedProducts.length > 0) {
       setSearchTriggered(true);
+    } else if (searchBy !== 'product' && searchQuery.trim().length >= 2) {
+      setSearchTriggered(true);
+    }
+  };
+
+  const getPlaceholderText = () => {
+    switch (searchBy) {
+      case 'ticketNumber': return 'Enter ticket number (e.g., #24)';
+      case 'name': return 'Enter your name';
+      case 'title': return 'Enter issue title or keywords';
+      case 'description': return 'Enter issue description keywords';
+      case 'product': return 'Select products from dropdown below...';
+      default: return 'Enter search keywords...';
     }
   };
 
@@ -116,62 +138,88 @@ export function AnonymousTicketSearchNew({ onClose }: AnonymousTicketSearchProps
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {/* Search Input */}
-            <div className="flex gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <Select value={searchBy} onValueChange={setSearchBy}>
+              <SelectTrigger>
+                <SelectValue placeholder="Search by..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ticketNumber">Ticket Number</SelectItem>
+                <SelectItem value="name">Your Name</SelectItem>
+                <SelectItem value="title">Issue Title</SelectItem>
+                <SelectItem value="description">Issue Details</SelectItem>
+                <SelectItem value="product">Product</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {searchBy !== 'product' ? (
               <Input
-                placeholder="Enter ticket number, name, or keywords..."
+                placeholder={getPlaceholderText()}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="flex-1"
+                className="md:col-span-2"
               />
-              <Button onClick={handleSearch} disabled={searchQuery.length < 2}>
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Button>
-            </div>
-
-            {/* Product Multi-Select */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Filter by Products (optional):</label>
-              <Select onValueChange={handleProductToggle}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select products to filter..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((product) => (
-                    <SelectItem key={product.id} value={product.name}>
-                      {product.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Selected Products Display */}
-              {selectedProducts.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {selectedProducts.map((productName) => (
-                    <Badge
-                      key={productName}
-                      variant="secondary"
-                      className="flex items-center gap-1"
-                    >
-                      <Package className="h-3 w-3" />
-                      {productName}
-                      <X
-                        className="h-3 w-3 cursor-pointer hover:text-red-500"
-                        onClick={() => removeProduct(productName)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
+            ) : (
+              <div className="md:col-span-2 space-y-2">
+                <Select onValueChange={handleProductToggle}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select products..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((product) => (
+                      <SelectItem key={product.id} value={product.name}>
+                        {product.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {/* Selected Products Display */}
+                {selectedProducts.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {selectedProducts.map((productName) => (
+                      <Badge
+                        key={productName}
+                        variant="secondary"
+                        className="flex items-center gap-1 text-xs"
+                      >
+                        <Package className="h-3 w-3" />
+                        {productName}
+                        <X
+                          className="h-3 w-3 cursor-pointer hover:text-red-500"
+                          onClick={() => removeProduct(productName)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <Button 
+              onClick={handleSearch} 
+              disabled={
+                (searchBy === 'product' && selectedProducts.length === 0) ||
+                (searchBy !== 'product' && searchQuery.trim().length < 2)
+              }
+              className="px-6"
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Search
+            </Button>
           </div>
-          {searchQuery.length > 0 && searchQuery.length < 2 && (
+          
+          {/* Validation message */}
+          {searchBy !== 'product' && searchQuery.length > 0 && searchQuery.length < 2 && (
             <p className="text-sm text-muted-foreground mt-2">
               Please enter at least 2 characters to search
+            </p>
+          )}
+          
+          {searchBy === 'product' && selectedProducts.length === 0 && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Please select at least one product to search
             </p>
           )}
         </CardContent>

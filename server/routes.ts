@@ -230,14 +230,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Anonymous ticket search
   app.get("/api/tickets/search/anonymous", async (req, res) => {
     try {
-      const { q, products } = req.query;
+      const { q, searchBy = 'all' } = req.query;
       
       if (!q || typeof q !== 'string' || q.trim().length < 2) {
         return res.status(400).json({ message: "Search query must be at least 2 characters long" });
       }
 
       const searchTerm = q.trim().toLowerCase();
-      const selectedProducts = products ? (products as string).split(',') : [];
       
       // Get all tickets first
       const allTickets = await storage.getTickets();
@@ -247,21 +246,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticket.requesterName && !ticket.requesterId
       );
 
-      // Apply text search across all fields
-      anonymousTickets = anonymousTickets.filter(ticket => {
-        return ticket.id.toString().includes(q.trim()) ||
-               `#${ticket.id}`.toLowerCase().includes(searchTerm) ||
-               ticket.title.toLowerCase().includes(searchTerm) ||
-               ticket.description.toLowerCase().includes(searchTerm) ||
-               (ticket.requesterName?.toLowerCase().includes(searchTerm) || false) ||
-               (ticket.product?.toLowerCase().includes(searchTerm) || false);
-      });
-
-      // Apply product filtering if products are selected
-      if (selectedProducts.length > 0) {
+      // Apply field-specific search
+      if (searchBy === 'product') {
+        // For product search, q contains comma-separated product names
+        const selectedProducts = searchTerm.split(',').map(p => p.trim());
         anonymousTickets = anonymousTickets.filter(ticket => 
-          ticket.product && selectedProducts.includes(ticket.product)
+          ticket.product && selectedProducts.some(product => 
+            ticket.product?.toLowerCase().includes(product.toLowerCase())
+          )
         );
+      } else if (searchBy === 'ticketNumber') {
+        anonymousTickets = anonymousTickets.filter(ticket => 
+          ticket.id.toString().includes(q.trim()) ||
+          `#${ticket.id}`.toLowerCase().includes(searchTerm)
+        );
+      } else if (searchBy === 'name') {
+        anonymousTickets = anonymousTickets.filter(ticket => 
+          ticket.requesterName?.toLowerCase().includes(searchTerm) || false
+        );
+      } else if (searchBy === 'title') {
+        anonymousTickets = anonymousTickets.filter(ticket => 
+          ticket.title.toLowerCase().includes(searchTerm)
+        );
+      } else if (searchBy === 'description') {
+        anonymousTickets = anonymousTickets.filter(ticket => 
+          ticket.description.toLowerCase().includes(searchTerm)
+        );
+      } else {
+        // Default 'all' search - search across all fields
+        anonymousTickets = anonymousTickets.filter(ticket => {
+          return ticket.id.toString().includes(q.trim()) ||
+                 `#${ticket.id}`.toLowerCase().includes(searchTerm) ||
+                 ticket.title.toLowerCase().includes(searchTerm) ||
+                 ticket.description.toLowerCase().includes(searchTerm) ||
+                 (ticket.requesterName?.toLowerCase().includes(searchTerm) || false) ||
+                 (ticket.product?.toLowerCase().includes(searchTerm) || false);
+        });
       }
 
       res.json(anonymousTickets);
