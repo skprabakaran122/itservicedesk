@@ -102,13 +102,7 @@ export interface IStorage {
   updateTicketSLA(id: number): Promise<void>;
   refreshSLAMetrics(): Promise<void>;
   
-  // Ticket routing methods
-  getTicketRouting(): Promise<TicketRouting[]>;
-  createTicketRouting(routing: InsertTicketRouting): Promise<TicketRouting>;
-  updateTicketRouting(id: number, updates: Partial<InsertTicketRouting>): Promise<TicketRouting | undefined>;
-  deleteTicketRouting(id: number): Promise<boolean>;
-  findRoutingRule(productName: string | null, category: string, priority: string): Promise<TicketRouting | undefined>;
-  applyTicketRouting(ticket: InsertTicket): Promise<InsertTicket>;
+
 }
 
 export class DatabaseStorage implements IStorage {
