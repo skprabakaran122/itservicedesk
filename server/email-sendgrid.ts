@@ -62,8 +62,19 @@ class EmailService {
       await sgMail.send(msg);
       console.log(`[Email] Email sent successfully to ${to}`);
       return true;
-    } catch (error) {
-      console.error('[Email] Failed to send email:', error);
+    } catch (error: any) {
+      console.error('[Email] Failed to send email - Code:', error.code);
+      
+      // Log detailed SendGrid error information
+      if (error.response && error.response.body) {
+        console.error('[Email] SendGrid error details:', JSON.stringify(error.response.body, null, 2));
+        if (error.response.body.errors) {
+          error.response.body.errors.forEach((err: any, index: number) => {
+            console.error(`[Email] Error ${index + 1}:`, err.message || err);
+          });
+        }
+      }
+      
       return false;
     }
   }
