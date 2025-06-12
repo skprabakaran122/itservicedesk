@@ -13,6 +13,8 @@ import type { Ticket, Product } from "@shared/schema";
 
 interface AnonymousTicketSearchProps {
   onClose?: () => void;
+  products?: Product[];
+  productsLoading?: boolean;
 }
 
 export function AnonymousTicketSearchNew({ onClose }: AnonymousTicketSearchProps) {

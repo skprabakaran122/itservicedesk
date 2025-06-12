@@ -5,8 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { ArrowLeft, Headphones, Search, Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { Product } from "@shared/schema";
 
 export default function PublicTicketPage() {
+  // Fetch products once at the parent level to avoid duplicate API calls
+  const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
+    queryKey: ['/api/products'],
+    retry: false,
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <div className="container mx-auto max-w-4xl">
@@ -37,11 +45,11 @@ export default function PublicTicketPage() {
           </TabsList>
           
           <TabsContent value="submit">
-            <AnonymousTicketForm />
+            <AnonymousTicketForm products={products} productsLoading={productsLoading} />
           </TabsContent>
           
           <TabsContent value="search">
-            <AnonymousTicketSearchNew />
+            <AnonymousTicketSearchNew products={products} productsLoading={productsLoading} />
           </TabsContent>
         </Tabs>
 

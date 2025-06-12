@@ -30,18 +30,15 @@ type AnonymousTicketForm = z.infer<typeof anonymousTicketSchema>;
 
 interface AnonymousTicketFormProps {
   onSuccess?: () => void;
+  products?: Product[];
+  productsLoading?: boolean;
 }
 
-export function AnonymousTicketForm({ onSuccess }: AnonymousTicketFormProps) {
+export function AnonymousTicketForm({ onSuccess, products = [], productsLoading = false }: AnonymousTicketFormProps) {
   const { toast } = useToast();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState<number | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
-
-  // Fetch products from the API
-  const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
-    queryKey: ['/api/products'],
-  });
 
   const form = useForm<AnonymousTicketForm>({
     resolver: zodResolver(anonymousTicketSchema),
