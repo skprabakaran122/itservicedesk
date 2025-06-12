@@ -32,13 +32,17 @@ git clone <your-git-repository-url> servicedesk
 cd servicedesk
 ```
 
-### Step 4: Install Dependencies
+### Step 4: Install Dependencies and Build
 ```bash
 # Install Node.js dependencies
 npm install
 
-# Build the application
+# Build the client application
 npm run build
+
+# Move build files to expected location for production
+mkdir -p server/public
+cp -r dist/public/* server/public/ 2>/dev/null || true
 ```
 
 ### Step 5: Environment Configuration

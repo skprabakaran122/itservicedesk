@@ -18,7 +18,20 @@ echo "📦 Installing dependencies..."
 npm install --production
 
 echo "🏗️ Building application..."
-npm run build 2>/dev/null || echo "Build step skipped"
+npm run build
+
+echo "📂 Moving build files to correct location..."
+mkdir -p server/public
+if [ -d "dist/public" ]; then
+    cp -r dist/public/* server/public/
+    echo "✅ Build files moved to server/public"
+else
+    echo "⚠️ No dist/public directory found, checking for alternative locations..."
+    if [ -d "dist" ]; then
+        cp -r dist/* server/public/
+        echo "✅ Build files moved from dist/ to server/public"
+    fi
+fi
 
 echo "🗄️ Setting up database..."
 npm run db:push
