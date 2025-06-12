@@ -23,12 +23,16 @@ class EmailService {
           console.log('[Email] Warning: SendGrid API key should start with "SG."');
         }
         
-        sgMail.setApiKey(apiKey);
+        // Trim any potential whitespace and set API key
+        const cleanApiKey = apiKey.trim();
+        sgMail.setApiKey(cleanApiKey);
+        console.log(`[Email] Using API key: ${cleanApiKey.substring(0, 10)}...`);
         this.fromEmail = config.fromEmail || process.env.FROM_EMAIL || 'noreply@calpion.com';
         this.isEnabled = true;
         console.log('[Email] SendGrid configured successfully');
         console.log(`[Email] From address: ${this.fromEmail}`);
         console.log(`[Email] API key format check: ${apiKey.startsWith('SG.') ? 'Valid' : 'Invalid'}`);
+        console.log(`[Email] API key length: ${apiKey.length}`);
       } catch (error) {
         console.log('[Email] Failed to initialize SendGrid:', error);
         this.isEnabled = false;
