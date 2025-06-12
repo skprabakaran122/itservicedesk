@@ -8,8 +8,11 @@ module.exports = {
     exec_mode: 'fork',
     env: {
       NODE_ENV: 'production',
-      PORT: 5000
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://servicedesk_user:password123@localhost:5432/servicedesk',
+      SENDGRID_API_KEY: 'configure_in_admin_console'
     },
+    env_file: '.env',
     error_file: './logs/pm2-error.log',
     out_file: './logs/pm2-out.log',
     log_file: './logs/pm2-combined.log',
