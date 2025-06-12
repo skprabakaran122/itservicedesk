@@ -181,6 +181,10 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
             <Shield className="h-4 w-4 mr-2" />
             Approval Routing
           </TabsTrigger>
+          <TabsTrigger value="email">
+            <Mail className="h-4 w-4 mr-2" />
+            Email Settings
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="products">
@@ -362,6 +366,10 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
 
         <TabsContent value="approval-routing">
           <ApprovalRoutingManager currentUser={currentUser} />
+        </TabsContent>
+
+        <TabsContent value="email">
+          <EmailSettings currentUser={currentUser} />
         </TabsContent>
       </Tabs>
     </div>

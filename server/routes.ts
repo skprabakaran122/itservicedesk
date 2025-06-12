@@ -581,6 +581,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (product) {
           await storage.initializeChangeApprovals(change.id, product.id, changeData.riskLevel, changeData.changeType);
+          
+          // Send email notifications to first level approvers
+          try {
+            const approvals = await storage.getChangeApprovals(change.id);
+            const firstLevelApprovals = approvals.filter(a => a.approvalLevel === 1);
+            const users = await storage.getUsers();
+            
+            for (const approval of firstLevelApprovals) {
+              const approver = users.find(u => u.id === approval.approverId);
+              if (approver?.email) {
+                await emailService.sendChangeApprovalEmail(change, approver.email, approver.name);
+              }
+            }
+          } catch (error) {
+            console.error('Failed to send change approval emails:', error);
+            // Don't fail the change creation if email fails
+          }
         }
       }
       
@@ -895,6 +912,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { approverId, action, comments } = req.body;
       
       const result = await storage.processApproval(changeId, approverId, action, comments);
+      
+      // Send email notifications for next level approvals
+      if (result.approved && !result.completed && result.nextLevel) {
+        try {
+          const change = await storage.getChange(changeId);
+          const approvals = await storage.getChangeApprovals(changeId);
+          const nextLevelApprovals = approvals.filter(a => a.approvalLevel === result.nextLevel && a.status === 'pending');
+          const users = await storage.getUsers();
+          
+          for (const approval of nextLevelApprovals) {
+            const approver = users.find(u => u.id === approval.approverId);
+            if (approver?.email && change) {
+              await emailService.sendChangeApprovalEmail(change, approver.email, approver.name);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to send next level approval emails:', error);
+        }
+      }
+      
       res.json(result);
     } catch (error: any) {
       res.status(400).json({ message: error?.message || "Failed to process approval" });
