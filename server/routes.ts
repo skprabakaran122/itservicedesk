@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { emailService } from "./email";
 import { z } from "zod";
 import { insertTicketSchema, insertChangeSchema, insertProductSchema, insertAttachmentSchema } from "@shared/schema";
 import session from "express-session";
@@ -336,6 +337,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
+
+      // Send email notification if email provided
+      if (ticketData.requesterEmail) {
+        try {
+          await emailService.sendTicketCreatedEmail(ticket, ticketData.requesterEmail);
+        } catch (error) {
+          console.error('Failed to send ticket creation email:', error);
+          // Don't fail the ticket creation if email fails
+        }
+      }
       
       res.status(201).json(ticket);
     } catch (error: any) {
@@ -362,6 +373,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const ticket = await storage.createTicket(ticketData);
+
+      // Send email notification to user
+      try {
+        await emailService.sendTicketCreatedEmail(ticket, currentUser.email);
+      } catch (error) {
+        console.error('Failed to send ticket creation email:', error);
+        // Don't fail the ticket creation if email fails
+      }
+
       res.status(201).json(ticket);
     } catch (error: any) {
       console.error('Ticket creation error:', error);
@@ -426,6 +446,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updatedTicket = await storage.updateTicketWithHistory(id, updates, currentUser.id, notes);
+
+      // Send email notification on ticket updates
+      if (updatedTicket) {
+        try {
+          // Determine recipient email
+          let recipientEmail = null;
+          if (updatedTicket.requesterEmail) {
+            recipientEmail = updatedTicket.requesterEmail;
+          } else if (updatedTicket.requesterId) {
+            const users = await storage.getUsers();
+            const requester = users.find(u => u.id === updatedTicket.requesterId);
+            if (requester?.email) {
+              recipientEmail = requester.email;
+            }
+          }
+
+          if (recipientEmail) {
+            await emailService.sendTicketUpdatedEmail(updatedTicket, recipientEmail, notes);
+          }
+        } catch (error) {
+          console.error('Failed to send ticket update email:', error);
+          // Don't fail the update if email fails
+        }
+      }
+
       res.json(updatedTicket);
     } catch (error) {
       res.status(400).json({ message: "Invalid update data" });
@@ -885,6 +930,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ response });
     } catch (error) {
       res.status(400).json({ message: "Invalid message format" });
+    }
+  });
+
+  // Email test endpoint
+  app.post("/api/email/test", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const schema = z.object({
+        email: z.string().email(),
+      });
+
+      const { email } = schema.parse(req.body);
+      
+      const testEmailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0;">Calpion IT Support</h1>
+            <p style="margin: 5px 0 0 0;">Email System Test</p>
+          </div>
+          
+          <div style="padding: 20px; background: #f9f9f9;">
+            <h2 style="color: #333; margin-top: 0;">✅ Email Configuration Successful!</h2>
+            <p>This is a test email to verify that your email notifications are working correctly.</p>
+            
+            <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 5px;">
+              <h3 style="margin-top: 0; color: #333;">System Information:</h3>
+              <ul style="margin: 0; padding-left: 20px;">
+                <li>Test sent at: ${new Date().toLocaleString()}</li>
+                <li>Requested by: ${currentUser.name} (${currentUser.email})</li>
+                <li>System: Calpion IT Service Desk</li>
+              </ul>
+            </div>
+            
+            <div style="margin: 20px 0; padding: 15px; background: #d4edda; border-radius: 5px; border-left: 4px solid #28a745;">
+              <h3 style="margin-top: 0; color: #28a745;">Email notifications are now active for:</h3>
+              <ul style="margin: 0; padding-left: 20px;">
+                <li>New ticket confirmations</li>
+                <li>Ticket status updates</li>
+                <li>Change approval requests</li>
+                <li>Priority issue alerts</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div style="padding: 20px; background: #333; color: white; text-align: center;">
+            <p style="margin: 0;">Calpion IT Support - Email Test Successful</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.8;">If you received this email, your configuration is working correctly</p>
+          </div>
+        </div>
+      `;
+
+      const success = await emailService.sendEmail(
+        email,
+        "🔧 Calpion IT Support - Email Test",
+        testEmailHtml
+      );
+
+      if (success) {
+        res.json({ 
+          message: "Test email sent successfully",
+          recipient: email,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(500).json({ message: "Failed to send test email" });
+      }
+    } catch (error: any) {
+      console.error('Email test error:', error);
+      res.status(400).json({ message: error.message || "Invalid request" });
     }
   });
 
