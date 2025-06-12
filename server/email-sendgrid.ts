@@ -13,10 +13,13 @@ class EmailService {
   private async initialize() {
     const config = getEmailConfig();
     
-    if (config.provider === 'sendgrid' && config.sendgridApiKey) {
+    // Try dynamic config first, then fallback to environment variable
+    const apiKey = config.sendgridApiKey || process.env.SENDGRID_API_KEY;
+    
+    if (apiKey && (config.provider === 'sendgrid' || !config.sendgridApiKey)) {
       try {
-        sgMail.setApiKey(config.sendgridApiKey);
-        this.fromEmail = config.fromEmail || 'noreply@calpion.com';
+        sgMail.setApiKey(apiKey);
+        this.fromEmail = config.fromEmail || process.env.FROM_EMAIL || 'noreply@calpion.com';
         this.isEnabled = true;
         console.log('[Email] SendGrid configured successfully');
         console.log(`[Email] From address: ${this.fromEmail}`);
