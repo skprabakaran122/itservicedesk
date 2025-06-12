@@ -17,17 +17,11 @@ interface AnonymousTicketSearchProps {
   productsLoading?: boolean;
 }
 
-export function AnonymousTicketSearchNew({ onClose }: AnonymousTicketSearchProps) {
+export function AnonymousTicketSearchNew({ onClose, products = [], productsLoading = false }: AnonymousTicketSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchBy, setSearchBy] = useState("ticketNumber");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [searchTriggered, setSearchTriggered] = useState(false);
-
-  // Fetch products for multi-select
-  const { data: products = [] } = useQuery<Product[]>({
-    queryKey: ['/api/products'],
-    retry: false,
-  });
 
   const { data: searchResults = [], isLoading, error } = useQuery<Ticket[]>({
     queryKey: ['/api/tickets/search/anonymous', searchQuery, searchBy, selectedProducts],
@@ -164,9 +158,9 @@ export function AnonymousTicketSearchNew({ onClose }: AnonymousTicketSearchProps
               />
             ) : (
               <div className="md:col-span-2 space-y-2">
-                <Select onValueChange={handleProductToggle}>
+                <Select onValueChange={handleProductToggle} disabled={productsLoading}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select products..." />
+                    <SelectValue placeholder={productsLoading ? "Loading products..." : "Select products..."} />
                   </SelectTrigger>
                   <SelectContent>
                     {products.map((product) => (

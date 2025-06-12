@@ -336,7 +336,7 @@ export function AnonymousTicketForm({ onSuccess, products = [], productsLoading 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Product/System</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={productsLoading}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder={productsLoading ? "Loading products..." : "Select product"} />
