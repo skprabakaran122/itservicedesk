@@ -214,28 +214,28 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                       )}
                     />
                   </div>
-                  <FormField
-                    control={registerForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <input 
-                            type="email" 
-                            placeholder="john.doe@company.com" 
-                            disabled={registerMutation.isPending}
-                            value={field.value || ""}
-                            onChange={(e) => field.onChange(e.target.value)}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                  <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Email
+                    </label>
+                    <input 
+                      id="email"
+                      type="email" 
+                      placeholder="john.doe@company.com" 
+                      disabled={registerMutation.isPending}
+                      value={registerForm.watch("email") || ""}
+                      onChange={(e) => {
+                        console.log("Email input changed:", e.target.value);
+                        registerForm.setValue("email", e.target.value);
+                      }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                    {registerForm.formState.errors.email && (
+                      <p className="text-sm font-medium text-destructive">
+                        {registerForm.formState.errors.email.message}
+                      </p>
                     )}
-                  />
+                  </div>
                   <FormField
                     control={registerForm.control}
                     name="password"
