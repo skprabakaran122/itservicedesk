@@ -62,6 +62,9 @@ function startSLAScheduler() {
 }
 
 (async () => {
+  // Initialize storage data once at startup
+  await storage.initializeData();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

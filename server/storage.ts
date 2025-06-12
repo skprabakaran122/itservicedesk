@@ -107,8 +107,13 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private static initialized = false;
+
   constructor() {
-    this.initializeData();
+    if (!DatabaseStorage.initialized) {
+      DatabaseStorage.initialized = true;
+      this.initializeData();
+    }
   }
 
   private getSLATargets(priority: string): { response: number; resolution: number } {
