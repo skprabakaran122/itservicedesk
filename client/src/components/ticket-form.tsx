@@ -258,16 +258,10 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Corporate">Corporate</SelectItem>
-                        <SelectItem value="North America">North America</SelectItem>
-                        <SelectItem value="Europe">Europe</SelectItem>
-                        <SelectItem value="Asia Pacific">Asia Pacific</SelectItem>
-                        <SelectItem value="Manufacturing">Manufacturing</SelectItem>
-                        <SelectItem value="Services">Services</SelectItem>
-                        <SelectItem value="Technology">Technology</SelectItem>
-                        <SelectItem value="Consulting">Consulting</SelectItem>
-                        <SelectItem value="Support">Support</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        <SelectItem value="BU1">BU1</SelectItem>
+                        <SelectItem value="BU2">BU2</SelectItem>
+                        <SelectItem value="BU3">BU3</SelectItem>
+                        <SelectItem value="BU4">BU4</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
