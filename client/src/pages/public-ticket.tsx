@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Lazy load heavy components
 const AnonymousTicketForm = lazy(() => import("@/components/anonymous-ticket-form").then(module => ({ default: module.AnonymousTicketForm })));
 const AnonymousTicketSearchNew = lazy(() => import("@/components/anonymous-ticket-search-new").then(module => ({ default: module.AnonymousTicketSearchNew })));
-const CalpionProjectIntakeForm = lazy(() => import("@/components/calpion-project-intake-form").then(module => ({ default: module.CalpionProjectIntakeForm })));
+const CalpionRPAProjectForm = lazy(() => import("@/components/calpion-rpa-project-form").then(module => ({ default: module.CalpionRPAProjectForm })));
 
 export default function PublicTicketPage() {
   const [activeTab, setActiveTab] = useState("submit");
@@ -57,7 +57,7 @@ export default function PublicTicketPage() {
             </TabsTrigger>
             <TabsTrigger value="project" className="flex items-center gap-2">
               <Headphones className="h-4 w-4" />
-              Project Intake
+              RPA/Olympus Project
             </TabsTrigger>
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Search className="h-4 w-4" />
@@ -104,7 +104,7 @@ export default function PublicTicketPage() {
                     <Skeleton className="h-10 w-32" />
                   </div>
                 }>
-                  <CalpionProjectIntakeForm />
+                  <CalpionRPAProjectForm />
                 </Suspense>
               </CardContent>
             </Card>
