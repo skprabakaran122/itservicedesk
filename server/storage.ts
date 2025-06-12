@@ -1,6 +1,6 @@
 import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, like, sql } from "drizzle-orm";
+import { eq, and, desc, or, like, sql, lt } from "drizzle-orm";
 
 export interface IStorage {
   // Ticket methods
@@ -102,6 +102,7 @@ export interface IStorage {
   }>;
   updateTicketSLA(id: number): Promise<void>;
   refreshSLAMetrics(): Promise<void>;
+  autoCloseResolvedTickets(): Promise<{ closedCount: number; tickets: Ticket[] }>;
   
 
 }
@@ -719,6 +720,52 @@ export class DatabaseStorage implements IStorage {
     }
     
     console.log(`[SLA] Refreshed SLA metrics for ${allTickets.length} tickets`);
+  }
+
+  async autoCloseResolvedTickets(): Promise<{ closedCount: number; tickets: Ticket[] }> {
+    // Find resolved tickets older than 3 days
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    
+    const resolvedTickets = await db.select()
+      .from(tickets)
+      .where(and(
+        eq(tickets.status, 'resolved'),
+        lt(tickets.resolvedAt, threeDaysAgo)
+      ));
+
+    const closedTickets: Ticket[] = [];
+
+    for (const ticket of resolvedTickets) {
+      // Update ticket status to closed
+      const [updatedTicket] = await db.update(tickets)
+        .set({
+          status: 'closed',
+          updatedAt: new Date()
+        })
+        .where(eq(tickets.id, ticket.id))
+        .returning();
+
+      if (updatedTicket) {
+        closedTickets.push(updatedTicket);
+
+        // Create history entry for auto-closure
+        await this.createTicketHistory({
+          ticketId: ticket.id,
+          action: 'auto_closed',
+          field: 'status',
+          oldValue: 'resolved',
+          newValue: 'closed',
+          userId: 1, // System user
+          notes: 'Automatically closed after 3 days in resolved status'
+        });
+      }
+    }
+
+    return {
+      closedCount: closedTickets.length,
+      tickets: closedTickets
+    };
   }
 
   // Approval routing methods

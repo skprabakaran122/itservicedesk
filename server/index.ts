@@ -61,6 +61,41 @@ function startSLAScheduler() {
   scheduleNextRefresh();
 }
 
+// Auto-close resolved tickets after 3 days
+function startAutoCloseScheduler() {
+  const runAutoClose = async () => {
+    try {
+      const result = await storage.autoCloseResolvedTickets();
+      if (result.closedCount > 0) {
+        log(`[AUTO-CLOSE] Automatically closed ${result.closedCount} resolved tickets older than 3 days`);
+      }
+    } catch (error) {
+      log(`[AUTO-CLOSE] Error during auto-close process: ${error}`);
+    }
+  };
+
+  // Run immediately on startup
+  runAutoClose();
+  
+  // Run daily at 2 AM
+  const scheduleDaily = () => {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(2, 0, 0, 0); // 2 AM
+    
+    const timeUntilTomorrow = tomorrow.getTime() - now.getTime();
+    
+    setTimeout(async () => {
+      await runAutoClose();
+      // Schedule the next run
+      scheduleDaily();
+    }, timeUntilTomorrow);
+  };
+  
+  scheduleDaily();
+}
+
 (async () => {
   // Initialize storage data once at startup
   await storage.initializeData();
@@ -110,5 +145,8 @@ function startSLAScheduler() {
     
     // Start the monthly SLA scheduler
     startSLAScheduler();
+    
+    // Start the auto-close scheduler
+    startAutoCloseScheduler();
   });
 })();
