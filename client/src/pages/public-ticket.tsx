@@ -104,7 +104,7 @@ export default function PublicTicketPage() {
                     <Skeleton className="h-10 w-32" />
                   </div>
                 }>
-                  <ProjectIntakeForm />
+                  <CalpionProjectIntakeForm />
                 </Suspense>
               </CardContent>
             </Card>
