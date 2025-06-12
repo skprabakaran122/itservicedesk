@@ -23,7 +23,6 @@ const registerSchema = z.object({
   email: z.string().email("Valid email is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   name: z.string().min(1, "Name is required"),
-  role: z.enum(["user", "technician", "manager", "admin"]),
 });
 
 interface LoginProps {
@@ -50,7 +49,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       email: "",
       password: "",
       name: "",
-      role: "user",
     },
   });
 
@@ -251,27 +249,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={registerForm.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Role</FormLabel>
-                        <FormControl>
-                          <select 
-                            {...field} 
-                            className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
-                          >
-                            <option value="user">User</option>
-                            <option value="technician">Technician</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
                   <Button 
                     type="submit" 
                     className="w-full bg-primary hover:bg-primary/90"
