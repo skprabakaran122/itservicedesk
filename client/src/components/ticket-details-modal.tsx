@@ -292,12 +292,15 @@ export function TicketDetailsModal({
                       <p className="text-sm">{ticket.category}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Requester</label>
-                      <div className="flex items-center gap-2">
-                        <UserIcon className="h-4 w-4 text-gray-400" />
-                        <div>
-                          <p className="text-sm font-medium">{getRequesterName()}</p>
-                          <p className="text-xs text-gray-500">{getRequesterEmail()}</p>
+                      <label className="text-sm font-medium text-gray-500">Requester Details</label>
+                      <div className="flex items-start gap-2">
+                        <UserIcon className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{getRequesterName()}</p>
+                          <p className="text-sm text-blue-600 dark:text-blue-400">{getRequesterEmail()}</p>
+                          {ticket.requesterPhone && (
+                            <p className="text-xs text-gray-500">Phone: {ticket.requesterPhone}</p>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -150,7 +150,10 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <UserIcon className="h-4 w-4" />
-                <span>{getRequesterName(ticket)}</span>
+                <div>
+                  <div className="font-medium">{getRequesterName(ticket)}</div>
+                  <div className="text-xs">{getRequesterEmail(ticket)}</div>
+                </div>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <AlertCircle className="h-4 w-4" />
@@ -178,7 +181,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
 
             <div className="flex justify-between items-center">
               <div className="text-xs text-gray-500 dark:text-gray-500">
-                Requester: {getRequesterEmail(ticket)} • Last updated: {ticket.updatedAt ? formatDateIST(ticket.updatedAt) : 'N/A'}
+                Last updated: {ticket.updatedAt ? formatDateIST(ticket.updatedAt) : 'N/A'}
               </div>
               <div className="flex gap-2 items-center">
                 {getAllowedStatusOptions(ticket).length > 0 && (
