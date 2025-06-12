@@ -1,5 +1,6 @@
 import sgMail from '@sendgrid/mail';
 import type { Ticket, Change, User } from '@shared/schema';
+import { getEmailConfig, isEmailConfigured } from './email-config';
 
 class EmailService {
   private isEnabled: boolean = false;
@@ -10,25 +11,28 @@ class EmailService {
   }
 
   private async initialize() {
-    const sendGridApiKey = process.env.SENDGRID_API_KEY;
+    const config = getEmailConfig();
     
-    if (!sendGridApiKey) {
+    if (config.provider === 'sendgrid' && config.sendgridApiKey) {
+      try {
+        sgMail.setApiKey(config.sendgridApiKey);
+        this.fromEmail = config.fromEmail || 'noreply@calpion.com';
+        this.isEnabled = true;
+        console.log('[Email] SendGrid configured successfully');
+        console.log(`[Email] From address: ${this.fromEmail}`);
+      } catch (error) {
+        console.log('[Email] Failed to initialize SendGrid:', error);
+        this.isEnabled = false;
+      }
+    } else {
       console.log('[Email] SENDGRID_API_KEY not configured. Email notifications disabled.');
       console.log('[Email] Please set SENDGRID_API_KEY environment variable to enable email notifications.');
       this.isEnabled = false;
-      return;
     }
+  }
 
-    try {
-      sgMail.setApiKey(sendGridApiKey);
-      this.fromEmail = process.env.FROM_EMAIL || 'noreply@calpion.com';
-      this.isEnabled = true;
-      console.log('[Email] SendGrid configured successfully');
-      console.log(`[Email] From address: ${this.fromEmail}`);
-    } catch (error) {
-      console.log('[Email] Failed to initialize SendGrid:', error);
-      this.isEnabled = false;
-    }
+  async reinitialize() {
+    await this.initialize();
   }
 
   async sendEmail(to: string, subject: string, html: string, text?: string): Promise<boolean> {

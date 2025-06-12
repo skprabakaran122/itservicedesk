@@ -1134,6 +1134,68 @@ ${projectData.additionalNotes || 'None'}
     }
   });
 
+  // Email settings endpoint
+  app.post("/api/email/settings", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      const { provider, sendgridApiKey, smtpHost, smtpPort, smtpSecure, smtpUser, smtpPass, fromEmail } = req.body;
+
+      // Update email configuration
+      const { updateEmailConfig } = await import('./email-config');
+      updateEmailConfig({
+        provider,
+        sendgridApiKey,
+        smtpHost,
+        smtpPort,
+        smtpSecure,
+        smtpUser,
+        smtpPass,
+        fromEmail
+      });
+
+      // Reinitialize email service with new configuration
+      await emailService.reinitialize();
+
+      res.json({ 
+        success: true,
+        message: "Email settings updated successfully" 
+      });
+    } catch (error: any) {
+      console.error('Email settings update error:', error);
+      res.status(500).json({ message: error.message || "Failed to update email settings" });
+    }
+  });
+
+  // Get email settings endpoint
+  app.get("/api/email/settings", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      const { getEmailConfig, isEmailConfigured } = await import('./email-config');
+      const config = getEmailConfig();
+
+      res.json({
+        ...config,
+        // Don't send sensitive data back
+        sendgridApiKey: config.sendgridApiKey ? '***configured***' : '',
+        smtpPass: config.smtpPass ? '***configured***' : '',
+        isConfigured: isEmailConfigured()
+      });
+    } catch (error: any) {
+      console.error('Email settings fetch error:', error);
+      res.status(500).json({ message: error.message || "Failed to fetch email settings" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

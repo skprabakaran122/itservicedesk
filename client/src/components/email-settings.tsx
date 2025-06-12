@@ -45,6 +45,25 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
     fromEmail: "",
   });
 
+  // Load current email settings
+  const { data: currentSettings, isLoading } = useQuery({
+    queryKey: ['/api/email/settings'],
+    enabled: !!currentUser && currentUser.role === 'admin',
+  });
+
+  // Update local state when settings are loaded
+  React.useEffect(() => {
+    if (currentSettings) {
+      setSettings(prev => ({
+        ...prev,
+        ...currentSettings,
+        // Don't overwrite if already has values (user might be editing)
+        sendgridApiKey: prev.sendgridApiKey || (currentSettings.sendgridApiKey === '***configured***' ? '' : currentSettings.sendgridApiKey || ''),
+        smtpPass: prev.smtpPass || (currentSettings.smtpPass === '***configured***' ? '' : currentSettings.smtpPass || ''),
+      }));
+    }
+  }, [currentSettings]);
+
   // Test email mutation
   const testEmailMutation = useMutation({
     mutationFn: async (email: string) => {
