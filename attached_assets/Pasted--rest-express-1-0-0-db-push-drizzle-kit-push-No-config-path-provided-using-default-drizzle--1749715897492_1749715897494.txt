@@ -1,0 +1,87 @@
+> rest-express@1.0.0 db:push
+> drizzle-kit push
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/home/ubuntu/servicedesk/drizzle.config.ts'
+Using 'pg' driver for database querying
+[⣷] Pulling schema from database...
+error: password authentication failed for user "servicedesk_user"
+    at /home/ubuntu/servicedesk/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Object.query (/home/ubuntu/servicedesk/node_modules/drizzle-kit/bin.cjs:66575:26)
+    at async fromDatabase2 (/home/ubuntu/servicedesk/node_modules/drizzle-kit/bin.cjs:18700:25) {
+  length: 112,
+  severity: 'FATAL',
+  code: '28P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'auth.c',
+  line: '335',
+  routine: 'auth_failed'
+}
+Starting application...
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [servicedesk](ids: [ 0 ])
+[PM2] [servicedesk](0) ✓
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ fork    │ 33637    │ 0s     │ 0    │ online    │ 0%       │ 16.9mb   │ ubuntu   │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /home/ubuntu/.pm2/dump.pm2
+Database setup complete!
+Checking application status...
+[TAILING] Tailing last 5 lines for [servicedesk] process (change the value with --lines option)
+/home/ubuntu/servicedesk/logs/pm2-error-0.log last 5 lines:
+0|serviced | 2025-06-12T08:09:48:   constraint: undefined,
+0|serviced | 2025-06-12T08:09:48:   file: 'auth.c',
+0|serviced | 2025-06-12T08:09:48:   line: '335',
+0|serviced | 2025-06-12T08:09:48:   routine: 'auth_failed'
+0|serviced | 2025-06-12T08:09:48: }
+
+/home/ubuntu/servicedesk/logs/pm2-out-0.log last 5 lines:
+0|serviced | 2025-06-12T08:11:12: [Email] Using API key: SG.placeho...
+0|serviced | 2025-06-12T08:11:12: [Email] SendGrid configured successfully
+0|serviced | 2025-06-12T08:11:12: [Email] From address: noreply@calpion.com
+0|serviced | 2025-06-12T08:11:12: [Email] API key format check: Valid
+0|serviced | 2025-06-12T08:11:12: [Email] API key length: 37
+
+0|servicedesk  | 2025-06-12T08:11:14: Error initializing data: error: password authentication failed for user "servicedesk_user"
+0|servicedesk  | 2025-06-12T08:11:14:     at /home/ubuntu/servicedesk/node_modules/pg-pool/index.js:45:11
+0|servicedesk  | 2025-06-12T08:11:14:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|servicedesk  | 2025-06-12T08:11:14:     at async <anonymous> (/home/ubuntu/servicedesk/node_modules/src/node-postgres/session.ts:104:19)
+0|servicedesk  | 2025-06-12T08:11:14:     at async DatabaseStorage.getUsers (/home/ubuntu/servicedesk/server/storage.ts:326:12)
+0|servicedesk  | 2025-06-12T08:11:14:     at async DatabaseStorage.initializeData (/home/ubuntu/servicedesk/server/storage.ts:146:29)
+0|servicedesk  | 2025-06-12T08:11:14:     at async <anonymous> (/home/ubuntu/servicedesk/server/index.ts:66:3) {
+0|servicedesk  | 2025-06-12T08:11:14:   length: 112,
+0|servicedesk  | 2025-06-12T08:11:14:   severity: 'FATAL',
+0|servicedesk  | 2025-06-12T08:11:14:   code: '28P01',
+0|servicedesk  | 2025-06-12T08:11:14:   detail: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   hint: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   position: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   internalPosition: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   internalQuery: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   where: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   schema: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   table: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   column: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   dataType: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   constraint: undefined,
+0|servicedesk  | 2025-06-12T08:11:14:   file: 'auth.c',
+0|servicedesk  | 2025-06-12T08:11:14:   line: '335',
+0|servicedesk  | 2025-06-12T08:11:14:   routine: 'auth_failed'
+0|servicedesk  | 2025-06-12T08:11:14: }
+0|servicedesk  | 2025-06-12T08:11:14: 8:11:14 AM [express] Warning: Failed to warm up database connection
+0|servicedesk  | 2025-06-12T08:11:14: 8:11:14 AM [express] serving on port 5000 (host: 0.0.0.0)
+0|servicedesk  | 2025-06-12T08:11:14: 8:11:14 AM [express] [SLA] Next SLA refresh scheduled for 2025-07-01T00:00:00.000Z
+
