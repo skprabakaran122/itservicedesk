@@ -185,7 +185,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                         <FormItem>
                           <FormLabel>Full Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="John Doe" {...field} />
+                            <Input 
+                              placeholder="John Doe" 
+                              disabled={registerMutation.isPending}
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -198,7 +202,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                         <FormItem>
                           <FormLabel>Username</FormLabel>
                           <FormControl>
-                            <Input placeholder="john.doe" {...field} />
+                            <Input 
+                              placeholder="john.doe" 
+                              disabled={registerMutation.isPending}
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -212,7 +220,12 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="john.doe@company.com" {...field} />
+                          <Input 
+                            type="email" 
+                            placeholder="john.doe@company.com" 
+                            disabled={registerMutation.isPending}
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -225,7 +238,12 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="Create a password" {...field} />
+                          <Input 
+                            type="password" 
+                            placeholder="Create a password" 
+                            disabled={registerMutation.isPending}
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
