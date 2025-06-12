@@ -7,7 +7,7 @@ import { ArrowLeft, Headphones, Search, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import calpionLogo from "@/assets/image_1749619432130.png";
+
 
 // Lazy load heavy components
 const AnonymousTicketForm = lazy(() => import("@/components/anonymous-ticket-form").then(module => ({ default: module.AnonymousTicketForm })));
@@ -34,7 +34,7 @@ export default function PublicTicketPage() {
           <div className="flex items-center justify-center mb-6">
             {/* Calpion Logo */}
             <img
-              src={calpionLogo}
+              src="/calpion-logo.png"
               alt="Calpion - Experience Excellence"
               className="h-16 drop-shadow-lg"
             />
