@@ -110,10 +110,7 @@ export class DatabaseStorage implements IStorage {
   private static initialized = false;
 
   constructor() {
-    if (!DatabaseStorage.initialized) {
-      DatabaseStorage.initialized = true;
-      this.initializeData();
-    }
+    // Initialization will be handled externally at server startup
   }
 
   private getSLATargets(priority: string): { response: number; resolution: number } {
@@ -143,7 +140,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  private async initializeData() {
+  async initializeData() {
     try {
       // Check if users exist, if not create sample users
       const existingUsers = await this.getUsers();
