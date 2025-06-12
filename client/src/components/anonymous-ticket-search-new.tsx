@@ -23,7 +23,7 @@ export function AnonymousTicketSearchNew({ onClose, products = [], productsLoadi
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [searchTriggered, setSearchTriggered] = useState(false);
 
-  const { data: searchResults = [], isLoading, error } = useQuery<Ticket[]>({
+  const { data: searchResults = [], isLoading, error, refetch } = useQuery<Ticket[]>({
     queryKey: ['/api/tickets/search/anonymous', searchQuery, searchBy, selectedProducts],
     queryFn: async () => {
       if (searchBy === 'product' && selectedProducts.length > 0) {
@@ -50,15 +50,17 @@ export function AnonymousTicketSearchNew({ onClose, products = [], productsLoadi
         return response.json();
       }
     },
-    enabled: searchTriggered && ((searchBy === 'product' && selectedProducts.length > 0) || (searchBy !== 'product' && searchQuery.length >= 1)),
+    enabled: false, // Disable automatic queries - only run when manually triggered
     retry: false,
   });
 
   const handleSearch = () => {
     if (searchBy === 'product' && selectedProducts.length > 0) {
       setSearchTriggered(true);
+      refetch();
     } else if (searchBy !== 'product' && searchQuery.trim().length >= 1) {
       setSearchTriggered(true);
+      refetch();
     }
   };
 
