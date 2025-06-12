@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Lazy load heavy components
 const AnonymousTicketForm = lazy(() => import("@/components/anonymous-ticket-form").then(module => ({ default: module.AnonymousTicketForm })));
 const AnonymousTicketSearchNew = lazy(() => import("@/components/anonymous-ticket-search-new").then(module => ({ default: module.AnonymousTicketSearchNew })));
+const ProjectIntakeForm = lazy(() => import("@/components/project-intake-form").then(module => ({ default: module.ProjectIntakeForm })));
 
 export default function PublicTicketPage() {
   const [activeTab, setActiveTab] = useState("submit");
@@ -49,14 +50,18 @@ export default function PublicTicketPage() {
 
         {/* Main Content with Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="submit" className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Submit New Ticket
+              Submit Ticket
+            </TabsTrigger>
+            <TabsTrigger value="project" className="flex items-center gap-2">
+              <Headphones className="h-4 w-4" />
+              Project Intake
             </TabsTrigger>
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Search className="h-4 w-4" />
-              Search Your Tickets
+              Search Tickets
             </TabsTrigger>
           </TabsList>
           
@@ -76,6 +81,33 @@ export default function PublicTicketPage() {
             }>
               <AnonymousTicketForm products={products} productsLoading={productsLoading} />
             </Suspense>
+          </TabsContent>
+
+          <TabsContent value="project">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Headphones className="h-5 w-5" />
+                  New Project Intake Request
+                </CardTitle>
+                <CardDescription>
+                  Submit a request for a new project or initiative. All fields are required for proper evaluation.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Suspense fallback={
+                  <div className="space-y-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-32 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-32 w-full" />
+                    <Skeleton className="h-10 w-32" />
+                  </div>
+                }>
+                  <ProjectIntakeForm />
+                </Suspense>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="search">

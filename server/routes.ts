@@ -848,6 +848,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Project Intake Routes
+  app.post("/api/project-intake", async (req, res) => {
+    try {
+      const projectData = req.body;
+      
+      // Create a ticket for the project intake request
+      const ticketData = {
+        title: `Project Intake: ${projectData.projectName}`,
+        description: `
+**Project Intake Request**
+
+**Requestor:** ${projectData.requestorName} (${projectData.requestorEmail})
+**Department:** ${projectData.requestorDepartment}
+**Project Type:** ${projectData.projectType}
+**Priority:** ${projectData.priority}
+
+**Project Description:**
+${projectData.projectDescription}
+
+**Business Justification:**
+${projectData.businessJustification}
+
+**Project Scope:**
+${projectData.projectScope}
+
+**Key Requirements:**
+${projectData.keyRequirements}
+
+**Success Criteria:**
+${projectData.successCriteria}
+
+**Timeline:**
+- Requested Start Date: ${projectData.requestedStartDate}
+- Desired Completion Date: ${projectData.desiredCompletionDate}
+
+**Budget Information:**
+- Estimated Budget: ${projectData.estimatedBudget || 'Not specified'}
+- Budget Approval Status: ${projectData.budgetApproval}
+
+**Stakeholders:**
+- Project Sponsor: ${projectData.projectSponsor}
+- Key Stakeholders: ${projectData.keyStakeholders}
+- Impacted Departments: ${projectData.impactedDepartments}
+- Estimated User Count: ${projectData.userCount || 'Not specified'}
+
+**Technical Requirements:**
+- Systems Involved: ${projectData.systemsInvolved || 'Not specified'}
+- Integration Required: ${projectData.integrationRequired ? 'Yes' : 'No'}
+${projectData.integrationRequired && projectData.integrationDetails ? `- Integration Details: ${projectData.integrationDetails}` : ''}
+- Security Requirements: ${projectData.securityRequirements || 'Not specified'}
+- Compliance Requirements: ${projectData.complianceRequirements || 'Not specified'}
+
+**Risk and Dependencies:**
+- Identified Risks: ${projectData.identifiedRisks || 'None specified'}
+- Dependencies: ${projectData.dependencies || 'None specified'}
+
+**Additional Notes:**
+${projectData.additionalNotes || 'None'}
+        `,
+        category: "project_request",
+        priority: projectData.priority,
+        status: "open",
+        contactEmail: projectData.requestorEmail,
+        contactName: projectData.requestorName,
+        contactPhone: projectData.requestorPhone || null,
+        productId: 2 // Default to Olympus product, or you can make this configurable
+      };
+
+      const ticket = await storage.createTicket(ticketData);
+      
+      // Send email notification if email service is configured
+      if (ticket) {
+        try {
+          await emailService.sendTicketCreatedEmail(ticket, projectData.requestorEmail);
+        } catch (emailError) {
+          console.error("Failed to send project intake email:", emailError);
+          // Don't fail the request if email fails
+        }
+      }
+
+      res.status(201).json({ 
+        success: true, 
+        ticketId: ticket.id,
+        message: "Project intake request submitted successfully" 
+      });
+    } catch (error) {
+      console.error("Error creating project intake request:", error);
+      res.status(500).json({ message: "Failed to submit project intake request" });
+    }
+  });
+
   // Approval routing endpoints
   app.get("/api/approval-routing", async (req, res) => {
     try {
