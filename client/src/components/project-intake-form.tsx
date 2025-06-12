@@ -15,48 +15,81 @@ import { useToast } from "@/hooks/use-toast";
 import { CalendarIcon, DollarSign, Users, Target, Clock, AlertTriangle } from "lucide-react";
 
 const projectIntakeSchema = z.object({
-  // Basic Project Information
-  projectName: z.string().min(3, "Project name must be at least 3 characters"),
-  requestorName: z.string().min(2, "Requestor name is required"),
-  requestorEmail: z.string().email("Valid email address is required"),
-  requestorDepartment: z.string().min(2, "Department is required"),
-  requestorPhone: z.string().optional(),
+  // Section 1: Project Information
+  projectTitle: z.string().min(3, "Project title is required"),
+  projectCode: z.string().optional(),
+  submissionDate: z.string().min(1, "Submission date is required"),
+  requestedBy: z.string().min(2, "Requestor name is required"),
+  department: z.string().min(2, "Department is required"),
+  businessUnit: z.string().min(2, "Business unit is required"),
+  contactEmail: z.string().email("Valid email address is required"),
+  contactPhone: z.string().min(10, "Phone number is required"),
   
-  // Project Details
-  projectDescription: z.string().min(20, "Project description must be at least 20 characters"),
-  businessJustification: z.string().min(20, "Business justification is required"),
-  projectType: z.enum(["new_system", "enhancement", "integration", "infrastructure", "security", "compliance", "other"]),
-  priority: z.enum(["low", "medium", "high", "critical"]),
+  // Section 2: Project Classification
+  projectCategory: z.enum(["strategic", "operational", "compliance", "infrastructure", "enhancement"]),
+  projectType: z.enum(["new_development", "system_upgrade", "process_improvement", "integration", "migration", "security"]),
+  businessPriority: z.enum(["critical", "high", "medium", "low"]),
+  estimatedComplexity: z.enum(["simple", "moderate", "complex", "very_complex"]),
   
-  // Scope and Requirements
-  projectScope: z.string().min(20, "Project scope is required"),
-  keyRequirements: z.string().min(20, "Key requirements are required"),
-  successCriteria: z.string().min(20, "Success criteria are required"),
+  // Section 3: Business Case
+  businessProblem: z.string().min(50, "Business problem description must be at least 50 characters"),
+  proposedSolution: z.string().min(50, "Proposed solution must be at least 50 characters"),
+  businessBenefits: z.string().min(50, "Business benefits must be at least 50 characters"),
+  expectedROI: z.string().optional(),
+  alternativesConsidered: z.string().optional(),
+  consequencesOfNotDoing: z.string().min(20, "Consequences if not implemented are required"),
   
-  // Timeline and Budget
-  requestedStartDate: z.string().min(1, "Requested start date is required"),
-  desiredCompletionDate: z.string().min(1, "Desired completion date is required"),
-  estimatedBudget: z.string().optional(),
-  budgetApproval: z.enum(["approved", "pending", "not_required", "unknown"]),
+  // Section 4: Project Scope
+  inScope: z.string().min(30, "In-scope items are required"),
+  outOfScope: z.string().min(20, "Out-of-scope items are required"),
+  assumptions: z.string().min(20, "Project assumptions are required"),
+  constraints: z.string().optional(),
   
-  // Stakeholders and Impact
-  projectSponsor: z.string().min(2, "Project sponsor is required"),
-  keyStakeholders: z.string().min(10, "Key stakeholders are required"),
-  impactedDepartments: z.string().min(5, "Impacted departments are required"),
-  userCount: z.string().optional(),
+  // Section 5: Timeline & Resources
+  proposedStartDate: z.string().min(1, "Proposed start date is required"),
+  requiredCompletionDate: z.string().min(1, "Required completion date is required"),
+  criticalMilestones: z.string().min(20, "Critical milestones are required"),
+  estimatedEffort: z.string().optional(),
+  resourceRequirements: z.string().min(20, "Resource requirements are required"),
   
-  // Technical Requirements
-  systemsInvolved: z.string().optional(),
-  integrationRequired: z.boolean().default(false),
-  integrationDetails: z.string().optional(),
+  // Section 6: Financial Information
+  estimatedTotalCost: z.string().optional(),
+  capitalExpenditure: z.string().optional(),
+  operationalExpenditure: z.string().optional(),
+  budgetSource: z.string().min(5, "Budget source is required"),
+  fundingApprovalStatus: z.enum(["approved", "pending", "not_submitted", "not_required"]),
+  costBenefitAnalysis: z.string().optional(),
+  
+  // Section 7: Stakeholders & Impact
+  executiveSponsor: z.string().min(2, "Executive sponsor is required"),
+  projectManager: z.string().optional(),
+  businessOwner: z.string().min(2, "Business owner is required"),
+  keyStakeholders: z.string().min(20, "Key stakeholders are required"),
+  impactedUsers: z.string().min(10, "Impacted users description is required"),
+  estimatedUserCount: z.string().optional(),
+  changeManagementNeeds: z.string().optional(),
+  
+  // Section 8: Technical Requirements
+  currentSystemsAffected: z.string().optional(),
+  technologyPlatform: z.string().optional(),
+  integrationRequirements: z.string().optional(),
   dataRequirements: z.string().optional(),
   securityRequirements: z.string().optional(),
   complianceRequirements: z.string().optional(),
+  infrastructureNeeds: z.string().optional(),
   
-  // Risk and Dependencies
-  identifiedRisks: z.string().optional(),
+  // Section 9: Risk Assessment
+  majorRisks: z.string().min(20, "Major risks must be identified"),
+  riskMitigationStrategies: z.string().min(20, "Risk mitigation strategies are required"),
   dependencies: z.string().optional(),
-  additionalNotes: z.string().optional(),
+  criticalSuccessFactors: z.string().min(20, "Critical success factors are required"),
+  
+  // Section 10: Approval & Authorization
+  businessCaseApproved: z.boolean().default(false),
+  budgetApproved: z.boolean().default(false),
+  resourcesSecured: z.boolean().default(false),
+  executiveApproval: z.string().optional(),
+  additionalComments: z.string().optional(),
 });
 
 type ProjectIntakeForm = z.infer<typeof projectIntakeSchema>;
@@ -69,10 +102,15 @@ export function ProjectIntakeForm() {
   const form = useForm<ProjectIntakeForm>({
     resolver: zodResolver(projectIntakeSchema),
     defaultValues: {
-      integrationRequired: false,
-      budgetApproval: "unknown",
-      priority: "medium",
-      projectType: "new_system"
+      submissionDate: new Date().toISOString().split('T')[0],
+      projectCategory: "operational",
+      projectType: "new_development",
+      businessPriority: "medium",
+      estimatedComplexity: "moderate",
+      fundingApprovalStatus: "not_submitted",
+      businessCaseApproved: false,
+      budgetApproved: false,
+      resourcesSecured: false
     }
   });
 
@@ -113,23 +151,23 @@ export function ProjectIntakeForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* Basic Information */}
+        {/* Section 1: Project Information */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Requestor Information
+              <Target className="h-5 w-5" />
+              Section 1: Project Information
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="requestorName"
+              name="projectTitle"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name *</FormLabel>
+                  <FormLabel>Project Title *</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="Enter project title" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -138,12 +176,12 @@ export function ProjectIntakeForm() {
             
             <FormField
               control={form.control}
-              name="requestorEmail"
+              name="projectCode"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email Address *</FormLabel>
+                  <FormLabel>Project Code</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="john.doe@calpion.com" {...field} />
+                    <Input placeholder="Optional project code" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -152,12 +190,40 @@ export function ProjectIntakeForm() {
             
             <FormField
               control={form.control}
-              name="requestorDepartment"
+              name="submissionDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Submission Date *</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="requestedBy"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Requested By *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Full name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="department"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Department *</FormLabel>
                   <FormControl>
-                    <Input placeholder="IT, Finance, Operations, etc." {...field} />
+                    <Input placeholder="Department name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -166,10 +232,38 @@ export function ProjectIntakeForm() {
             
             <FormField
               control={form.control}
-              name="requestorPhone"
+              name="businessUnit"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>Business Unit *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Business unit" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="contactEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Email *</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="email@calpion.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="contactPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Phone *</FormLabel>
                   <FormControl>
                     <Input placeholder="+1 (555) 123-4567" {...field} />
                   </FormControl>

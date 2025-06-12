@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Lazy load heavy components
 const AnonymousTicketForm = lazy(() => import("@/components/anonymous-ticket-form").then(module => ({ default: module.AnonymousTicketForm })));
 const AnonymousTicketSearchNew = lazy(() => import("@/components/anonymous-ticket-search-new").then(module => ({ default: module.AnonymousTicketSearchNew })));
-const ProjectIntakeForm = lazy(() => import("@/components/project-intake-form").then(module => ({ default: module.ProjectIntakeForm })));
+const CalpionProjectIntakeForm = lazy(() => import("@/components/calpion-project-intake-form").then(module => ({ default: module.CalpionProjectIntakeForm })));
 
 export default function PublicTicketPage() {
   const [activeTab, setActiveTab] = useState("submit");
