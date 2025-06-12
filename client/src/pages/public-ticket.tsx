@@ -24,7 +24,7 @@ export default function PublicTicketPage() {
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnMount: false,
     refetchOnWindowFocus: false,
-    enabled: activeTab === "submit" || activeTab === "search", // Only fetch when tabs need it
+    enabled: activeTab === "submit" || activeTab === "search" || activeTab === "project", // Only fetch when tabs need it
   });
 
   return (
