@@ -9,7 +9,7 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: 5000,
-      DATABASE_URL: 'postgresql://servicedesk_user:password123@localhost:5432/servicedesk',
+      DATABASE_URL: 'postgresql://postgres@localhost:5432/servicedesk',
       SENDGRID_API_KEY: 'configure_in_admin_console'
     },
     env_file: '.env',
