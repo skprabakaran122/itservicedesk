@@ -12,11 +12,15 @@ import { Separator } from "@/components/ui/separator";
 
 interface EmailSettings {
   enabled: boolean;
+  provider: 'smtp' | 'sendgrid';
+  // SMTP Settings
   smtpHost: string;
   smtpPort: number;
   smtpSecure: boolean;
   smtpUser: string;
   smtpPass: string;
+  // SendGrid Settings
+  sendgridApiKey: string;
   fromEmail: string;
 }
 
@@ -56,29 +60,17 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
     onSuccess: () => {
       toast({
         title: "Test Email Sent",
-        description: "Check your inbox for the test email. It may take a few minutes to arrive.",
+        description: "Check your inbox for the test email",
       });
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({
-        title: "Test Email Failed",
-        description: error.message || "Failed to send test email",
+        title: "Test Failed",
+        description: "Failed to send test email. Check your configuration.",
         variant: "destructive",
       });
     },
   });
-
-  const handleTestEmail = () => {
-    if (!testEmail) {
-      toast({
-        title: "Email Required",
-        description: "Please enter an email address to test",
-        variant: "destructive",
-      });
-      return;
-    }
-    testEmailMutation.mutate(testEmail);
-  };
 
   // Save settings mutation
   const saveSettingsMutation = useMutation({
@@ -106,6 +98,18 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
       });
     },
   });
+
+  const handleTestEmail = () => {
+    if (!testEmail) {
+      toast({
+        title: "Email Required",
+        description: "Please enter an email address to test",
+        variant: "destructive",
+      });
+      return;
+    }
+    testEmailMutation.mutate(testEmail);
+  };
 
   const handleSettingsChange = (field: keyof EmailSettings, value: any) => {
     setSettings(prev => ({ ...prev, [field]: value }));
@@ -154,7 +158,7 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
                   name="provider"
                   value="sendgrid"
                   checked={settings.provider === 'sendgrid'}
-                  onChange={(e) => handleSettingsChange('provider', e.target.value)}
+                  onChange={(e) => handleSettingsChange('provider', e.target.value as 'sendgrid')}
                   className="text-primary"
                 />
                 <span>SendGrid (Recommended)</span>
@@ -165,7 +169,7 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
                   name="provider"
                   value="smtp"
                   checked={settings.provider === 'smtp'}
-                  onChange={(e) => handleSettingsChange('provider', e.target.value)}
+                  onChange={(e) => handleSettingsChange('provider', e.target.value as 'smtp')}
                   className="text-primary"
                 />
                 <span>SMTP</span>
@@ -215,67 +219,66 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
             <div className="space-y-4">
               <h3 className="text-lg font-medium">SMTP Configuration</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="smtpHost">SMTP Host</Label>
-              <Input
-                id="smtpHost"
-                placeholder="smtp.example.com"
-                value={settings.smtpHost}
-                onChange={(e) => handleSettingsChange('smtpHost', e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="smtpPort">SMTP Port</Label>
-              <Input
-                id="smtpPort"
-                type="number"
-                placeholder="587"
-                value={settings.smtpPort}
-                onChange={(e) => handleSettingsChange('smtpPort', parseInt(e.target.value) || 587)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="smtpUser">SMTP Username</Label>
-              <Input
-                id="smtpUser"
-                placeholder="your-email@example.com"
-                value={settings.smtpUser}
-                onChange={(e) => handleSettingsChange('smtpUser', e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="smtpPass">SMTP Password</Label>
-              <Input
-                id="smtpPass"
-                type="password"
-                placeholder="Your SMTP password"
-                value={settings.smtpPass}
-                onChange={(e) => handleSettingsChange('smtpPass', e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="smtpSecure"
-              checked={settings.smtpSecure}
-              onCheckedChange={(checked) => handleSettingsChange('smtpSecure', checked)}
-            />
-            <Label htmlFor="smtpSecure">Use SSL/TLS (recommended for port 465)</Label>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="fromEmailSmtp">From Email (optional)</Label>
-            <Input
-              id="fromEmailSmtp"
-              placeholder="noreply@yourcompany.com"
-              value={settings.fromEmail}
-              onChange={(e) => handleSettingsChange('fromEmail', e.target.value)}
-            />
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtpHost">SMTP Host</Label>
+                  <Input
+                    id="smtpHost"
+                    placeholder="smtp.example.com"
+                    value={settings.smtpHost}
+                    onChange={(e) => handleSettingsChange('smtpHost', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="smtpPort">SMTP Port</Label>
+                  <Input
+                    id="smtpPort"
+                    type="number"
+                    placeholder="587"
+                    value={settings.smtpPort}
+                    onChange={(e) => handleSettingsChange('smtpPort', parseInt(e.target.value) || 587)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="smtpUser">SMTP Username</Label>
+                  <Input
+                    id="smtpUser"
+                    placeholder="your-email@example.com"
+                    value={settings.smtpUser}
+                    onChange={(e) => handleSettingsChange('smtpUser', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="smtpPass">SMTP Password</Label>
+                  <Input
+                    id="smtpPass"
+                    type="password"
+                    placeholder="Your SMTP password"
+                    value={settings.smtpPass}
+                    onChange={(e) => handleSettingsChange('smtpPass', e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="smtpSecure"
+                    checked={settings.smtpSecure}
+                    onCheckedChange={(checked) => handleSettingsChange('smtpSecure', checked)}
+                  />
+                  <Label htmlFor="smtpSecure">Use SSL/TLS (recommended for port 465)</Label>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="fromEmailSmtp">From Email (optional)</Label>
+                  <Input
+                    id="fromEmailSmtp"
+                    placeholder="noreply@yourcompany.com"
+                    value={settings.fromEmail}
+                    onChange={(e) => handleSettingsChange('fromEmail', e.target.value)}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -316,67 +319,11 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
           <Button 
             onClick={handleTestEmail}
             disabled={testEmailMutation.isPending}
-            className="w-full md:w-auto"
+            className="w-full"
           >
             <Send className="h-4 w-4 mr-2" />
             {testEmailMutation.isPending ? "Sending..." : "Send Test Email"}
           </Button>
-          
-          {testEmailMutation.isPending && (
-            <p className="text-sm text-muted-foreground">
-              Sending test email... This may take a few moments.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Email Configuration Guide</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <h4 className="font-medium">Popular SMTP Providers:</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="space-y-1">
-                <p><strong>Gmail:</strong></p>
-                <p>Host: smtp.gmail.com</p>
-                <p>Port: 587 (or 465 with SSL)</p>
-                <p>Note: Use App Password, not regular password</p>
-              </div>
-              
-              <div className="space-y-1">
-                <p><strong>Outlook/Office 365:</strong></p>
-                <p>Host: smtp-mail.outlook.com</p>
-                <p>Port: 587</p>
-                <p>Security: STARTTLS</p>
-              </div>
-              
-              <div className="space-y-1">
-                <p><strong>Yahoo:</strong></p>
-                <p>Host: smtp.mail.yahoo.com</p>
-                <p>Port: 587 (or 465 with SSL)</p>
-                <p>Note: Use App Password</p>
-              </div>
-              
-              <div className="space-y-1">
-                <p><strong>Custom SMTP:</strong></p>
-                <p>Contact your hosting provider</p>
-                <p>Common ports: 587, 465, 25</p>
-                <p>Check SSL/TLS requirements</p>
-              </div>
-            </div>
-          </div>
-          
-          <Separator />
-          
-          <div className="space-y-2">
-            <h4 className="font-medium">Development Mode:</h4>
-            <p className="text-sm text-muted-foreground">
-              If no SMTP settings are configured, the system will automatically use Ethereal Email 
-              for testing. Check the server logs for preview URLs to view sent emails.
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
