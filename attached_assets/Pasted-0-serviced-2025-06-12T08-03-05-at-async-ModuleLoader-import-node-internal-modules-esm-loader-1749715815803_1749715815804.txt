@@ -1,0 +1,35 @@
+0|serviced | 2025-06-12T08:03:05:     at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+0|serviced | 2025-06-12T08:03:12: Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|serviced | 2025-06-12T08:03:12:     at <anonymous> (/home/ubuntu/servicedesk/server/db.ts:6:9)
+0|serviced | 2025-06-12T08:03:12:     at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+0|serviced | 2025-06-12T08:03:12:     at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+
+0|servicedesk  | 2025-06-12T08:09:47: [Email] Using API key: SG.placeho...
+0|servicedesk  | 2025-06-12T08:09:47: [Email] SendGrid configured successfully
+0|servicedesk  | 2025-06-12T08:09:47: [Email] From address: noreply@calpion.com
+0|servicedesk  | 2025-06-12T08:09:47: [Email] API key format check: Valid
+0|servicedesk  | 2025-06-12T08:09:47: [Email] API key length: 37
+0|servicedesk  | 2025-06-12T08:09:48: Error initializing data: error: password authentication failed for user "servicedesk_user"
+0|servicedesk  | 2025-06-12T08:09:48:     at /home/ubuntu/servicedesk/node_modules/pg-pool/index.js:45:11
+0|servicedesk  | 2025-06-12T08:09:48:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|servicedesk  | 2025-06-12T08:09:48:     at async <anonymous> (/home/ubuntu/servicedesk/node_modules/src/node-postgres/session.ts:104:19)
+0|servicedesk  | 2025-06-12T08:09:48:     at async DatabaseStorage.getUsers (/home/ubuntu/servicedesk/server/storage.ts:326:12)
+0|servicedesk  | 2025-06-12T08:09:48:     at async DatabaseStorage.initializeData (/home/ubuntu/servicedesk/server/storage.ts:146:29)
+0|servicedesk  | 2025-06-12T08:09:48:     at async <anonymous> (/home/ubuntu/servicedesk/server/index.ts:66:3) {
+0|servicedesk  | 2025-06-12T08:09:48:   length: 112,
+0|servicedesk  | 2025-06-12T08:09:48:   severity: 'FATAL',
+0|servicedesk  | 2025-06-12T08:09:48:   code: '28P01',
+0|servicedesk  | 2025-06-12T08:09:48:   detail: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   hint: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   position: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   internalPosition: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   internalQuery: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   where: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   schema: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   table: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   column: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   dataType: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   constraint: undefined,
+0|servicedesk  | 2025-06-12T08:09:48:   file: 'auth.c',
+0|servicedesk  | 2025-06-12T08:09:48:   line: '335',
+0|servicedesk  | 2025-06-12T08:09:48:   routine: 'auth_failed'
