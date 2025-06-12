@@ -7,6 +7,7 @@ import { ArrowLeft, Headphones, Search, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import calpionLogo from "@/assets/image_1749619432130.png";
 
 // Lazy load heavy components
 const AnonymousTicketForm = lazy(() => import("@/components/anonymous-ticket-form").then(module => ({ default: module.AnonymousTicketForm })));
@@ -32,66 +33,11 @@ export default function PublicTicketPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
             {/* Calpion Logo */}
-            <div className="relative">
-              <svg
-                width="120"
-                height="60"
-                viewBox="0 0 120 60"
-                className="drop-shadow-lg"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* Background circle */}
-                <circle
-                  cx="30"
-                  cy="30"
-                  r="28"
-                  fill="url(#gradient1)"
-                  stroke="#1e40af"
-                  strokeWidth="2"
-                />
-                
-                {/* Letter C */}
-                <path
-                  d="M 20 15 Q 15 15 15 30 Q 15 45 20 45 Q 25 45 30 40"
-                  stroke="#ffffff"
-                  strokeWidth="4"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-                
-                {/* Company name */}
-                <text
-                  x="65"
-                  y="25"
-                  fontFamily="Arial, sans-serif"
-                  fontSize="18"
-                  fontWeight="bold"
-                  fill="#1e40af"
-                  className="dark:fill-white"
-                >
-                  CALPION
-                </text>
-                
-                <text
-                  x="65"
-                  y="42"
-                  fontFamily="Arial, sans-serif"
-                  fontSize="10"
-                  fill="#64748b"
-                  className="dark:fill-gray-300"
-                >
-                  IT SERVICES
-                </text>
-                
-                {/* Gradient definitions */}
-                <defs>
-                  <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#1e40af" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
+            <img
+              src={calpionLogo}
+              alt="Calpion - Experience Excellence"
+              className="h-16 drop-shadow-lg"
+            />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
             Support Portal
