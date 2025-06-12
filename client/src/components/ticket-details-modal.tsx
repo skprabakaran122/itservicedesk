@@ -174,12 +174,14 @@ export function TicketDetailsModal({
     }
   };
 
-  const getRequesterName = (requesterId: number) => {
+  const getRequesterName = (requesterId: number | null) => {
+    if (!requesterId) return 'Unknown User';
     const user = users.find(u => u.id === requesterId);
     return user ? user.name : `User ${requesterId}`;
   };
 
-  const getRequesterEmail = (requesterId: number) => {
+  const getRequesterEmail = (requesterId: number | null) => {
+    if (!requesterId) return 'unknown@company.com';
     const user = users.find(u => u.id === requesterId);
     return user ? user.email : `user${requesterId}@company.com`;
   };
@@ -190,13 +192,13 @@ export function TicketDetailsModal({
   };
 
   const canUserReopenTicket = () => {
-    return currentUser?.id === ticket.requesterId && 
+    return ticket.requesterId && currentUser?.id === ticket.requesterId && 
            ticket.status === 'resolved'; // Only resolved tickets can be reopened, not closed ones
   };
 
   const canUserModifyTicket = () => {
     if (currentUser?.role === 'user') {
-      return currentUser?.id === ticket.requesterId;
+      return ticket.requesterId && currentUser?.id === ticket.requesterId;
     }
     return true; // agents, managers, admins can modify any ticket
   };
@@ -328,6 +330,7 @@ export function TicketDetailsModal({
                             </>
                           ) : (
                             <>
+                              <SelectItem value="pending">Pending</SelectItem>
                               <SelectItem value="open">Open</SelectItem>
                               <SelectItem value="in_progress">In Progress</SelectItem>
                               <SelectItem value="resolved">Resolved</SelectItem>
