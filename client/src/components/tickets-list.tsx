@@ -165,7 +165,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
                     onValueChange={(newStatus) => handleStatusUpdate(ticket.id, newStatus)}
                     disabled={updateStatusMutation.isPending}
                   >
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-40">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
