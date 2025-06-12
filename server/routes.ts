@@ -241,50 +241,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all tickets first
       const allTickets = await storage.getTickets();
       
-      // Filter to only include anonymous tickets (those with requesterName and no requesterId)
-      let anonymousTickets = allTickets.filter(ticket => 
-        ticket.requesterName && ticket.requesterId === null
-      );
+      // Include all tickets in search
+      let searchableTickets = allTickets;
 
       // Apply field-specific search
       if (searchBy === 'product') {
         // For product search, q contains comma-separated product names
         const selectedProducts = searchTerm.split(',').map(p => p.trim());
-        anonymousTickets = anonymousTickets.filter(ticket => 
+        searchableTickets = searchableTickets.filter(ticket => 
           ticket.product && selectedProducts.some(product => 
             ticket.product?.toLowerCase().includes(product.toLowerCase())
           )
         );
       } else if (searchBy === 'ticketNumber') {
-        anonymousTickets = anonymousTickets.filter(ticket => 
+        searchableTickets = searchableTickets.filter(ticket => 
           ticket.id.toString().includes(q.trim()) ||
           `#${ticket.id}`.toLowerCase().includes(searchTerm)
         );
       } else if (searchBy === 'name') {
-        anonymousTickets = anonymousTickets.filter(ticket => 
-          ticket.requesterName?.toLowerCase().includes(searchTerm) || false
+        // Get all users to look up authenticated user names
+        const users = await storage.getUsers();
+        searchableTickets = searchableTickets.filter(ticket => 
+          (ticket.requesterName?.toLowerCase().includes(searchTerm)) ||
+          (ticket.requesterId && users.find(u => u.id === ticket.requesterId)?.name?.toLowerCase().includes(searchTerm))
         );
       } else if (searchBy === 'title') {
-        anonymousTickets = anonymousTickets.filter(ticket => 
+        searchableTickets = searchableTickets.filter(ticket => 
           ticket.title.toLowerCase().includes(searchTerm)
         );
       } else if (searchBy === 'description') {
-        anonymousTickets = anonymousTickets.filter(ticket => 
+        searchableTickets = searchableTickets.filter(ticket => 
           ticket.description.toLowerCase().includes(searchTerm)
         );
       } else {
         // Default 'all' search - search across all fields
-        anonymousTickets = anonymousTickets.filter(ticket => {
+        const users = await storage.getUsers();
+        searchableTickets = searchableTickets.filter(ticket => {
+          const authenticatedUserName = ticket.requesterId ? 
+            users.find(u => u.id === ticket.requesterId)?.name : null;
+          
           return ticket.id.toString().includes(q.trim()) ||
                  `#${ticket.id}`.toLowerCase().includes(searchTerm) ||
                  ticket.title.toLowerCase().includes(searchTerm) ||
                  ticket.description.toLowerCase().includes(searchTerm) ||
                  (ticket.requesterName?.toLowerCase().includes(searchTerm) || false) ||
+                 (authenticatedUserName?.toLowerCase().includes(searchTerm) || false) ||
                  (ticket.product?.toLowerCase().includes(searchTerm) || false);
         });
       }
 
-      res.json(anonymousTickets);
+      res.json(searchableTickets);
     } catch (error) {
       console.error("Error searching anonymous tickets:", error);
       res.status(500).json({ message: "Failed to search tickets" });
