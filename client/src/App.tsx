@@ -13,6 +13,7 @@ function Router({ currentUser, onLogout }: { currentUser: any; onLogout: () => v
   return (
     <Switch>
       <Route path="/support" component={PublicTicketPage} />
+      <Route path="/public-ticket" component={PublicTicketPage} />
       <Route path="/">
         {currentUser ? (
           <Dashboard currentUser={currentUser} onLogout={onLogout} />
