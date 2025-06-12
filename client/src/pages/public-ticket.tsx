@@ -14,6 +14,9 @@ export default function PublicTicketPage() {
   const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ['/api/products'],
     retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   return (
@@ -46,42 +49,11 @@ export default function PublicTicketPage() {
           </TabsList>
           
           <TabsContent value="submit">
-            {productsLoading ? (
-              <Card>
-                <CardHeader>
-                  <Skeleton className="h-6 w-1/3" />
-                  <Skeleton className="h-4 w-2/3" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-24 w-full" />
-                  <Skeleton className="h-10 w-1/4" />
-                </CardContent>
-              </Card>
-            ) : (
-              <AnonymousTicketForm products={products} productsLoading={productsLoading} />
-            )}
+            <AnonymousTicketForm products={products} productsLoading={productsLoading} />
           </TabsContent>
           
           <TabsContent value="search">
-            {productsLoading ? (
-              <Card>
-                <CardHeader>
-                  <Skeleton className="h-6 w-1/3" />
-                  <Skeleton className="h-4 w-2/3" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full md:col-span-2" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <AnonymousTicketSearchNew products={products} productsLoading={productsLoading} />
-            )}
+            <AnonymousTicketSearchNew products={products} productsLoading={productsLoading} />
           </TabsContent>
         </Tabs>
 
