@@ -1,6 +1,6 @@
 import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, like, sql, lt } from "drizzle-orm";
+import { eq, and, desc, or, like, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Ticket methods
@@ -731,7 +731,7 @@ export class DatabaseStorage implements IStorage {
       .from(tickets)
       .where(and(
         eq(tickets.status, 'resolved'),
-        lt(tickets.resolvedAt, threeDaysAgo)
+        sql`resolved_at IS NOT NULL AND resolved_at < ${threeDaysAgo.toISOString()}`
       ));
 
     const closedTickets: Ticket[] = [];
