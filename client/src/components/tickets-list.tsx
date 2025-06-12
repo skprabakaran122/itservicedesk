@@ -91,16 +91,18 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
       return [];
     }
     
-    // Agents, managers, and admins can change to any status
-    // Allow all status transitions for staff roles
-    const allStatuses = ['pending', 'open', 'in-progress', 'resolved', 'closed'];
-    
-    // Add reopen option if they're the original requester or for any closed/resolved ticket
-    if (ticket.requesterId === currentUser?.id || ticket.status === 'closed' || ticket.status === 'resolved') {
-      allStatuses.push('reopen');
+    // Agents, managers, and admins have different options based on current status
+    if (ticket.status === 'closed') {
+      // Closed tickets cannot be moved to any other status - they are final
+      return [];
     }
     
-    return allStatuses;
+    // For other statuses, allow all transitions except reopen (unless they're the original requester)
+    const baseStatuses = ['pending', 'open', 'in-progress', 'resolved', 'closed'];
+    if (ticket.requesterId === currentUser?.id) {
+      baseStatuses.push('reopen');
+    }
+    return baseStatuses;
   };
 
   return (

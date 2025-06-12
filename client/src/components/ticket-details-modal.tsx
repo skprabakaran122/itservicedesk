@@ -197,10 +197,15 @@ export function TicketDetailsModal({
   };
 
   const canUserModifyTicket = () => {
+    // Closed tickets cannot be modified by anyone
+    if (ticket.status === 'closed') {
+      return false;
+    }
+    
     if (currentUser?.role === 'user') {
       return ticket.requesterId && currentUser?.id === ticket.requesterId;
     }
-    return true; // agents, managers, admins can modify any ticket
+    return true; // agents, managers, admins can modify any non-closed ticket
   };
 
   const handleStatusUpdate = () => {
