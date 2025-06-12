@@ -30,8 +30,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user session exists on the server
-    const checkSession = async () => {
+    // Defer authentication check to not block initial render
+    const timeoutId = setTimeout(async () => {
       try {
         const response = await fetch('/api/auth/me', {
           credentials: 'include'
@@ -41,12 +41,12 @@ function App() {
           setCurrentUser(data.user);
         }
       } catch (error) {
-        console.log('No active session');
+        // Silent fail for auth check
       }
       setIsLoading(false);
-    };
-    
-    checkSession();
+    }, 50); // Minimal delay to allow initial render
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const handleLogin = (user: any) => {

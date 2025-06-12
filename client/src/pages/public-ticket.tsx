@@ -1,5 +1,4 @@
-import { AnonymousTicketForm } from "@/components/anonymous-ticket-form";
-import { AnonymousTicketSearchNew } from "@/components/anonymous-ticket-search-new";
+import { lazy, Suspense, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,14 +8,21 @@ import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Lazy load heavy components
+const AnonymousTicketForm = lazy(() => import("@/components/anonymous-ticket-form").then(module => ({ default: module.AnonymousTicketForm })));
+const AnonymousTicketSearchNew = lazy(() => import("@/components/anonymous-ticket-search-new").then(module => ({ default: module.AnonymousTicketSearchNew })));
+
 export default function PublicTicketPage() {
-  // Fetch products once at the parent level to avoid duplicate API calls
+  const [activeTab, setActiveTab] = useState("submit");
+  
+  // Only fetch products when needed (when tabs are accessed)
   const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ['/api/products'],
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    enabled: activeTab === "submit" || activeTab === "search", // Only fetch when tabs need it
   });
 
   return (
@@ -36,7 +42,7 @@ export default function PublicTicketPage() {
         </div>
 
         {/* Main Content with Tabs */}
-        <Tabs defaultValue="submit" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="submit" className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
@@ -49,11 +55,39 @@ export default function PublicTicketPage() {
           </TabsList>
           
           <TabsContent value="submit">
-            <AnonymousTicketForm products={products} productsLoading={productsLoading} />
+            <Suspense fallback={
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-64" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-10 w-32" />
+                </CardContent>
+              </Card>
+            }>
+              <AnonymousTicketForm products={products} productsLoading={productsLoading} />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="search">
-            <AnonymousTicketSearchNew products={products} productsLoading={productsLoading} />
+            <Suspense fallback={
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-64" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-10 w-32" />
+                </CardContent>
+              </Card>
+            }>
+              <AnonymousTicketSearchNew products={products} productsLoading={productsLoading} />
+            </Suspense>
           </TabsContent>
         </Tabs>
 
