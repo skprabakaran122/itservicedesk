@@ -31,6 +31,7 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [editingRouting, setEditingRouting] = useState<ApprovalRouting | null>(null);
 
   const { data: routings = [], isLoading: routingsLoading } = useQuery({
@@ -178,6 +179,25 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
     user.role === 'manager' || user.role === 'admin'
   );
 
+  // Group routings by product and risk level for better visualization
+  const groupedRoutings = routings.reduce((groups: any, routing: ApprovalRouting) => {
+    const key = `${routing.productId}-${routing.riskLevel}`;
+    if (!groups[key]) {
+      groups[key] = {
+        productId: routing.productId,
+        riskLevel: routing.riskLevel,
+        approvals: []
+      };
+    }
+    groups[key].approvals.push(routing);
+    return groups;
+  }, {});
+
+  // Sort approvals within each group by level
+  Object.values(groupedRoutings).forEach((group: any) => {
+    group.approvals.sort((a: ApprovalRouting, b: ApprovalRouting) => a.approvalLevel - b.approvalLevel);
+  });
+
   return (
     <div className="space-y-6">
       <Card>
@@ -185,99 +205,140 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              <CardTitle>Approval Routing Configuration</CardTitle>
+              <CardTitle>Multilevel Approval Configuration</CardTitle>
             </div>
-            <Button 
-              onClick={() => {
-                setEditingRouting(null);
-                form.reset();
-                setShowForm(true);
-              }}
-              className="bg-primary hover:bg-primary/90"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Routing Rule
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => setShowWizard(true)}
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Setup Wizard
+              </Button>
+              <Button 
+                onClick={() => {
+                  setEditingRouting(null);
+                  form.reset();
+                  setShowForm(true);
+                }}
+                className="bg-primary hover:bg-primary/90"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Approver
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Risk Level</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Approver</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {routingsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
-                      Loading approval routing rules...
-                    </TableCell>
-                  </TableRow>
-                ) : routings.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
-                      No approval routing rules configured
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  routings.map((routing: ApprovalRouting) => (
-                    <TableRow key={routing.id}>
-                      <TableCell className="font-medium">
-                        {getProductName(routing.productId)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getRiskColor(routing.riskLevel)}>
-                          {routing.riskLevel.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono">
-                          Level {routing.approvalLevel}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4" />
-                          {getApproverName(routing.approverId)}
+          {routingsLoading ? (
+            <div className="text-center py-8">Loading approval routing rules...</div>
+          ) : Object.keys(groupedRoutings).length === 0 ? (
+            <div className="text-center py-8">
+              <div className="mb-4">
+                <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Approval Rules</h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Configure approval workflows for different risk levels and products.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {Object.values(groupedRoutings).map((group: any) => (
+                <Card key={`${group.productId}-${group.riskLevel}`} className="border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <h3 className="font-semibold">{getProductName(group.productId)}</h3>
+                          <Badge className={getRiskColor(group.riskLevel)}>
+                            {group.riskLevel.toUpperCase()} Risk
+                          </Badge>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={routing.isActive === 'true' ? 'default' : 'secondary'}>
-                          {routing.isActive === 'true' ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(routing)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => deleteMutation.mutate(routing.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingRouting(null);
+                          form.reset({
+                            productId: group.productId,
+                            riskLevel: group.riskLevel,
+                            approvalLevel: Math.max(...group.approvals.map((a: ApprovalRouting) => a.approvalLevel)) + 1,
+                            approverId: 0
+                          });
+                          setShowForm(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Level
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {group.approvals.map((routing: ApprovalRouting, index: number) => (
+                        <div key={routing.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                  {routing.approvalLevel}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="font-medium">{getApproverName(routing.approverId)}</div>
+                                <div className="text-sm text-gray-500">Level {routing.approvalLevel} Approver</div>
+                              </div>
+                            </div>
+                            <Badge variant={routing.isActive === 'true' ? 'default' : 'secondary'}>
+                              {routing.isActive === 'true' ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(routing)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteMutation.mutate(routing.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                      ))}
+                      
+                      {/* Approval Flow Visualization */}
+                      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                        <div className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                          Approval Flow:
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                          {group.approvals.map((routing: ApprovalRouting, index: number) => (
+                            <div key={routing.id} className="flex items-center gap-2">
+                              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 rounded text-xs">
+                                L{routing.approvalLevel}: {getApproverName(routing.approverId)}
+                              </span>
+                              {index < group.approvals.length - 1 && (
+                                <span className="text-blue-400">→</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -423,6 +484,125 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Setup Wizard Dialog */}
+      <Dialog open={showWizard} onOpenChange={setShowWizard}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Approval Workflow Setup Wizard
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Common Patterns */}
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setupCommonWorkflow('simple')}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Simple Approval</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span>Low Risk: Auto-approve</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                      <span>Medium Risk: 1 Level</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500" />
+                      <span>High Risk: 2 Levels</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setupCommonWorkflow('enterprise')}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Enterprise Model</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span>Low Risk: Manager</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                      <span>Medium Risk: Manager → Admin</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500" />
+                      <span>High Risk: Manager → Admin → Senior Admin</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setupCommonWorkflow('custom')}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Custom Setup</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span>Configure manually</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span>Product-specific rules</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span>Complex workflows</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Workflow Examples</h4>
+              <div className="space-y-3 text-sm text-blue-700 dark:text-blue-300">
+                <div>
+                  <strong>Simple:</strong> Basic approval structure suitable for small teams
+                </div>
+                <div>
+                  <strong>Enterprise:</strong> Traditional corporate approval hierarchy with multiple levels
+                </div>
+                <div>
+                  <strong>Custom:</strong> Flexible configuration for specific organizational needs
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowWizard(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+
+  // Setup common workflow patterns
+  function setupCommonWorkflow(type: 'simple' | 'enterprise' | 'custom') {
+    setShowWizard(false);
+    
+    if (type === 'custom') {
+      setShowForm(true);
+      return;
+    }
+
+    // Show instructions for the selected pattern
+    toast({
+      title: `${type === 'simple' ? 'Simple' : 'Enterprise'} Workflow Setup`,
+      description: `Use the "Add Approver" button to configure ${type} approval patterns for each product and risk level.`,
+    });
+  }
 }
