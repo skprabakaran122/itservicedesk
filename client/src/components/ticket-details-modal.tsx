@@ -301,6 +301,12 @@ export function TicketDetailsModal({
                           {ticket.requesterPhone && (
                             <p className="text-xs text-gray-500">Phone: {ticket.requesterPhone}</p>
                           )}
+                          {ticket.requesterDepartment && (
+                            <p className="text-xs text-gray-500">Department: {ticket.requesterDepartment}</p>
+                          )}
+                          {ticket.requesterBusinessUnit && (
+                            <p className="text-xs text-gray-500">Business Unit: {ticket.requesterBusinessUnit}</p>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -48,6 +48,8 @@ export function AnonymousTicketForm({ onSuccess, products = [], productsLoading 
       requesterName: "",
       requesterEmail: "",
       requesterPhone: "",
+      requesterDepartment: "",
+      requesterBusinessUnit: "",
       title: "",
       description: "",
       priority: "medium",

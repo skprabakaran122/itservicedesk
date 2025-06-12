@@ -153,6 +153,9 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
                 <div>
                   <div className="font-medium">{getRequesterName(ticket)}</div>
                   <div className="text-xs">{getRequesterEmail(ticket)}</div>
+                  {ticket.requesterDepartment && (
+                    <div className="text-xs text-gray-500">Dept: {ticket.requesterDepartment}</div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
