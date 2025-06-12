@@ -65,6 +65,14 @@ function startSLAScheduler() {
   // Initialize storage data once at startup
   await storage.initializeData();
   
+  // Warm up database connection by running a simple query
+  try {
+    await storage.getProducts();
+    log("Database connection warmed up");
+  } catch (error) {
+    log("Warning: Failed to warm up database connection");
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

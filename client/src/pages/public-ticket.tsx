@@ -7,6 +7,7 @@ import { Link } from "wouter";
 import { ArrowLeft, Headphones, Search, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PublicTicketPage() {
   // Fetch products once at the parent level to avoid duplicate API calls
@@ -45,11 +46,42 @@ export default function PublicTicketPage() {
           </TabsList>
           
           <TabsContent value="submit">
-            <AnonymousTicketForm products={products} productsLoading={productsLoading} />
+            {productsLoading ? (
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-1/3" />
+                  <Skeleton className="h-4 w-2/3" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-10 w-1/4" />
+                </CardContent>
+              </Card>
+            ) : (
+              <AnonymousTicketForm products={products} productsLoading={productsLoading} />
+            )}
           </TabsContent>
           
           <TabsContent value="search">
-            <AnonymousTicketSearchNew products={products} productsLoading={productsLoading} />
+            {productsLoading ? (
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-1/3" />
+                  <Skeleton className="h-4 w-2/3" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full md:col-span-2" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <AnonymousTicketSearchNew products={products} productsLoading={productsLoading} />
+            )}
           </TabsContent>
         </Tabs>
 
