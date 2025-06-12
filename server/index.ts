@@ -72,6 +72,15 @@ function startSLAScheduler() {
   } catch (error) {
     log("Warning: Failed to warm up database connection");
   }
+
+  // Keep database connections alive with periodic health checks
+  setInterval(async () => {
+    try {
+      await storage.getProducts();
+    } catch (error) {
+      // Silent health check - don't log errors
+    }
+  }, 60000); // Check every minute
   
   const server = await registerRoutes(app);
 
