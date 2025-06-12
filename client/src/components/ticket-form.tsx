@@ -23,6 +23,8 @@ const formSchema = z.object({
   category: z.enum(["software", "hardware", "network", "access", "other"]).default("software"),
   assignedTo: z.string().optional(),
   product: z.string().min(1, "Product is required"),
+  requesterDepartment: z.string().optional(),
+  requesterBusinessUnit: z.string().optional(),
 });
 
 interface TicketFormProps {
@@ -211,6 +213,68 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
               placeholder="Select affected product"
               required={true}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="requesterDepartment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Department</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select department" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="IT">IT</SelectItem>
+                        <SelectItem value="Finance">Finance</SelectItem>
+                        <SelectItem value="HR">Human Resources</SelectItem>
+                        <SelectItem value="Operations">Operations</SelectItem>
+                        <SelectItem value="Sales">Sales</SelectItem>
+                        <SelectItem value="Marketing">Marketing</SelectItem>
+                        <SelectItem value="Legal">Legal</SelectItem>
+                        <SelectItem value="Executive">Executive</SelectItem>
+                        <SelectItem value="Customer Service">Customer Service</SelectItem>
+                        <SelectItem value="R&D">Research & Development</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="requesterBusinessUnit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Business Unit</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select business unit" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Corporate">Corporate</SelectItem>
+                        <SelectItem value="North America">North America</SelectItem>
+                        <SelectItem value="Europe">Europe</SelectItem>
+                        <SelectItem value="Asia Pacific">Asia Pacific</SelectItem>
+                        <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                        <SelectItem value="Services">Services</SelectItem>
+                        <SelectItem value="Technology">Technology</SelectItem>
+                        <SelectItem value="Consulting">Consulting</SelectItem>
+                        <SelectItem value="Support">Support</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}

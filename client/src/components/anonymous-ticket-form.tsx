@@ -19,6 +19,8 @@ const anonymousTicketSchema = z.object({
   requesterName: z.string().min(1, "Name is required"),
   requesterEmail: z.string().optional().refine((email) => !email || z.string().email().safeParse(email).success, "Please enter a valid email address"),
   requesterPhone: z.string().optional(),
+  requesterDepartment: z.string().optional(),
+  requesterBusinessUnit: z.string().optional(),
   title: z.string().min(1, "Issue title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
@@ -348,6 +350,68 @@ export function AnonymousTicketForm({ onSuccess, products = [], productsLoading 
                               {product.name}
                             </SelectItem>
                           ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="requesterDepartment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select department" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="IT">IT</SelectItem>
+                          <SelectItem value="Finance">Finance</SelectItem>
+                          <SelectItem value="HR">Human Resources</SelectItem>
+                          <SelectItem value="Operations">Operations</SelectItem>
+                          <SelectItem value="Sales">Sales</SelectItem>
+                          <SelectItem value="Marketing">Marketing</SelectItem>
+                          <SelectItem value="Legal">Legal</SelectItem>
+                          <SelectItem value="Executive">Executive</SelectItem>
+                          <SelectItem value="Customer Service">Customer Service</SelectItem>
+                          <SelectItem value="R&D">Research & Development</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="requesterBusinessUnit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Business Unit</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select business unit" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Corporate">Corporate</SelectItem>
+                          <SelectItem value="North America">North America</SelectItem>
+                          <SelectItem value="Europe">Europe</SelectItem>
+                          <SelectItem value="Asia Pacific">Asia Pacific</SelectItem>
+                          <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                          <SelectItem value="Services">Services</SelectItem>
+                          <SelectItem value="Technology">Technology</SelectItem>
+                          <SelectItem value="Consulting">Consulting</SelectItem>
+                          <SelectItem value="Support">Support</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

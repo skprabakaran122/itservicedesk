@@ -15,6 +15,8 @@ export const tickets = pgTable("tickets", {
   requesterEmail: text("requester_email"),
   requesterName: text("requester_name"),
   requesterPhone: text("requester_phone"),
+  requesterDepartment: text("requester_department"),
+  requesterBusinessUnit: text("requester_business_unit"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   firstResponseAt: timestamp("first_response_at"),
