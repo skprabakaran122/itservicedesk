@@ -174,16 +174,30 @@ export function TicketDetailsModal({
     }
   };
 
-  const getRequesterName = (requesterId: number | null) => {
-    if (!requesterId) return 'Unknown User';
-    const user = users.find(u => u.id === requesterId);
-    return user ? user.name : `User ${requesterId}`;
+  const getRequesterName = () => {
+    // Use stored requester name if available
+    if (ticket.requesterName) return ticket.requesterName;
+    
+    // Fall back to user lookup if requesterId exists
+    if (ticket.requesterId) {
+      const user = users.find(u => u.id === ticket.requesterId);
+      return user ? user.name : `User ${ticket.requesterId}`;
+    }
+    
+    return 'Unknown User';
   };
 
-  const getRequesterEmail = (requesterId: number | null) => {
-    if (!requesterId) return 'unknown@company.com';
-    const user = users.find(u => u.id === requesterId);
-    return user ? user.email : `user${requesterId}@company.com`;
+  const getRequesterEmail = () => {
+    // Use stored requester email if available
+    if (ticket.requesterEmail) return ticket.requesterEmail;
+    
+    // Fall back to user lookup if requesterId exists
+    if (ticket.requesterId) {
+      const user = users.find(u => u.id === ticket.requesterId);
+      return user ? user.email : `user${ticket.requesterId}@company.com`;
+    }
+    
+    return 'No email provided';
   };
 
   const getUserName = (userId: number) => {
@@ -282,8 +296,8 @@ export function TicketDetailsModal({
                       <div className="flex items-center gap-2">
                         <UserIcon className="h-4 w-4 text-gray-400" />
                         <div>
-                          <p className="text-sm font-medium">{getRequesterName(ticket.requesterId)}</p>
-                          <p className="text-xs text-gray-500">{getRequesterEmail(ticket.requesterId)}</p>
+                          <p className="text-sm font-medium">{getRequesterName()}</p>
+                          <p className="text-xs text-gray-500">{getRequesterEmail()}</p>
                         </div>
                       </div>
                     </div>

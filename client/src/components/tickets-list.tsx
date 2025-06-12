@@ -57,16 +57,30 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
-  const getRequesterName = (requesterId: number | null) => {
-    if (!requesterId) return 'Unknown User';
-    const user = users.find(u => u.id === requesterId);
-    return user ? user.name : `User ${requesterId}`;
+  const getRequesterName = (ticket: Ticket) => {
+    // Use stored requester name if available
+    if (ticket.requesterName) return ticket.requesterName;
+    
+    // Fall back to user lookup if requesterId exists
+    if (ticket.requesterId) {
+      const user = users.find(u => u.id === ticket.requesterId);
+      return user ? user.name : `User ${ticket.requesterId}`;
+    }
+    
+    return 'Unknown User';
   };
 
-  const getRequesterEmail = (requesterId: number | null) => {
-    if (!requesterId) return 'unknown@company.com';
-    const user = users.find(u => u.id === requesterId);
-    return user ? user.email : `user${requesterId}@company.com`;
+  const getRequesterEmail = (ticket: Ticket) => {
+    // Use stored requester email if available
+    if (ticket.requesterEmail) return ticket.requesterEmail;
+    
+    // Fall back to user lookup if requesterId exists
+    if (ticket.requesterId) {
+      const user = users.find(u => u.id === ticket.requesterId);
+      return user ? user.email : `user${ticket.requesterId}@company.com`;
+    }
+    
+    return 'No email provided';
   };
 
   const handleStatusUpdate = (ticketId: number, newStatus: string) => {
@@ -136,7 +150,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <UserIcon className="h-4 w-4" />
-                <span>{getRequesterName(ticket.requesterId)}</span>
+                <span>{getRequesterName(ticket)}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <AlertCircle className="h-4 w-4" />
@@ -164,7 +178,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
 
             <div className="flex justify-between items-center">
               <div className="text-xs text-gray-500 dark:text-gray-500">
-                Requester: {getRequesterEmail(ticket.requesterId)} • Last updated: {ticket.updatedAt ? formatDateIST(ticket.updatedAt) : 'N/A'}
+                Requester: {getRequesterEmail(ticket)} • Last updated: {ticket.updatedAt ? formatDateIST(ticket.updatedAt) : 'N/A'}
               </div>
               <div className="flex gap-2 items-center">
                 {getAllowedStatusOptions(ticket).length > 0 && (
