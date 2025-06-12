@@ -1,0 +1,297 @@
+import sgMail from '@sendgrid/mail';
+import type { Ticket, Change, User } from '@shared/schema';
+
+class EmailService {
+  private isEnabled: boolean = false;
+  private fromEmail: string = '';
+
+  constructor() {
+    this.initialize();
+  }
+
+  private async initialize() {
+    const sendGridApiKey = process.env.SENDGRID_API_KEY;
+    
+    if (!sendGridApiKey) {
+      console.log('[Email] SENDGRID_API_KEY not configured. Email notifications disabled.');
+      console.log('[Email] Please set SENDGRID_API_KEY environment variable to enable email notifications.');
+      this.isEnabled = false;
+      return;
+    }
+
+    try {
+      sgMail.setApiKey(sendGridApiKey);
+      this.fromEmail = process.env.FROM_EMAIL || 'noreply@calpion.com';
+      this.isEnabled = true;
+      console.log('[Email] SendGrid configured successfully');
+      console.log(`[Email] From address: ${this.fromEmail}`);
+    } catch (error) {
+      console.log('[Email] Failed to initialize SendGrid:', error);
+      this.isEnabled = false;
+    }
+  }
+
+  async sendEmail(to: string, subject: string, html: string, text?: string): Promise<boolean> {
+    if (!this.isEnabled) {
+      console.log('[Email] Email service disabled, skipping send');
+      return false;
+    }
+
+    try {
+      const msg = {
+        to,
+        from: this.fromEmail,
+        subject,
+        text: text || html.replace(/<[^>]*>/g, ''), // Strip HTML for text version
+        html,
+      };
+
+      await sgMail.send(msg);
+      console.log(`[Email] Email sent successfully to ${to}`);
+      return true;
+    } catch (error) {
+      console.error('[Email] Failed to send email:', error);
+      return false;
+    }
+  }
+
+  async sendTicketCreatedEmail(ticket: Ticket, userEmail?: string): Promise<void> {
+    if (!this.isEnabled) return;
+
+    const recipientEmail = userEmail || ticket.requesterEmail || '';
+    if (!recipientEmail) {
+      console.log('[Email] No recipient email for ticket notification');
+      return;
+    }
+
+    const subject = `Ticket Created: #${ticket.id} - ${ticket.title}`;
+    const priorityColor = this.getPriorityColor(ticket.priority);
+    const statusColor = this.getStatusColor(ticket.status);
+    const responseTime = this.getResponseTime(ticket.priority);
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #1e40af; color: white; padding: 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">Calpion IT Service Desk</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Ticket Created Successfully</p>
+        </div>
+        
+        <div style="padding: 30px; background-color: #f8fafc;">
+          <h2 style="color: #1e40af; margin-top: 0;">Ticket #${ticket.id}: ${ticket.title}</h2>
+          
+          <div style="background-color: white; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+              <div>
+                <strong style="color: #374151;">Priority:</strong>
+                <span style="background-color: ${priorityColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">
+                  ${ticket.priority.toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <strong style="color: #374151;">Status:</strong>
+                <span style="background-color: ${statusColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">
+                  ${ticket.status.toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <strong style="color: #374151;">Category:</strong>
+                <span style="color: #6b7280;">${ticket.category}</span>
+              </div>
+              <div>
+                <strong style="color: #374151;">Expected Response:</strong>
+                <span style="color: #6b7280;">${responseTime}</span>
+              </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+              <strong style="color: #374151;">Description:</strong>
+              <div style="margin-top: 8px; padding: 15px; background-color: #f9fafb; border-left: 4px solid #1e40af; border-radius: 4px;">
+                ${ticket.description}
+              </div>
+            </div>
+          </div>
+          
+          <div style="background-color: #e0f2fe; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #0369a1; margin-top: 0;">What's Next?</h3>
+            <ul style="color: #374151; line-height: 1.6;">
+              <li>Your ticket has been logged and assigned ID #${ticket.id}</li>
+              <li>Our team will respond within ${responseTime}</li>
+              <li>You'll receive updates via email as progress is made</li>
+              <li>For urgent issues, please contact our support hotline</li>
+            </ul>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+              This is an automated notification from Calpion IT Service Desk<br>
+              Please do not reply to this email
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    await this.sendEmail(recipientEmail, subject, html);
+  }
+
+  async sendTicketUpdatedEmail(ticket: Ticket, userEmail?: string, updateNote?: string): Promise<void> {
+    if (!this.isEnabled) return;
+
+    const recipientEmail = userEmail || ticket.requesterEmail || '';
+    if (!recipientEmail) return;
+
+    const subject = `Ticket Updated: #${ticket.id} - ${ticket.title}`;
+    const priorityColor = this.getPriorityColor(ticket.priority);
+    const statusColor = this.getStatusColor(ticket.status);
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #059669; color: white; padding: 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">Calpion IT Service Desk</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Ticket Update</p>
+        </div>
+        
+        <div style="padding: 30px; background-color: #f8fafc;">
+          <h2 style="color: #059669; margin-top: 0;">Ticket #${ticket.id} has been updated</h2>
+          
+          <div style="background-color: white; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #374151; margin-top: 0;">${ticket.title}</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+              <div>
+                <strong style="color: #374151;">Priority:</strong>
+                <span style="background-color: ${priorityColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">
+                  ${ticket.priority.toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <strong style="color: #374151;">Status:</strong>
+                <span style="background-color: ${statusColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">
+                  ${ticket.status.toUpperCase()}
+                </span>
+              </div>
+            </div>
+            
+            ${updateNote ? `
+              <div style="margin-top: 20px;">
+                <strong style="color: #374151;">Update Notes:</strong>
+                <div style="margin-top: 8px; padding: 15px; background-color: #f0f9ff; border-left: 4px solid #059669; border-radius: 4px;">
+                  ${updateNote}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+              This is an automated notification from Calpion IT Service Desk<br>
+              Please do not reply to this email
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    await this.sendEmail(recipientEmail, subject, html);
+  }
+
+  async sendChangeApprovalEmail(change: Change, approverEmail: string, approverName: string): Promise<void> {
+    if (!this.isEnabled) return;
+
+    const subject = `Change Approval Required: #${change.id} - ${change.title}`;
+    const priorityColor = this.getPriorityColor(change.priority);
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #dc2626; color: white; padding: 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">Calpion IT Service Desk</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Change Approval Required</p>
+        </div>
+        
+        <div style="padding: 30px; background-color: #f8fafc;">
+          <h2 style="color: #dc2626; margin-top: 0;">Change #${change.id} Requires Your Approval</h2>
+          
+          <p style="color: #374151; font-size: 16px;">Hello ${approverName},</p>
+          <p style="color: #374151;">A change request has been submitted that requires your approval:</p>
+          
+          <div style="background-color: white; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #374151; margin-top: 0;">${change.title}</h3>
+            
+            <div style="margin-bottom: 15px;">
+              <strong style="color: #374151;">Priority:</strong>
+              <span style="background-color: ${priorityColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">
+                ${change.priority.toUpperCase()}
+              </span>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+              <strong style="color: #374151;">Requested By:</strong>
+              <span style="color: #6b7280;">${change.requestedBy}</span>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+              <strong style="color: #374151;">Implementation Date:</strong>
+              <span style="color: #6b7280;">${new Date(change.scheduledDate).toLocaleDateString()}</span>
+            </div>
+            
+            <div style="margin-top: 20px;">
+              <strong style="color: #374151;">Description:</strong>
+              <div style="margin-top: 8px; padding: 15px; background-color: #f9fafb; border-left: 4px solid #dc2626; border-radius: 4px;">
+                ${change.description}
+              </div>
+            </div>
+          </div>
+          
+          <div style="background-color: #fef3c7; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #92400e; margin-top: 0;">Action Required</h3>
+            <p style="color: #374151; margin: 0;">
+              Please review this change request and provide your approval decision. 
+              Log into the IT Service Desk portal to approve or reject this change.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+              This is an automated notification from Calpion IT Service Desk<br>
+              Please do not reply to this email
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    await this.sendEmail(approverEmail, subject, html);
+  }
+
+  private getPriorityColor(priority: string): string {
+    switch (priority.toLowerCase()) {
+      case 'critical': return '#dc2626';
+      case 'high': return '#ea580c';
+      case 'medium': return '#d97706';
+      case 'low': return '#65a30d';
+      default: return '#6b7280';
+    }
+  }
+
+  private getStatusColor(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'open': return '#2563eb';
+      case 'in_progress': return '#d97706';
+      case 'resolved': return '#16a34a';
+      case 'closed': return '#6b7280';
+      default: return '#6b7280';
+    }
+  }
+
+  private getResponseTime(priority: string): string {
+    switch (priority.toLowerCase()) {
+      case 'critical': return '1 hour';
+      case 'high': return '4 hours';
+      case 'medium': return '24 hours';
+      case 'low': return '72 hours';
+      default: return '24 hours';
+    }
+  }
+}
+
+export const emailService = new EmailService();

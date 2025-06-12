@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { emailService } from "./email";
+import { emailService } from "./email-sendgrid";
 import { z } from "zod";
 import { insertTicketSchema, insertChangeSchema, insertProductSchema, insertAttachmentSchema } from "@shared/schema";
 import session from "express-session";
