@@ -335,7 +335,9 @@ export function TicketDetailsModal({
                               <SelectItem value="in_progress">In Progress</SelectItem>
                               <SelectItem value="resolved">Resolved</SelectItem>
                               <SelectItem value="closed">Closed</SelectItem>
-                              <SelectItem value="reopen">Reopen</SelectItem>
+                              {(ticket.requesterId === currentUser?.id || ticket.status === 'closed' || ticket.status === 'resolved') && (
+                                <SelectItem value="reopen">Reopen</SelectItem>
+                              )}
                             </>
                           )}
                         </SelectContent>

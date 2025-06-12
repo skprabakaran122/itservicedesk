@@ -57,12 +57,14 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
-  const getRequesterName = (requesterId: number) => {
+  const getRequesterName = (requesterId: number | null) => {
+    if (!requesterId) return 'Unknown User';
     const user = users.find(u => u.id === requesterId);
     return user ? user.name : `User ${requesterId}`;
   };
 
-  const getRequesterEmail = (requesterId: number) => {
+  const getRequesterEmail = (requesterId: number | null) => {
+    if (!requesterId) return 'unknown@company.com';
     const user = users.find(u => u.id === requesterId);
     return user ? user.email : `user${requesterId}@company.com`;
   };
@@ -75,7 +77,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
   const getAllowedStatusOptions = (ticket: Ticket) => {
     if (currentUser?.role === 'user') {
       // Users can only modify their own tickets
-      if (ticket.requesterId !== currentUser?.id) {
+      if (!ticket.requesterId || ticket.requesterId !== currentUser?.id) {
         return []; // No options for tickets they don't own
       }
       
@@ -89,18 +91,16 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
       return [];
     }
     
-    // Agents, managers, and admins have different options based on current status
-    if (ticket.status === 'closed') {
-      // Closed tickets can only be reopened
-      return ['reopen'];
+    // Agents, managers, and admins can change to any status
+    // Allow all status transitions for staff roles
+    const allStatuses = ['pending', 'open', 'in-progress', 'resolved', 'closed'];
+    
+    // Add reopen option if they're the original requester or for any closed/resolved ticket
+    if (ticket.requesterId === currentUser?.id || ticket.status === 'closed' || ticket.status === 'resolved') {
+      allStatuses.push('reopen');
     }
     
-    // For other statuses, allow all transitions except reopen (unless they're the original requester)
-    const baseStatuses = ['pending', 'open', 'in-progress', 'resolved', 'closed'];
-    if (ticket.requesterId === currentUser?.id) {
-      baseStatuses.push('reopen');
-    }
-    return baseStatuses;
+    return allStatuses;
   };
 
   return (
