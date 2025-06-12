@@ -8,9 +8,7 @@ module.exports = {
     exec_mode: 'fork',
     env: {
       NODE_ENV: 'production',
-      PORT: 5000,
-      DATABASE_URL: 'postgresql://servicedesk_user:servicedesk123@localhost:5432/servicedesk',
-      SESSION_SECRET: '866fc68cc92dbaa085d34f5b072cb5bc2e3a4758d810f0a9862f61d147fc64d1e0f303b5e780ce2eeabac9c1697ee0985145321d435b7749ed499ec0d310d753'
+      PORT: 5000
     },
     error_file: './logs/pm2-error.log',
     out_file: './logs/pm2-out.log',

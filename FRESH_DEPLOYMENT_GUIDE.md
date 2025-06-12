@@ -61,8 +61,14 @@ npm run db:push
 
 ### Step 7: Start Application with PM2
 ```bash
-# Start with PM2
-pm2 start ecosystem.config.js
+# Create logs directory
+mkdir -p logs
+
+# Option 1: Use .cjs config file
+pm2 start ecosystem.config.cjs
+
+# Option 2: Direct PM2 start (if config issues persist)
+pm2 start server/index.ts --name servicedesk --interpreter node --interpreter-args "--import tsx" --env production
 
 # Save PM2 configuration
 pm2 save
