@@ -20,9 +20,10 @@ import calpionLogo from "@assets/image_1749619432130.png";
 interface DashboardProps {
   currentUser: any;
   onLogout: () => void;
+  initialTab?: string;
 }
 
-export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
+export default function Dashboard({ currentUser, onLogout, initialTab }: DashboardProps) {
   const [showTicketForm, setShowTicketForm] = useState(false);
   const [showChangeForm, setShowChangeForm] = useState(false);
 
@@ -269,7 +270,7 @@ export default function Dashboard({ currentUser, onLogout }: DashboardProps) {
       )}
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="tickets" className="space-y-4">
+      <Tabs defaultValue={initialTab || "tickets"} className="space-y-4">
         <TabsList>
           <TabsTrigger value="tickets">Support Tickets</TabsTrigger>
           {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (

@@ -14,6 +14,20 @@ function Router({ currentUser, onLogout }: { currentUser: any; onLogout: () => v
     <Switch>
       <Route path="/support" component={PublicTicketPage} />
       <Route path="/public-ticket" component={PublicTicketPage} />
+      <Route path="/admin">
+        {currentUser ? (
+          <Dashboard currentUser={currentUser} onLogout={onLogout} initialTab="admin" />
+        ) : (
+          <Login onLoginSuccess={(user) => window.location.reload()} />
+        )}
+      </Route>
+      <Route path="/dashboard">
+        {currentUser ? (
+          <Dashboard currentUser={currentUser} onLogout={onLogout} />
+        ) : (
+          <Login onLoginSuccess={(user) => window.location.reload()} />
+        )}
+      </Route>
       <Route path="/">
         {currentUser ? (
           <Dashboard currentUser={currentUser} onLogout={onLogout} />

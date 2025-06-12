@@ -1,26 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Send, Settings, TestTube2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface EmailSettings {
-  enabled: boolean;
   provider: 'smtp' | 'sendgrid';
-  // SMTP Settings
+  sendgridApiKey: string;
   smtpHost: string;
   smtpPort: number;
   smtpSecure: boolean;
   smtpUser: string;
   smtpPass: string;
-  // SendGrid Settings
-  sendgridApiKey: string;
   fromEmail: string;
 }
 
@@ -34,14 +31,13 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
   
   const [testEmail, setTestEmail] = useState(currentUser?.email || "");
   const [settings, setSettings] = useState<EmailSettings>({
-    enabled: false,
     provider: 'sendgrid',
+    sendgridApiKey: "",
     smtpHost: "",
     smtpPort: 587,
     smtpSecure: false,
     smtpUser: "",
     smtpPass: "",
-    sendgridApiKey: "",
     fromEmail: "",
   });
 
@@ -52,44 +48,17 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
   });
 
   // Update local state when settings are loaded
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentSettings) {
       setSettings(prev => ({
         ...prev,
         ...currentSettings,
-        // Don't overwrite if already has values (user might be editing)
-        sendgridApiKey: prev.sendgridApiKey || (currentSettings.sendgridApiKey === '***configured***' ? '' : currentSettings.sendgridApiKey || ''),
-        smtpPass: prev.smtpPass || (currentSettings.smtpPass === '***configured***' ? '' : currentSettings.smtpPass || ''),
+        // Don't overwrite sensitive fields if they show as configured
+        sendgridApiKey: (currentSettings as any).sendgridApiKey === '***configured***' ? prev.sendgridApiKey : (currentSettings as any).sendgridApiKey || '',
+        smtpPass: (currentSettings as any).smtpPass === '***configured***' ? prev.smtpPass : (currentSettings as any).smtpPass || '',
       }));
     }
   }, [currentSettings]);
-
-  // Test email mutation
-  const testEmailMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const response = await fetch('/api/email/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email })
-      });
-      if (!response.ok) throw new Error('Failed to send test email');
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Test Email Sent",
-        description: "Check your inbox for the test email",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Test Failed",
-        description: "Failed to send test email. Check your configuration.",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Save settings mutation
   const saveSettingsMutation = useMutation({
@@ -100,7 +69,10 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
         credentials: 'include',
         body: JSON.stringify(settings)
       });
-      if (!response.ok) throw new Error('Failed to save settings');
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to save settings');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -108,11 +80,42 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
         title: "Settings Saved",
         description: "Email configuration has been updated successfully",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/email/settings'] });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to save email settings",
+        description: error.message || "Failed to save email settings",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Test email mutation
+  const testEmailMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const response = await fetch('/api/email/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email })
+      });
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to send test email');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Test Email Sent",
+        description: "Check your inbox for the test email",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Test Failed",
+        description: error.message || "Failed to send test email. Check your configuration.",
         variant: "destructive",
       });
     },
@@ -135,114 +138,128 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
   };
 
   const handleSaveSettings = () => {
+    if (settings.provider === 'sendgrid' && !settings.sendgridApiKey) {
+      toast({
+        title: "SendGrid API Key Required",
+        description: "Please enter your SendGrid API key",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (settings.provider === 'smtp' && (!settings.smtpHost || !settings.smtpUser || !settings.smtpPass)) {
+      toast({
+        title: "SMTP Configuration Required",
+        description: "Please fill in all SMTP settings",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!settings.fromEmail) {
+      toast({
+        title: "From Email Required",
+        description: "Please enter a from email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
     saveSettingsMutation.mutate(settings);
   };
 
-  if (currentUser?.role !== 'admin') {
+  if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Email Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Only administrators can configure email settings.</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <div className="flex items-center space-x-2">
+          <Settings className="h-5 w-5" />
+          <h2 className="text-lg font-semibold">Email Settings</h2>
+        </div>
+        <div>Loading email settings...</div>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center space-x-2">
+        <Settings className="h-5 w-5" />
+        <h2 className="text-lg font-semibold">Email Settings</h2>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Email Configuration
+          <CardTitle className="flex items-center space-x-2">
+            <Mail className="h-5 w-5" />
+            <span>Email Provider Configuration</span>
           </CardTitle>
           <CardDescription>
-            Configure email provider for notifications. Choose between SendGrid or SMTP.
+            Configure your email service for sending notifications and alerts
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Email Provider Selection */}
-          <div className="space-y-4">
-            <Label className="text-base font-medium">Email Provider</Label>
-            <div className="flex gap-4">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="provider"
-                  value="sendgrid"
-                  checked={settings.provider === 'sendgrid'}
-                  onChange={(e) => handleSettingsChange('provider', e.target.value as 'sendgrid')}
-                  className="text-primary"
-                />
-                <span>SendGrid (Recommended)</span>
-              </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="provider"
-                  value="smtp"
-                  checked={settings.provider === 'smtp'}
-                  onChange={(e) => handleSettingsChange('provider', e.target.value as 'smtp')}
-                  className="text-primary"
-                />
-                <span>SMTP</span>
-              </label>
-            </div>
+          {/* Provider Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="provider">Email Provider</Label>
+            <Select 
+              value={settings.provider} 
+              onValueChange={(value: 'smtp' | 'sendgrid') => handleSettingsChange('provider', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select email provider" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sendgrid">SendGrid (Recommended)</SelectItem>
+                <SelectItem value="smtp">SMTP</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* From Email */}
+          <div className="space-y-2">
+            <Label htmlFor="fromEmail">From Email Address</Label>
+            <Input
+              id="fromEmail"
+              type="email"
+              placeholder="noreply@yourcompany.com"
+              value={settings.fromEmail}
+              onChange={(e) => handleSettingsChange('fromEmail', e.target.value)}
+            />
           </div>
 
           <Separator />
 
-          {/* SendGrid Configuration */}
+          {/* SendGrid Settings */}
           {settings.provider === 'sendgrid' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">SendGrid Configuration</h3>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sendgridApiKey">SendGrid API Key</Label>
-                  <Input
-                    id="sendgridApiKey"
-                    type="password"
-                    placeholder="SG.xxxxxxxxxxxxxxxx"
-                    value={settings.sendgridApiKey}
-                    onChange={(e) => handleSettingsChange('sendgridApiKey', e.target.value)}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Get your API key from SendGrid Dashboard → Settings → API Keys
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fromEmail">From Email Address</Label>
-                  <Input
-                    id="fromEmail"
-                    type="email"
-                    placeholder="noreply@calpion.com"
-                    value={settings.fromEmail}
-                    onChange={(e) => handleSettingsChange('fromEmail', e.target.value)}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Must be a verified sender in your SendGrid account
-                  </p>
-                </div>
+              <h3 className="text-sm font-medium">SendGrid Configuration</h3>
+              <div className="space-y-2">
+                <Label htmlFor="sendgridApiKey">SendGrid API Key</Label>
+                <Input
+                  id="sendgridApiKey"
+                  type="password"
+                  placeholder={(currentSettings as any)?.sendgridApiKey === '***configured***' ? 'API key is configured' : 'Enter your SendGrid API key'}
+                  value={settings.sendgridApiKey}
+                  onChange={(e) => handleSettingsChange('sendgridApiKey', e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Get your API key from the SendGrid dashboard under Settings → API Keys
+                </p>
               </div>
             </div>
           )}
 
-          {/* SMTP Configuration */}
+          {/* SMTP Settings */}
           {settings.provider === 'smtp' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">SMTP Configuration</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="text-sm font-medium">SMTP Configuration</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="smtpHost">SMTP Host</Label>
                   <Input
                     id="smtpHost"
-                    placeholder="smtp.example.com"
+                    placeholder="smtp.gmail.com"
                     value={settings.smtpHost}
                     onChange={(e) => handleSettingsChange('smtpHost', e.target.value)}
                   />
@@ -255,15 +272,27 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
                     type="number"
                     placeholder="587"
                     value={settings.smtpPort}
-                    onChange={(e) => handleSettingsChange('smtpPort', parseInt(e.target.value) || 587)}
+                    onChange={(e) => handleSettingsChange('smtpPort', parseInt(e.target.value))}
                   />
                 </div>
-                
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="smtpSecure"
+                  checked={settings.smtpSecure}
+                  onCheckedChange={(checked) => handleSettingsChange('smtpSecure', checked)}
+                />
+                <Label htmlFor="smtpSecure">Use SSL/TLS</Label>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="smtpUser">SMTP Username</Label>
                   <Input
                     id="smtpUser"
-                    placeholder="your-email@example.com"
+                    type="email"
+                    placeholder="your-email@gmail.com"
                     value={settings.smtpUser}
                     onChange={(e) => handleSettingsChange('smtpUser', e.target.value)}
                   />
@@ -274,35 +303,19 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
                   <Input
                     id="smtpPass"
                     type="password"
-                    placeholder="Your SMTP password"
+                    placeholder={(currentSettings as any)?.smtpPass === '***configured***' ? 'Password is configured' : 'Enter password or app password'}
                     value={settings.smtpPass}
                     onChange={(e) => handleSettingsChange('smtpPass', e.target.value)}
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="smtpSecure"
-                    checked={settings.smtpSecure}
-                    onCheckedChange={(checked) => handleSettingsChange('smtpSecure', checked)}
-                  />
-                  <Label htmlFor="smtpSecure">Use SSL/TLS (recommended for port 465)</Label>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="fromEmailSmtp">From Email (optional)</Label>
-                  <Input
-                    id="fromEmailSmtp"
-                    placeholder="noreply@yourcompany.com"
-                    value={settings.fromEmail}
-                    onChange={(e) => handleSettingsChange('fromEmail', e.target.value)}
                   />
                 </div>
               </div>
             </div>
           )}
 
-          <div className="flex justify-between items-center pt-4">
+          <Separator />
+
+          {/* Save Settings */}
+          <div className="flex space-x-2">
             <Button 
               onClick={handleSaveSettings}
               disabled={saveSettingsMutation.isPending}
@@ -313,11 +326,12 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
         </CardContent>
       </Card>
 
+      {/* Test Email */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center space-x-2">
             <TestTube2 className="h-5 w-5" />
-            Test Email
+            <span>Test Email Configuration</span>
           </CardTitle>
           <CardDescription>
             Send a test email to verify your configuration is working
@@ -338,9 +352,10 @@ export function EmailSettings({ currentUser }: EmailSettingsProps) {
           <Button 
             onClick={handleTestEmail}
             disabled={testEmailMutation.isPending}
+            variant="outline"
             className="w-full"
           >
-            <Send className="h-4 w-4 mr-2" />
+            <Send className="w-4 h-4 mr-2" />
             {testEmailMutation.isPending ? "Sending..." : "Send Test Email"}
           </Button>
         </CardContent>
