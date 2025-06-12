@@ -89,7 +89,13 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
       return [];
     }
     
-    // Agents, managers, and admins can change to any status except reopen (unless they're the original requester)
+    // Agents, managers, and admins have different options based on current status
+    if (ticket.status === 'closed') {
+      // Closed tickets can only be reopened
+      return ['reopen'];
+    }
+    
+    // For other statuses, allow all transitions except reopen (unless they're the original requester)
     const baseStatuses = ['pending', 'open', 'in-progress', 'resolved', 'closed'];
     if (ticket.requesterId === currentUser?.id) {
       baseStatuses.push('reopen');
