@@ -27,7 +27,7 @@ class EmailService {
         const cleanApiKey = apiKey.trim();
         sgMail.setApiKey(cleanApiKey);
         console.log(`[Email] Using API key: ${cleanApiKey.substring(0, 10)}...`);
-        this.fromEmail = config.fromEmail || process.env.FROM_EMAIL || 'noreply@calpion.com';
+        this.fromEmail = config.fromEmail || process.env.FROM_EMAIL || 'no-reply@calpion.com';
         this.isEnabled = true;
         console.log('[Email] SendGrid configured successfully');
         console.log(`[Email] From address: ${this.fromEmail}`);

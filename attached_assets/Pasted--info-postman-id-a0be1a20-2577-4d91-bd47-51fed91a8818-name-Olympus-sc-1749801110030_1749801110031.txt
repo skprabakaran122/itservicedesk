@@ -1,0 +1,306 @@
+{
+	"info": {
+		"_postman_id": "a0be1a20-2577-4d91-bd47-51fed91a8818",
+		"name": "Olympus",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "6637131"
+	},
+	"item": [
+		{
+			"name": "SendGrid",
+			"item": [
+				{
+					"name": "Send Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer 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",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\t\"personalizations\": [{\r\n\t\t\"to\": [{\r\n\t\t\t\"email\": \"mahesh_s_devang@yahoo.co.in\"\r\n\t\t}],\r\n\t\t\"cc\": [{\r\n\t\t\t\"email\": \"maheshs@calpion.com\"\r\n\t\t}, {\r\n\t\t\t\"email\": \" maheshivaswamy@yahoo.co.in\"\r\n\t\t}]\r\n\t}],\r\n\t\"from\": {\r\n\t\t\"email\": \"no-reply@calpion.com\"\r\n\t},\r\n\t\"subject\": \"Sending with SendGrid is Fun\",\r\n\t\"content\": [{\r\n\t\t\"type\": \"text/plain\",\r\n\t\t\"value\": \"and easy to do anywhere, even with cURL\"\r\n\t}]\r\n}"
+						},
+						"url": {
+							"raw": "https://api.sendgrid.com/v3/mail/send",
+							"protocol": "https",
+							"host": [
+								"api",
+								"sendgrid",
+								"com"
+							],
+							"path": [
+								"v3",
+								"mail",
+								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Email by Single Sender",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer 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",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\t\"from\": {\r\n\t\t\"email\": \"maheshs@calpion.com\"\r\n\t},\r\n\t\"personalizations\": [{\r\n\t\t\"to\": [{\r\n\t\t\t\"email\": \"mahesh_s_devang@yahoo.co.in\"\r\n\t\t}],\r\n\t\t\"cc\": [{\r\n\t\t\t\"email\": \"maheshs@calpion.com\"\r\n\t\t}, {\r\n\t\t\t\"email\": \" maheshivaswamy@yahoo.co.in\"\r\n\t\t}]\r\n\t}],\r\n\t\"subject\": \"Sending with SendGrid is Fun\",\r\n\t\"content\": [{\r\n\t\t\"type\": \"text/plain\",\r\n\t\t\"value\": \"and easy to do anywhere, even with cURL\"\r\n\t}]\r\n}"
+						},
+						"url": {
+							"raw": "https://api.sendgrid.com/v3/mail/send",
+							"protocol": "https",
+							"host": [
+								"api",
+								"sendgrid",
+								"com"
+							],
+							"path": [
+								"v3",
+								"mail",
+								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Calpion Email by Single Sender no-rep",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer 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",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\t\"from\": {\r\n\t\t\"email\": \"no-rep@calpion.com\"\r\n\t},\r\n\t\"personalizations\": [{\r\n\t\t\"to\": [{\r\n\t\t\t\"email\": \"mahesh_s_devang@yahoo.co.in\"\r\n\t\t}],\r\n\t\t\"cc\": [{\r\n\t\t\t\"email\": \"maheshs@calpion.com\"\r\n\t\t}, {\r\n\t\t\t\"email\": \" maheshivaswamy@yahoo.co.in\"\r\n\t\t}, {\r\n\t\t\t\"email\": \" Nagesh.gururaj@calpion.com\"\r\n\t\t}]\r\n\t}],\r\n\t\"subject\": \"Sending with SendGrid is Fun 2\",\r\n\t\"content\": [{\r\n\t\t\"type\": \"text/plain\",\r\n\t\t\"value\": \"and easy to do anywhere, even with cURL\"\r\n\t}]\r\n}"
+						},
+						"url": {
+							"raw": "https://api.sendgrid.com/v3/mail/send",
+							"protocol": "https",
+							"host": [
+								"api",
+								"sendgrid",
+								"com"
+							],
+							"path": [
+								"v3",
+								"mail",
+								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Calpion Email by Single Sender NewApiKey",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer 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",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\t\"from\": {\r\n\t\t\"email\": \"no-reply@calpion.com\"\r\n\t},\r\n\t\"personalizations\": [{\r\n\t\t\"to\": [{\r\n\t\t\t\"email\": \"mahesh_s_devang@yahoo.co.in\"\r\n\t\t}],\r\n\t\t\"cc\": [{\r\n\t\t\t\"email\": \"maheshs@calpion.com\"\r\n\t\t}, {\r\n\t\t\t\"email\": \" maheshivaswamy@yahoo.co.in\"\r\n\t\t}, {\r\n\t\t\t\"email\": \" Nagesh.gururaj@calpion.com\"\r\n\t\t}]\r\n\t}],\r\n\t\"subject\": \"Sending with SendGrid is Fun 3\",\r\n\t\"content\": [{\r\n\t\t\"type\": \"text/plain\",\r\n\t\t\"value\": \"and easy to do anywhere, even with cURL\"\r\n\t}]\r\n}"
+						},
+						"url": {
+							"raw": "https://api.sendgrid.com/v3/mail/send",
+							"protocol": "https",
+							"host": [
+								"api",
+								"sendgrid",
+								"com"
+							],
+							"path": [
+								"v3",
+								"mail",
+								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Validate Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer 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",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"maheshs@calpion.com\",\r\n    \"source\": \"OlympusPatientEmailValidation\"\r\n}"
+						},
+						"url": {
+							"raw": "https://api.sendgrid.com/v3/validations/email",
+							"protocol": "https",
+							"host": [
+								"api",
+								"sendgrid",
+								"com"
+							],
+							"path": [
+								"v3",
+								"validations",
+								"email"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ProHance",
+			"item": [
+				{
+					"name": "GetComprehensiveData",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "ZERAKis1JihcUDZeVzk+cSIoITYzMjc5NDEyMzEwMzg1MDBwUm9IYU5jRV9EZUxpTWlUZVJfU3lNQm9MZERAKis1JihcUDZeVzk+cSIoITZwUm9IYU5jRV9EZUxpTWlUZVJfU3lNQm9MMTYzMjM5MjI2MzQ1Nw==",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "phcalpionadmin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\"fromDate\": \"2021-09-22\",\r\n\"toDate\": \"2021-09-22\",\r\n\"shifts\": \"\",\r\n\"shiftHrsOnly\": \"false\",\r\n\"userGroupName\": \"\",\r\n\"superGroupName\": \"\",\r\n\"reportBy\": \"User\",\r\n\"viewBy\": \"Day\",\r\n\"reportColumns\": \"Employee ID,User Groups,FirstLogin,LastLogout,Efficiency,Utilization,AVG_LoggedHours,AVG_ActiveHours,AVG_TimeOnSystem,AVG_Productive_TOS,AVG_ProductiveHours,AVG_TimeAwayFromSystem,AVG_IdleTime\"\r\n}"
+						},
+						"url": {
+							"raw": "https://prohance.io:7070/prohancei/report/comprehensive/getdata",
+							"protocol": "https",
+							"host": [
+								"prohance",
+								"io"
+							],
+							"port": "7070",
+							"path": [
+								"prohancei",
+								"report",
+								"comprehensive",
+								"getdata"
+							]
+						},
+						"description": "Get Comprehensive Data"
+					},
+					"response": []
+				},
+				{
+					"name": "GetComprehensiveUsage",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "ZERAKis1JihcUDZeVzk+cSIoITYzMjc5NDEyMzEwMzg1MDBwUm9IYU5jRV9EZUxpTWlUZVJfU3lNQm9MZERAKis1JihcUDZeVzk+cSIoITZwUm9IYU5jRV9EZUxpTWlUZVJfU3lNQm9MMTYzMjM5MjI2MzQ1Nw==",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "phcalpionadmin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\"fromDate\": \"2021-09-22\",\r\n\"toDate\": \"2021-09-22\",\r\n\"shifts\": \"\",\r\n\"shiftHrsOnly\": \"false\",\r\n\"userGroupName\": \"\",\r\n\"superGroupName\": \"\",\r\n\"reportBy\": \"User\",\r\n\"viewBy\": \"Day\",\r\n\"reportColumns\": \"Employee ID,User Groups,FirstLogin,LastLogout,Efficiency,Utilization,AVG_LoggedHours,AVG_ActiveHours,AVG_TimeOnSystem,AVG_Productive_TOS,AVG_ProductiveHours,AVG_TimeAwayFromSystem,AVG_IdleTime\"\r\n}"
+						},
+						"url": {
+							"raw": "https://prohance.io:7070/prohancei/report/comprehensive/usage",
+							"protocol": "https",
+							"host": [
+								"prohance",
+								"io"
+							],
+							"port": "7070",
+							"path": [
+								"prohancei",
+								"report",
+								"comprehensive",
+								"usage"
+							]
+						},
+						"description": "Get Comprehensive Usage template"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
