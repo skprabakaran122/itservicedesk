@@ -753,12 +753,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 return productName;
               });
               
-              // Remove duplicates and update user
+              // Remove duplicates and filter out any old product names that don't exist anymore
               const uniqueProducts = Array.from(new Set(updatedProducts));
-              if (JSON.stringify(uniqueProducts) !== JSON.stringify(user.assignedProducts)) {
-                await storage.updateUser(user.id, { assignedProducts: uniqueProducts });
+              const currentProducts = await storage.getProducts();
+              const validProducts = uniqueProducts.filter(productName => 
+                currentProducts.some(p => p.name === productName)
+              );
+              
+              if (JSON.stringify(validProducts) !== JSON.stringify(user.assignedProducts)) {
+                await storage.updateUser(user.id, { assignedProducts: validProducts });
                 updatedUserCount++;
-                console.log(`[Product Update] Updated user ${user.username} products: ${user.assignedProducts.join(', ')} -> ${uniqueProducts.join(', ')}`);
+                console.log(`[Product Update] Updated user ${user.username} products: ${user.assignedProducts.join(', ')} -> ${validProducts.join(', ')}`);
               }
             }
           }
