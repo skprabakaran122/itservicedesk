@@ -12,7 +12,8 @@ export interface EmailConfig {
 
 let emailConfig: EmailConfig = {
   provider: 'sendgrid',
-  fromEmail: 'noreply@calpion.com'
+  sendgridApiKey: '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',
+  fromEmail: 'no-reply@calpion.com'
 };
 
 export function getEmailConfig(): EmailConfig {
