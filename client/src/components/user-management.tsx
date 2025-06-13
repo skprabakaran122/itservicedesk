@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { User, Product } from "@shared/schema";
-import { UserPlus, Users, Shield, UserCheck, UserX, Edit, Trash2 } from "lucide-react";
+import { UserPlus, Users, Shield, UserCheck, UserX, Edit, Trash2, RefreshCw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const createUserSchema = z.object({
@@ -43,14 +43,18 @@ export function UserManagement({ currentUser }: UserManagementProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
     refetchInterval: 30000,
   });
 
-  const { data: products = [] } = useQuery<Product[]>({
+  const { data: products = [], refetch: refetchProducts } = useQuery<Product[]>({
     queryKey: ["/api/products"],
+    refetchInterval: 10000, // Refetch every 10 seconds for immediate updates
+    staleTime: 0, // Always consider data stale to fetch fresh updates
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
   });
 
   const createForm = useForm<z.infer<typeof createUserSchema>>({
@@ -248,13 +252,25 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             Manage user accounts, roles, and permissions
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add User
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              refetchProducts();
+              queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+            }}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add User
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
