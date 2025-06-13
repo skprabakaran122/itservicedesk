@@ -23,10 +23,8 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
   const queryClient = useQueryClient();
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
-  // Filter tickets based on user role
-  const filteredTickets = currentUser?.role === 'user' 
-    ? tickets.filter(ticket => ticket.requesterId === currentUser?.id)
-    : tickets;
+  // Tickets are already filtered by the server based on user role
+  const filteredTickets = tickets;
   
   const { data: users = [] } = useQuery<User[]>({
     queryKey: ["/api/users"],

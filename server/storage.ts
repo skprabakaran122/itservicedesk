@@ -173,21 +173,28 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
     
-    // Only admins can see all tickets
+    // Admins can see all tickets
     if (user.role === 'admin') {
       return await this.getTickets();
     }
     
-    // For agents, managers, and users - filter by assigned products
+    // Regular users see only tickets they created
+    if (user.role === 'user') {
+      return await db.select().from(tickets)
+        .where(eq(tickets.requesterId, userId))
+        .orderBy(desc(tickets.createdAt));
+    }
+    
+    // For agents and managers - filter by assigned products
     if (!user.assignedProducts || user.assignedProducts.length === 0) {
-      // Users with no assigned products see no tickets
+      // If no assigned products, agents/managers see no tickets
       return [];
     }
     
-    // Filter tickets by assigned products
+    // Filter tickets by assigned products for agents and managers
     return await db.select().from(tickets)
       .where(or(...user.assignedProducts.map(product => eq(tickets.product, product))))
-      .orderBy(tickets.createdAt);
+      .orderBy(desc(tickets.createdAt));
   }
 
   async getTicket(id: number): Promise<Ticket | undefined> {
