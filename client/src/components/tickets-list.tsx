@@ -87,14 +87,19 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
 
   // Get allowed status options for a specific ticket
   const getAllowedStatusOptions = (ticket: Ticket) => {
+    // Closed tickets cannot be moved to any other status - they are final
+    if (ticket.status === 'closed') {
+      return [];
+    }
+    
     if (currentUser?.role === 'user') {
       // Users can only modify their own tickets
       if (!ticket.requesterId || ticket.requesterId !== currentUser?.id) {
         return []; // No options for tickets they don't own
       }
       
-      // Users can only reopen resolved/closed tickets or close open/reopened tickets
-      if (ticket.status === 'resolved' || ticket.status === 'closed') {
+      // Users can only reopen resolved tickets or close open/reopened tickets
+      if (ticket.status === 'resolved') {
         return ['reopen'];
       }
       if (ticket.status === 'open' || ticket.status === 'reopen') {
@@ -104,10 +109,6 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
     }
     
     // Agents, managers, and admins have different options based on current status
-    if (ticket.status === 'closed') {
-      // Closed tickets cannot be moved to any other status - they are final
-      return [];
-    }
     
     // For other statuses, allow all transitions except reopen (unless they're the original requester)
     const baseStatuses = ['pending', 'open', 'in-progress', 'resolved', 'closed'];
