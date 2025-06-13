@@ -731,15 +731,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If product name changed, update all users' assigned products
       if (updates.name && updates.name !== currentProduct.name) {
+        console.log(`[Product Update] Product name changed from "${currentProduct.name}" to "${updates.name}"`);
         const users = await storage.getUsers();
+        let updatedUserCount = 0;
+        
         for (const user of users) {
-          if (user.assignedProducts && user.assignedProducts.includes(currentProduct.name)) {
-            const updatedProducts = user.assignedProducts.map(productName => 
-              productName === currentProduct.name ? updates.name : productName
+          if (user.assignedProducts && user.assignedProducts.length > 0) {
+            // Check for any product names that contain the base product name (like "Olympus")
+            const baseProductName = currentProduct.name.split(' ')[0]; // Get "Olympus" from "Olympus 1"
+            const hasRelatedProduct = user.assignedProducts.some(productName => 
+              productName.startsWith(baseProductName) || productName === currentProduct.name
             );
-            await storage.updateUser(user.id, { assignedProducts: updatedProducts });
+            
+            if (hasRelatedProduct) {
+              // Update all variations of the product name to the new name
+              const updatedProducts = user.assignedProducts.map(productName => {
+                // Replace exact matches and variations that start with the base name
+                if (productName === currentProduct.name || productName.startsWith(baseProductName)) {
+                  return updates.name;
+                }
+                return productName;
+              });
+              
+              // Remove duplicates and update user
+              const uniqueProducts = Array.from(new Set(updatedProducts));
+              if (JSON.stringify(uniqueProducts) !== JSON.stringify(user.assignedProducts)) {
+                await storage.updateUser(user.id, { assignedProducts: uniqueProducts });
+                updatedUserCount++;
+                console.log(`[Product Update] Updated user ${user.username} products: ${user.assignedProducts.join(', ')} -> ${uniqueProducts.join(', ')}`);
+              }
+            }
           }
         }
+        console.log(`[Product Update] Updated ${updatedUserCount} users with new product name`);
       }
       
       res.json(product);
@@ -1110,7 +1134,8 @@ ${projectData.additionalNotes || 'None'}
           });
 
           // Remove duplicates and invalid products
-          const validProducts = [...new Set(updatedProducts)].filter(productName => 
+          const uniqueProducts = Array.from(new Set(updatedProducts));
+          const validProducts = uniqueProducts.filter(productName => 
             products.some(p => p.name === productName)
           );
 
