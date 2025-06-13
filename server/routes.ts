@@ -717,10 +717,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
+      
+      // Get the current product to check if name is changing
+      const currentProduct = await storage.getProduct(id);
+      if (!currentProduct) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
       const product = await storage.updateProduct(id, updates);
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
       }
+      
+      // If product name changed, update all users' assigned products
+      if (updates.name && updates.name !== currentProduct.name) {
+        const users = await storage.getUsers();
+        for (const user of users) {
+          if (user.assignedProducts && user.assignedProducts.includes(currentProduct.name)) {
+            const updatedProducts = user.assignedProducts.map(productName => 
+              productName === currentProduct.name ? updates.name : productName
+            );
+            await storage.updateUser(user.id, { assignedProducts: updatedProducts });
+          }
+        }
+      }
+      
       res.json(product);
     } catch (error) {
       res.status(400).json({ message: "Invalid update data" });
@@ -1060,6 +1081,52 @@ ${projectData.additionalNotes || 'None'}
       res.json({ response });
     } catch (error) {
       res.status(400).json({ message: "Invalid message format" });
+    }
+  });
+
+  // Cleanup endpoint to sync all user assigned products with current product names
+  app.post("/api/admin/sync-user-products", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const products = await storage.getProducts();
+      const users = await storage.getUsers();
+      let updatedUsers = 0;
+
+      for (const user of users) {
+        if (user.assignedProducts && user.assignedProducts.length > 0) {
+          // Map old product names to current ones
+          const updatedProducts = user.assignedProducts.map(assignedProduct => {
+            // Find matching product by checking for partial matches or exact matches
+            const currentProduct = products.find(p => 
+              p.name === assignedProduct || 
+              assignedProduct.includes(p.name.split(' ')[0]) || // Match first word
+              p.name.includes(assignedProduct.split(' ')[0])     // Reverse match
+            );
+            return currentProduct ? currentProduct.name : assignedProduct;
+          });
+
+          // Remove duplicates and invalid products
+          const validProducts = [...new Set(updatedProducts)].filter(productName => 
+            products.some(p => p.name === productName)
+          );
+
+          if (JSON.stringify(validProducts) !== JSON.stringify(user.assignedProducts)) {
+            await storage.updateUser(user.id, { assignedProducts: validProducts });
+            updatedUsers++;
+          }
+        }
+      }
+
+      res.json({ 
+        message: `Successfully synchronized ${updatedUsers} users with current product names`,
+        updatedUsers 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to sync user products" });
     }
   });
 
