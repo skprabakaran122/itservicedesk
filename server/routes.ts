@@ -387,9 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const ticket = await storage.createTicket({
           ...ticketData,
-          requesterId: null, // No user ID for anonymous tickets
-          createdAt: new Date(),
-          updatedAt: new Date()
+          requesterId: null // No user ID for anonymous tickets
         });
 
         // Send email notification if email provided

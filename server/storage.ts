@@ -199,6 +199,11 @@ export class DatabaseStorage implements IStorage {
     // Show tickets created by this user (agents can create tickets for any product)
     conditions.push(eq(tickets.requesterId, userId));
     
+    // Managers should see all tickets pending approval
+    if (user.role === 'manager') {
+      conditions.push(eq(tickets.approvalStatus, 'pending'));
+    }
+    
     // Also show tickets for their assigned products (if they have any)
     if (user.assignedProducts && user.assignedProducts.length > 0) {
       // Get all actual product names from database for better matching
