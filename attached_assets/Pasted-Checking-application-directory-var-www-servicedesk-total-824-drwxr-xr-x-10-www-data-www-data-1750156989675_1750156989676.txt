@@ -1,0 +1,187 @@
+Checking application directory...
+/var/www/servicedesk
+total 824
+drwxr-xr-x  10 www-data www-data   4096 Jun 17 10:38 .
+drwxr-xr-x   5 root     root       4096 Jun 17 10:37 ..
+-rw-r--r--   1 www-data www-data    142 Jun 17 10:37 .env
+drwxr-xr-x   8 www-data www-data   4096 Jun 17 10:37 .git
+-rw-r--r--   1 www-data www-data   1169 Jun 17 10:37 .gitignore
+-rw-r--r--   1 www-data www-data    724 Jun 17 10:37 .replit
+-rw-r--r--   1 www-data www-data   1770 Jun 17 10:37 COMMIT_INSTRUCTIONS.md
+-rw-r--r--   1 www-data www-data   2245 Jun 17 10:37 COMMIT_SUMMARY.md
+-rw-r--r--   1 www-data www-data   1748 Jun 17 10:37 CREATE_SENDGRID_API_KEY.md
+-rw-r--r--   1 www-data www-data   2856 Jun 17 10:37 DEPARTMENT_DEPLOYMENT_SUMMARY.md
+-rw-r--r--   1 www-data www-data   6772 Jun 17 10:37 DEPLOYMENT_GUIDE.md
+-rw-r--r--   1 www-data www-data   1224 Jun 17 10:37 DEPLOY_TO_SERVER.md
+-rw-r--r--   1 www-data www-data   2956 Jun 17 10:37 EMAIL_FEATURES.md
+-rw-r--r--   1 www-data www-data   3579 Jun 17 10:37 EMAIL_INTEGRATION_SUMMARY.md
+-rw-r--r--   1 www-data www-data   3015 Jun 17 10:37 FINAL_DEPLOYMENT.md
+-rw-r--r--   1 www-data www-data   4275 Jun 17 10:37 FRESH_DEPLOYMENT_GUIDE.md
+-rw-r--r--   1 www-data www-data   2757 Jun 17 10:37 GITHUB_SETUP.md
+-rw-r--r--   1 www-data www-data   1942 Jun 17 10:37 GIT_COMMIT_SUMMARY.md
+-rw-r--r--   1 www-data www-data   6057 Jun 17 10:37 HTTPS_DEPLOYMENT_GUIDE.md
+-rw-r--r--   1 www-data www-data   3621 Jun 17 10:37 MANUAL_DEPLOYMENT_GUIDE.md
+-rw-r--r--   1 www-data www-data   1590 Jun 17 10:37 MANUAL_HTTPS_DEPLOYMENT.md
+-rw-r--r--   1 www-data www-data   3224 Jun 17 10:37 PRODUCTION_FIX_COMMANDS.md
+-rw-r--r--   1 www-data www-data   3185 Jun 17 10:37 QUICK_DEPLOY_GUIDE.md
+-rw-r--r--   1 www-data www-data   2267 Jun 17 10:37 RESYNC_INSTRUCTIONS.md
+-rw-r--r--   1 www-data www-data   2612 Jun 17 10:37 SENDGRID_CONFIGURATION.md
+-rw-r--r--   1 www-data www-data   2470 Jun 17 10:37 SERVER_ENVIRONMENT_FIX.md
+-rw-r--r--   1 www-data www-data    271 Jun 17 10:37 admin_cookies.txt
+-rw-r--r--   1 www-data www-data    269 Jun 17 10:37 agent_cookies.txt
+-rw-r--r--   1 www-data www-data    271 Jun 17 10:37 agent_test_cookies.txt
+drwxr-xr-x   2 www-data www-data   4096 Jun 17 10:37 attached_assets
+-rw-r--r--   1 www-data www-data  15581 Jun 17 10:37 change-form-fixed.tsx
+-rw-r--r--   1 www-data www-data   3291 Jun 17 10:37 clean_deployment.sh
+drwxr-xr-x   4 www-data www-data   4096 Jun 17 10:37 client
+-rwxr-xr-x   1 www-data www-data   4525 Jun 17 10:37 complete_deployment.sh
+-rw-r--r--   1 www-data www-data   1924 Jun 17 10:37 complete_firewall_fix.sh
+-rw-r--r--   1 www-data www-data    459 Jun 17 10:37 components.json
+-rw-r--r--   1 www-data www-data    269 Jun 17 10:37 cookies.txt
+-rw-r--r--   1 www-data www-data   4612 Jun 17 10:37 database_auth_fix.sh
+-rw-r--r--   1 www-data www-data   2317 Jun 17 10:37 database_setup_fix.sh
+-rw-r--r--   1 www-data www-data   2304 Jun 17 10:37 debug_modal_css.sh
+-rwxr-xr-x   1 www-data www-data  10874 Jun 17 10:37 deploy-to-server.sh
+-rw-r--r--   1 www-data www-data   7103 Jun 17 10:37 deploy.sh
+-rwxr-xr-x   1 www-data www-data   1766 Jun 17 10:37 deploy_department_changes.sh
+-rw-r--r--   1 www-data www-data   4260 Jun 17 10:37 deploy_from_scratch.sh
+-rw-r--r--   1 www-data www-data   3179 Jun 17 10:37 deploy_modal_fixes.sh
+-rw-r--r--   1 www-data www-data   1535 Jun 17 10:37 direct_inline_fix.sh
+-rw-r--r--   1 www-data www-data   1275 Jun 17 10:37 direct_line_edit.sh
+drwxrwxr-x   3 www-data www-data   4096 Jun 17 10:38 dist
+-rw-r--r--   1 www-data www-data    325 Jun 17 10:37 drizzle.config.ts
+-rw-r--r--   1 www-data www-data    428 Jun 17 10:38 ecosystem.config.cjs
+-rw-r--r--   1 www-data www-data    493 Jun 17 10:37 ecosystem.config.js
+-rw-r--r--   1 www-data www-data   1350 Jun 17 10:37 final_scroll_fix.sh
+-rw-r--r--   1 www-data www-data   3259 Jun 17 10:37 fix_database_auth.sh
+-rw-r--r--   1 www-data www-data   1153 Jun 17 10:37 fix_firewall.sh
+-rw-r--r--   1 www-data www-data   1248 Jun 17 10:37 fix_production_issues.sh
+-rw-r--r--   1 www-data www-data   1495 Jun 17 10:37 fix_server_environment.sh
+-rwxr-xr-x   1 www-data www-data   1006 Jun 17 10:37 force_deploy.sh
+-rw-r--r--   1 www-data www-data   2257 Jun 17 10:37 force_scroll_fix.sh
+-rw-r--r--   1 www-data www-data   8187 Jun 17 10:37 https-update.tar.gz
+-rw-r--r--   1 www-data www-data    921 Jun 17 10:37 manual_deploy.sh
+-rw-r--r--   1 www-data www-data   2399 Jun 17 10:37 manual_deploy_steps.md
+-rw-r--r--   1 www-data www-data   1242 Jun 17 10:37 manual_edit_lines.sh
+-rw-r--r--   1 www-data www-data   2780 Jun 17 10:37 modal_fix_robust.sh
+drwxr-xr-x 322 www-data www-data  12288 Jun 17 10:38 node_modules
+-rw-r--r--   1 www-data www-data 341708 Jun 17 10:37 package-lock.json
+-rw-r--r--   1 www-data www-data   3897 Jun 17 10:37 package.json
+-rw-r--r--   1 www-data www-data     80 Jun 17 10:37 postcss.config.js
+-rw-r--r--   1 www-data www-data   3143 Jun 17 10:37 postgres_superuser_setup.sh
+-rw-r--r--   1 www-data www-data   3746 Jun 17 10:37 postgresql_complete_fix.sh
+-rw-r--r--   1 www-data www-data   1932 Jun 17 10:37 production_server_fix.sh
+-rwxr-xr-x   1 www-data www-data   2101 Jun 17 10:37 push-https-changes.sh
+-rw-r--r--   1 www-data www-data   1868 Jun 17 10:37 quick_deploy_fix.sh
+-rw-r--r--   1 www-data www-data    829 Jun 17 10:37 quick_modal_fix.sh
+-rw-r--r--   1 www-data www-data   7638 Jun 17 10:37 replit.md
+-rw-r--r--   1 www-data www-data   6891 Jun 17 10:37 safe_deploy.sh
+-rw-r--r--   1 www-data www-data   4352 Jun 17 10:37 sample-approval-email.html
+-rw-r--r--   1 www-data www-data   4996 Jun 17 10:37 sample-change-approval-email.html
+drwxr-xr-x   2 www-data www-data   4096 Jun 17 10:37 server
+-rw-r--r--   1 www-data www-data   1429 Jun 17 10:37 service-desk.ppk
+-rw-r--r--   1 www-data www-data    790 Jun 17 10:37 servicedesk.service
+-rw-r--r--   1 www-data www-data   3738 Jun 17 10:37 setup-https.sh
+drwxr-xr-x   2 www-data www-data   4096 Jun 17 10:37 shared
+-rw-r--r--   1 www-data www-data   2975 Jun 17 10:37 simple_db_fix.sh
+-rwxr-xr-x   1 www-data www-data   1347 Jun 17 10:37 simple_deploy.sh
+-rw-r--r--   1 www-data www-data    665 Jun 17 10:37 simple_production_deploy.sh
+-rwxr-xr-x   1 www-data www-data   3022 Jun 17 10:37 sync_and_deploy.sh
+-rw-r--r--   1 www-data www-data   2627 Jun 17 10:37 tailwind.config.ts
+-rw-r--r--   1 www-data www-data  10399 Jun 17 10:37 ticket-form-fixed.tsx
+-rw-r--r--   1 www-data www-data    657 Jun 17 10:37 tsconfig.json
+-rw-r--r--   1 www-data www-data   2063 Jun 17 10:37 unix_socket_fix.sh
+-rw-r--r--   1 www-data www-data   1805 Jun 17 10:37 update_sendgrid_config.sh
+drwxr-xr-x   2 www-data www-data   4096 Jun 17 10:38 uploads
+-rw-r--r--   1 www-data www-data  23991 Jun 17 10:37 user-management-fixed.tsx
+-rw-r--r--   1 www-data www-data    971 Jun 17 10:37 vite.config.ts
+-rwxr-xr-x   1 www-data www-data   7388 Jun 17 10:37 working_deploy.sh
+-rw-r--r--   1 www-data www-data   2005 Jun 17 10:37 wrapper_scroll_fix.sh
+
+Checking dist directory...
+total 160
+drwxrwxr-x  3 www-data www-data   4096 Jun 17 10:38 .
+drwxr-xr-x 10 www-data www-data   4096 Jun 17 10:38 ..
+-rw-rw-r--  1 www-data www-data 148233 Jun 17 10:38 index.js
+drwxrwxr-x  3 www-data www-data   4096 Jun 17 10:38 public
+
+Checking if we can run the app manually...
+[1] 20918
+node:internal/modules/esm/resolve:873
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /var/www/servicedesk/dist/index.js
+    at packageResolve (node:internal/modules/esm/resolve:873:9)
+    at moduleResolve (node:internal/modules/esm/resolve:946:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+    at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:642:12)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:591:25)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:574:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+    at ModuleJob._link (node:internal/modules/esm/module_job:130:49) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v20.19.2
+[1]+  Exit 1                  sudo -u www-data NODE_ENV=production /usr/bin/node dist/index.js
+Application failed to start
+
+Checking application logs...
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]: node:internal/modules/esm/resolve:873
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:         ^
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]: Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /var/www/servicedesk/dist/index.js
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:     at packageResolve (node:internal/modules/esm/resolve:873:9)
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:     at moduleResolve (node:internal/modules/esm/resolve:946:18)
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:     at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:642:12)
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:     at #cachedDefaultResolve (node:internal/modules/esm/loader:591:25)
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:     at ModuleLoader.resolve (node:internal/modules/esm/loader:574:38)
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:     at ModuleJob._link (node:internal/modules/esm/module_job:130:49) {
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]:   code: 'ERR_MODULE_NOT_FOUND'
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]: }
+Jun 17 10:42:38 ip-172-31-85-178 node[20905]: Node.js v20.19.2
+Jun 17 10:42:38 ip-172-31-85-178 systemd[1]: pm2-servicedesk.service: Main process exited, code=exited, status=1/FAILURE
+Jun 17 10:42:38 ip-172-31-85-178 systemd[1]: pm2-servicedesk.service: Failed with result 'exit-code'.
+Jun 17 10:42:43 ip-172-31-85-178 systemd[1]: pm2-servicedesk.service: Scheduled restart job, restart counter is at 31.
+Jun 17 10:42:43 ip-172-31-85-178 systemd[1]: Stopped PM2 Service Desk Application.
+Jun 17 10:42:43 ip-172-31-85-178 systemd[1]: Started PM2 Service Desk Application.
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]: node:internal/modules/esm/resolve:873
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:         ^
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]: Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /var/www/servicedesk/dist/index.js
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:     at packageResolve (node:internal/modules/esm/resolve:873:9)
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:     at moduleResolve (node:internal/modules/esm/resolve:946:18)
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:     at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:642:12)
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:     at #cachedDefaultResolve (node:internal/modules/esm/loader:591:25)
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:     at ModuleLoader.resolve (node:internal/modules/esm/loader:574:38)
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:     at ModuleJob._link (node:internal/modules/esm/module_job:130:49) {
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]:   code: 'ERR_MODULE_NOT_FOUND'
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]: }
+Jun 17 10:42:43 ip-172-31-85-178 node[20932]: Node.js v20.19.2
+Jun 17 10:42:43 ip-172-31-85-178 systemd[1]: pm2-servicedesk.service: Main process exited, code=exited, status=1/FAILURE
+Jun 17 10:42:43 ip-172-31-85-178 systemd[1]: pm2-servicedesk.service: Failed with result 'exit-code'.
+Jun 17 10:42:48 ip-172-31-85-178 systemd[1]: pm2-servicedesk.service: Scheduled restart job, restart counter is at 32.
+Jun 17 10:42:48 ip-172-31-85-178 systemd[1]: Stopped PM2 Service Desk Application.
+Jun 17 10:42:48 ip-172-31-85-178 systemd[1]: Started PM2 Service Desk Application.
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]: node:internal/modules/esm/resolve:873
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:         ^
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]: Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /var/www/servicedesk/dist/index.js
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:     at packageResolve (node:internal/modules/esm/resolve:873:9)
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:     at moduleResolve (node:internal/modules/esm/resolve:946:18)
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:     at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:642:12)
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:     at #cachedDefaultResolve (node:internal/modules/esm/loader:591:25)
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:     at ModuleLoader.resolve (node:internal/modules/esm/loader:574:38)
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:     at ModuleJob._link (node:internal/modules/esm/module_job:130:49) {
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]:   code: 'ERR_MODULE_NOT_FOUND'
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]: }
+Jun 17 10:42:49 ip-172-31-85-178 node[20946]: Node.js v20.19.2
+Jun 17 10:42:49 ip-172-31-85-178 systemd[1]: pm2-servicedesk.service: Main process exited, code=exited, status=1/FAILURE
+Jun 17 10:42:49 ip-172-31-85-178 systemd[1]: pm2-servicedesk.service: Failed with result 'exit-code'.
