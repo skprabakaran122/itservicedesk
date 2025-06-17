@@ -7,9 +7,31 @@ class EmailService {
   private fromEmail: string = '';
 
   private getBaseUrl(): string {
-    // Production URL takes priority, then Replit domain, then localhost fallback
-    return process.env.BASE_URL || 
-           (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'http://localhost:5000');
+    // Check for explicit BASE_URL override first (production)
+    if (process.env.BASE_URL) {
+      return process.env.BASE_URL;
+    }
+    
+    // Auto-detect Replit environment URLs
+    if (process.env.REPLIT_DEV_DOMAIN) {
+      return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+    }
+    
+    // Check for Replit deployment URL patterns
+    if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
+      return `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
+    }
+    
+    // Check for other Replit domain patterns
+    if (process.env.REPLIT_DOMAINS) {
+      const domains = process.env.REPLIT_DOMAINS.split(',');
+      if (domains.length > 0) {
+        return `https://${domains[0]}`;
+      }
+    }
+    
+    // Development fallback
+    return 'http://localhost:5000';
   }
 
   constructor() {

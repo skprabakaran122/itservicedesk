@@ -127,6 +127,19 @@ This is a comprehensive IT Service Desk application built with modern web techno
 
 ## Recent Changes
 
+### June 17, 2025 - Dynamic URL Detection & API Key Persistence ✓ COMPLETED
+- **Dynamic Base URL Detection**: Automatic URL detection for all environments
+  - Dev Preview: Auto-detects Replit preview domains without hardcoding
+  - Production: Uses BASE_URL environment variable when available
+  - Local Development: Falls back to localhost appropriately
+- **Manager Approval Visibility Fix**: Managers now see all tickets pending approval
+  - Modified getTicketsForUser() to include all pending approval tickets for managers
+  - Approval workflow now works across all departments and assignments
+- **SendGrid API Key Persistence**: Database storage for email configuration
+  - Added settings table for persistent configuration storage
+  - API key entered once stays saved between application restarts
+  - Email configuration survives server reboots and deployments
+
 ### June 17, 2025 - Production Deployment Complete ✓ COMPLETED
 - **Ubuntu Server Deployment**: Full production deployment on Ubuntu server completed
   - Git-based deployment with automated build process
