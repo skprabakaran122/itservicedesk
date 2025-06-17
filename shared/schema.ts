@@ -199,6 +199,25 @@ export const insertChangeApprovalSchema = createInsertSchema(changeApprovals).om
 export type InsertChangeApproval = z.infer<typeof insertChangeApprovalSchema>;
 export type ChangeApproval = typeof changeApprovals.$inferSelect;
 
+// Settings table for persistent configuration
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSettingSchema = createInsertSchema(settings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertSetting = z.infer<typeof insertSettingSchema>;
+export type Setting = typeof settings.$inferSelect;
+
 // File attachments table
 export const attachments = pgTable("attachments", {
   id: serial("id").primaryKey(),

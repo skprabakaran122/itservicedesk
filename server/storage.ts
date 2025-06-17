@@ -1,4 +1,4 @@
-import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval } from "@shared/schema";
+import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, settings, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval, type Setting, type InsertSetting } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, like, sql, not, isNull, lte, notInArray, inArray } from "drizzle-orm";
 
@@ -109,6 +109,10 @@ export interface IStorage {
   markChangeAsOverdue(changeId: number): Promise<void>;
   sendOverdueNotifications(): Promise<{ notificationCount: number; changes: Change[] }>;
   
+  // Settings methods
+  getSetting(key: string): Promise<Setting | undefined>;
+  setSetting(key: string, value: string, description?: string): Promise<Setting>;
+  getSettings(): Promise<Setting[]>;
 
 }
 
@@ -1015,6 +1019,40 @@ export class DatabaseStorage implements IStorage {
     }
     
     return { notificationCount, changes: overdueChanges };
+  }
+
+  // Settings persistence methods
+  async getSetting(key: string): Promise<Setting | undefined> {
+    const [setting] = await db.select()
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1);
+    return setting || undefined;
+  }
+
+  async setSetting(key: string, value: string, description?: string): Promise<Setting> {
+    const existing = await this.getSetting(key);
+    
+    if (existing) {
+      const [updated] = await db.update(settings)
+        .set({ 
+          value, 
+          description: description || existing.description,
+          updatedAt: new Date()
+        })
+        .where(eq(settings.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(settings)
+        .values({ key, value, description })
+        .returning();
+      return created;
+    }
+  }
+
+  async getSettings(): Promise<Setting[]> {
+    return await db.select().from(settings).orderBy(settings.key);
   }
 }
 
