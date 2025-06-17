@@ -3,9 +3,13 @@ import https from "https";
 import http from "http";
 import fs from "fs";
 import path from "path";
+import dotenv from "dotenv";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
+
+// Load environment variables from .env file
+dotenv.config();
 
 // SSL Certificate configuration
 function getSSLCredentials() {
