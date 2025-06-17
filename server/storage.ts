@@ -1,6 +1,6 @@
 import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, like, sql } from "drizzle-orm";
+import { eq, and, desc, or, like, sql, not, isNull, lte, notInArray } from "drizzle-orm";
 
 export interface IStorage {
   // Ticket methods
@@ -103,6 +103,11 @@ export interface IStorage {
   updateTicketSLA(id: number): Promise<void>;
   refreshSLAMetrics(): Promise<void>;
   autoCloseResolvedTickets(): Promise<{ closedCount: number; tickets: Ticket[] }>;
+  
+  // Overdue change monitoring methods
+  checkOverdueChanges(): Promise<Change[]>;
+  markChangeAsOverdue(changeId: number): Promise<void>;
+  sendOverdueNotifications(): Promise<{ notificationCount: number; changes: Change[] }>;
   
 
 }
@@ -941,6 +946,70 @@ export class DatabaseStorage implements IStorage {
       nextLevel: nextApproval?.approvalLevel,
       completed: false 
     };
+  }
+
+  // Overdue change monitoring methods
+  async checkOverdueChanges(): Promise<Change[]> {
+    const now = new Date();
+    
+    // Find changes that are past their end date and not completed/failed/cancelled
+    const overdueChanges = await db.select()
+      .from(changes)
+      .where(and(
+        not(isNull(changes.endDate)),
+        lte(changes.endDate, now),
+        notInArray(changes.status, ['completed', 'failed', 'cancelled', 'rejected']),
+        eq(changes.isOverdue, 'false')
+      ));
+    
+    return overdueChanges;
+  }
+
+  async markChangeAsOverdue(changeId: number): Promise<void> {
+    await db.update(changes)
+      .set({ 
+        isOverdue: 'true',
+        updatedAt: new Date()
+      })
+      .where(eq(changes.id, changeId));
+  }
+
+  async sendOverdueNotifications(): Promise<{ notificationCount: number; changes: Change[] }> {
+    const overdueChanges = await this.checkOverdueChanges();
+    let notificationCount = 0;
+    
+    for (const change of overdueChanges) {
+      // Mark as overdue first
+      await this.markChangeAsOverdue(change.id);
+      
+      // Get all managers for notification
+      const managers = await db.select()
+        .from(users)
+        .where(eq(users.role, 'manager'));
+      
+      // Import email service dynamically to avoid circular imports
+      const { emailService } = await import('./email-sendgrid');
+      
+      // Send notifications to all managers
+      for (const manager of managers) {
+        try {
+          await emailService.sendChangeOverdueEmail(change, manager.email, manager.name);
+          notificationCount++;
+        } catch (error) {
+          console.error(`Failed to send overdue notification to ${manager.email}:`, error);
+        }
+      }
+      
+      // Record notification sent timestamp
+      await db.update(changes)
+        .set({ 
+          overdueNotificationSent: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(changes.id, change.id));
+    }
+    
+    return { notificationCount, changes: overdueChanges };
   }
 }
 

@@ -223,6 +223,131 @@ class EmailService {
     await this.sendEmail(recipientEmail, subject, html);
   }
 
+  async sendChangeOverdueEmail(change: Change, managerEmail: string, managerName: string): Promise<void> {
+    if (!this.isEnabled) {
+      console.log('[Email] Service not enabled, skipping change overdue email');
+      return;
+    }
+
+    const priorityColor = this.getPriorityColor(change.priority);
+    const riskColor = change.riskLevel === 'high' ? '#ef4444' : change.riskLevel === 'medium' ? '#f59e0b' : '#10b981';
+    
+    const subject = `🚨 OVERDUE: Change Request #${change.id} - ${change.title}`;
+    
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Change Request Overdue</title>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: white; padding: 30px; border: 1px solid #e5e7eb; }
+        .footer { background: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+        .change-info { background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444; }
+        .overdue-alert { background: #fee2e2; border: 2px solid #fca5a5; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .priority-${change.priority} { color: ${priorityColor}; font-weight: bold; }
+        .risk-${change.riskLevel} { color: ${riskColor}; font-weight: bold; }
+        .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .btn { display: inline-block; padding: 15px 30px; margin: 10px; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; background: #dc2626; color: white; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">🚨 Calpion Change Management</div>
+          <h1 style="margin: 0; font-size: 24px;">Change Request Overdue</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Immediate attention required</p>
+        </div>
+
+        <div class="content">
+          <div class="overdue-alert">
+            <h2 style="color: #dc2626; margin-top: 0;">⚠️ OVERDUE ALERT ⚠️</h2>
+            <p style="font-size: 18px; margin: 10px 0;"><strong>This change has exceeded its planned implementation window and requires immediate attention.</strong></p>
+          </div>
+
+          <h2>Hello ${managerName},</h2>
+          <p>Change Request #${change.id} has not been implemented within its planned window and is now <strong style="color: #dc2626;">OVERDUE</strong>. This requires immediate management attention.</p>
+
+          <div class="change-info">
+            <h3 style="margin-top: 0; color: #1f2937;">Overdue Change Details</h3>
+            <p><strong>Change ID:</strong> #${change.id}</p>
+            <p><strong>Title:</strong> ${change.title}</p>
+            <p><strong>Priority:</strong> <span class="priority-${change.priority}">${change.priority.toUpperCase()}</span></p>
+            <p><strong>Risk Level:</strong> <span class="risk-${change.riskLevel}">${change.riskLevel.toUpperCase()} RISK</span></p>
+            <p><strong>Status:</strong> ${change.status}</p>
+            <p><strong>Planned Date:</strong> ${change.plannedDate ? new Date(change.plannedDate).toLocaleDateString() : 'Not specified'}</p>
+            <p><strong>End Date:</strong> ${change.endDate ? new Date(change.endDate).toLocaleDateString() : 'Not specified'}</p>
+            <p><strong>Requested By:</strong> ${change.requestedBy}</p>
+            <p><strong>Category:</strong> ${change.category}</p>
+            <p><strong>Product:</strong> ${change.product || 'Not specified'}</p>
+            <p><strong>Description:</strong></p>
+            <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #e5e7eb;">
+              ${change.description}
+            </div>
+            ${change.rollbackPlan ? `
+            <p><strong>Rollback Plan:</strong></p>
+            <div style="background: #fffbeb; padding: 15px; border-radius: 4px; border: 1px solid #fed7aa;">
+              ${change.rollbackPlan}
+            </div>
+            ` : ''}
+          </div>
+
+          <div style="background: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #dc2626; margin-top: 0;">🎯 Immediate Actions Required:</h3>
+            <ul style="margin: 10px 0;">
+              <li><strong>Investigate delay reasons</strong> - Identify what prevented implementation</li>
+              <li><strong>Assess current risk</strong> - Evaluate impact of the delay</li>
+              <li><strong>Update implementation plan</strong> - Set new realistic timeline</li>
+              <li><strong>Communicate with stakeholders</strong> - Inform affected parties</li>
+              <li><strong>Consider rollback</strong> - If implementation is no longer viable</li>
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/dashboard?tab=changes" class="btn">📋 REVIEW CHANGE REQUEST</a>
+          </div>
+
+          <p style="color: #dc2626; font-weight: bold; text-align: center; font-size: 16px;">
+            This change is now overdue and requires immediate management intervention.
+          </p>
+
+          <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+            <strong>Note:</strong> Only administrators can close overdue changes. Please review and take appropriate action as soon as possible.
+          </p>
+        </div>
+
+        <div class="footer">
+          <p>Calpion Change Management System | Overdue Alert</p>
+          <p>This is an automated notification. Please do not reply to this email.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const text = `
+OVERDUE ALERT: Change Request #${change.id}
+
+Change: ${change.title}
+Priority: ${change.priority.toUpperCase()}
+Risk Level: ${change.riskLevel.toUpperCase()}
+Status: ${change.status}
+Planned Date: ${change.plannedDate ? new Date(change.plannedDate).toLocaleDateString() : 'Not specified'}
+
+This change has exceeded its planned implementation window and requires immediate attention.
+
+Please log into the Change Management portal to review and take action.
+
+This is an automated notification from Calpion Change Management System.
+    `;
+
+    await this.sendEmail(managerEmail, subject, html, text);
+    console.log(`[Email] Change overdue notification sent to ${managerEmail} for change #${change.id}`);
+  }
+
   async sendChangeApprovalEmail(change: Change, approverEmail: string, approverName: string): Promise<void> {
     if (!this.isEnabled) return;
 

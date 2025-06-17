@@ -60,6 +60,8 @@ export const changes = pgTable("changes", {
   changeType: varchar("change_type", { length: 20 }).notNull().default('normal'), // standard, normal, emergency
   rollbackPlan: text("rollback_plan"),
   approvalToken: text("approval_token"), // Secure token for email-based approval
+  overdueNotificationSent: timestamp("overdue_notification_sent"), // Track when overdue notification was sent
+  isOverdue: varchar("is_overdue", { length: 10 }).default('false'), // 'true' if change is overdue
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
