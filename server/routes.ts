@@ -366,9 +366,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Session data:', (req as any).session);
       console.log('Session ID:', (req as any).sessionID);
       const currentUser = (req as any).session?.user;
+      
+      // Allow both authenticated and anonymous ticket creation
       if (!currentUser) {
-        console.log('No user in session, authentication failed');
-        return res.status(401).json({ message: "Authentication required" });
+        console.log('No user in session, creating anonymous ticket');
+        // Handle anonymous ticket creation
+        const anonymousTicketSchema = z.object({
+          requesterName: z.string().min(1),
+          requesterEmail: z.string().optional().refine((email) => !email || z.string().email().safeParse(email).success, "Please enter a valid email address"),
+          requesterPhone: z.string().optional(),
+          title: z.string().min(1),
+          description: z.string().min(1),
+          priority: z.enum(["low", "medium", "high", "critical"]),
+          category: z.enum(["software", "hardware", "network", "access", "other"]),
+          product: z.string().optional(),
+          status: z.string().default("open")
+        });
+
+        const ticketData = anonymousTicketSchema.parse(req.body);
+        
+        const ticket = await storage.createTicket({
+          ...ticketData,
+          requesterId: null, // No user ID for anonymous tickets
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+
+        // Send email notification if email provided
+        if (ticketData.requesterEmail) {
+          try {
+            await emailService.sendTicketCreatedEmail(ticket, ticketData.requesterEmail);
+          } catch (error) {
+            console.error('Failed to send anonymous ticket creation email:', error);
+          }
+        }
+
+        return res.status(201).json(ticket);
       }
 
       const ticketData = insertTicketSchema.parse({
