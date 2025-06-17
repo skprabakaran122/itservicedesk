@@ -34,7 +34,9 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
   const queryClient = useQueryClient();
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [showRequestApprovalDialog, setShowRequestApprovalDialog] = useState(false);
   const [approvingTicket, setApprovingTicket] = useState<Ticket | null>(null);
+  const [requestingApprovalTicket, setRequestingApprovalTicket] = useState<Ticket | null>(null);
 
   // Tickets are already filtered by the server based on user role
   const filteredTickets = tickets;
@@ -65,8 +67,11 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
   });
 
   const requestApprovalMutation = useMutation({
-    mutationFn: async (ticketId: number) => {
-      const response = await apiRequest("POST", `/api/tickets/${ticketId}/request-approval`);
+    mutationFn: async (data: { ticketId: number; managerId: number; comments?: string }) => {
+      const response = await apiRequest("POST", `/api/tickets/${data.ticketId}/request-approval`, {
+        managerId: data.managerId,
+        comments: data.comments
+      });
       return await response.json();
     },
     onSuccess: () => {
@@ -75,6 +80,9 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
         description: "Ticket sent for approval successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+      setShowRequestApprovalDialog(false);
+      setRequestingApprovalTicket(null);
+      requestApprovalForm.reset();
     },
     onError: (error: any) => {
       toast({
@@ -82,6 +90,19 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
         description: error.message || "Failed to send ticket for approval",
         variant: "destructive",
       });
+    },
+  });
+
+  const requestApprovalSchema = z.object({
+    managerId: z.string().min(1, "Please select a manager"),
+    comments: z.string().optional(),
+  });
+
+  const requestApprovalForm = useForm<z.infer<typeof requestApprovalSchema>>({
+    resolver: zodResolver(requestApprovalSchema),
+    defaultValues: {
+      managerId: '',
+      comments: '',
     },
   });
 
@@ -155,12 +176,24 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
   };
 
   const handleRequestApproval = (ticket: Ticket) => {
-    requestApprovalMutation.mutate(ticket.id);
+    setRequestingApprovalTicket(ticket);
+    setShowRequestApprovalDialog(true);
+    requestApprovalForm.reset();
   };
 
   const handleApprovalAction = (ticket: Ticket) => {
     setApprovingTicket(ticket);
     setShowApprovalDialog(true);
+  };
+
+  const onRequestApprovalSubmit = (data: z.infer<typeof requestApprovalSchema>) => {
+    if (!requestingApprovalTicket) return;
+    
+    requestApprovalMutation.mutate({
+      ticketId: requestingApprovalTicket.id,
+      managerId: parseInt(data.managerId),
+      comments: data.comments
+    });
   };
 
   const onApprovalSubmit = (data: z.infer<typeof approvalSchema>) => {
