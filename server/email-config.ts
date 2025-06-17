@@ -34,12 +34,12 @@ export async function loadEmailConfig(): Promise<void> {
     
     emailConfig = {
       provider: (providerSetting?.value as 'smtp' | 'sendgrid') || 'sendgrid',
-      sendgridApiKey: apiKeySetting?.value || process.env.SENDGRID_API_KEY,
+      sendgridApiKey: apiKeySetting?.value || process.env.SENDGRID_API_KEY || undefined,
       fromEmail: fromEmailSetting?.value || 'no-reply@calpion.com',
-      smtpHost: smtpHostSetting?.value,
+      smtpHost: smtpHostSetting?.value || undefined,
       smtpPort: smtpPortSetting?.value ? parseInt(smtpPortSetting.value) : undefined,
-      smtpUser: smtpUserSetting?.value,
-      smtpPass: smtpPassSetting?.value,
+      smtpUser: smtpUserSetting?.value || undefined,
+      smtpPass: smtpPassSetting?.value || undefined,
       smtpSecure: true
     };
     
