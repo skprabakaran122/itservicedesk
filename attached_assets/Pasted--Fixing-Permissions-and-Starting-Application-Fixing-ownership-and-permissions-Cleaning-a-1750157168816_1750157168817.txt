@@ -1,0 +1,73 @@
+=== Fixing Permissions and Starting Application ===
+Fixing ownership and permissions...
+Cleaning and reinstalling dependencies...
+npm error code EACCES
+npm error syscall mkdir
+npm error path /var/www/.npm
+npm error errno EACCES
+npm error
+npm error Your cache folder contains root-owned files, due to a bug in
+npm error previous versions of npm which has since been addressed.
+npm error
+npm error To permanently fix this problem, please run:
+npm error   sudo chown -R 33:33 "/var/www/.npm"
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.4.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.4.2
+npm notice To update run: npm install -g npm@11.4.2
+npm notice
+npm error Log files were not written due to an error writing to the directory: /var/www/.npm/_logs
+npm error You can rerun the command with `--loglevel=verbose` to see the logs in your terminal
+Creating simple production service...
+[Unit]
+Description=Calpion IT Service Desk
+After=network.target postgresql.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/servicedesk
+Environment=NODE_ENV=production
+Environment=PORT=5000
+Environment=HOST=127.0.0.1
+ExecStart=/usr/bin/node --loader tsx/esm server/index.ts
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=servicedesk
+
+[Install]
+WantedBy=multi-user.target
+Starting service...
+Checking service status...
+● servicedesk.service - Calpion IT Service Desk
+     Loaded: loaded (/etc/systemd/system/servicedesk.service; enabled; vendor preset: enabled)
+     Active: activating (auto-restart) (Result: exit-code) since Tue 2025-06-17 10:45:48 UTC; 7s ago
+    Process: 21579 ExecStart=/usr/bin/node --loader tsx/esm server/index.ts (code=exited, status=1/FAILURE)
+   Main PID: 21579 (code=exited, status=1/FAILURE)
+        CPU: 82ms
+
+Jun 17 10:45:48 ip-172-31-85-178 systemd[1]: servicedesk.service: Main process exited, code=exited, status=1/FAILURE
+Jun 17 10:45:48 ip-172-31-85-178 systemd[1]: servicedesk.service: Failed with result 'exit-code'.
+
+Checking logs...
+Jun 17 10:45:48 ip-172-31-85-178 servicedesk[21579]:     at ModuleLoader.resolve (node:internal/modules/esm/loader:572:35)
+Jun 17 10:45:48 ip-172-31-85-178 servicedesk[21579]:     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+Jun 17 10:45:48 ip-172-31-85-178 servicedesk[21579]:     at ModuleLoader.import (node:internal/modules/esm/loader:539:34)
+Jun 17 10:45:48 ip-172-31-85-178 servicedesk[21579]:     at Hooks.register (node:internal/modules/esm/hooks:167:34)
+Jun 17 10:45:48 ip-172-31-85-178 servicedesk[21579]:     at initializeHooks (node:internal/modules/esm/utils:318:17) {
+Jun 17 10:45:48 ip-172-31-85-178 servicedesk[21579]:   code: 'ERR_MODULE_NOT_FOUND'
+Jun 17 10:45:48 ip-172-31-85-178 servicedesk[21579]: }
+Jun 17 10:45:48 ip-172-31-85-178 servicedesk[21579]: Node.js v20.19.2
+Jun 17 10:45:48 ip-172-31-85-178 systemd[1]: servicedesk.service: Main process exited, code=exited, status=1/FAILURE
+Jun 17 10:45:48 ip-172-31-85-178 systemd[1]: servicedesk.service: Failed with result 'exit-code'.
+
+Testing application...
+
+=== Next Steps ===
+If the service is running, your app should be accessible via Nginx
+Check logs: sudo journalctl -fu servicedesk
+Manual start test: cd /var/www/servicedesk && sudo -u www-data node --loader tsx/esm server/index.ts
