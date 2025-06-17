@@ -1768,14 +1768,14 @@ ${projectData.additionalNotes || 'None'}
       }
 
       const { getEmailConfig, isEmailConfigured } = await import('./email-config');
-      const config = getEmailConfig();
+      const config = await getEmailConfig();
 
       res.json({
         ...config,
         // Don't send sensitive data back
         sendgridApiKey: config.sendgridApiKey ? '***configured***' : '',
         smtpPass: config.smtpPass ? '***configured***' : '',
-        isConfigured: isEmailConfigured()
+        isConfigured: await isEmailConfigured()
       });
     } catch (error: any) {
       console.error('Email settings fetch error:', error);

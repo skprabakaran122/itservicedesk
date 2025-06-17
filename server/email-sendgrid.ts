@@ -39,7 +39,7 @@ class EmailService {
   }
 
   private async initialize() {
-    const config = getEmailConfig();
+    const config = await getEmailConfig();
     
     // Try dynamic config first, then fallback to environment variable
     const apiKey = config.sendgridApiKey || process.env.SENDGRID_API_KEY;

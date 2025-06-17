@@ -1,0 +1,30 @@
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]:   line: '3452',
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]:   routine: 'aclcheck_error'
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: }
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] Warning: Failed to warm up database connection
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] [SSL] No SSL certificates found, running HTTP only on port 5000
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] [SLA] Next SLA refresh scheduled for 2025-07-01T00:00:00.000Z
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] HTTP server running on port 5000 (host: 0.0.0.0)
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] [SSL] To enable HTTPS, provide SSL certificates via environment variabl… directory
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] [AUTO-CLOSE] Error during auto-close process: error: permission denied …le tickets
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] [OVERDUE] Error during overdue check process: error: permission denied …le changes
+Hint: Some lines were ellipsized, use -l to show in full.
+
+13. Monitoring startup logs...
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]:   table: undefined,
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]:   column: undefined,
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]:   dataType: undefined,
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]:   constraint: undefined,
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]:   file: 'aclchk.c',
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]:   line: '3452',
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]:   routine: 'aclcheck_error'
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: }
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] Warning: Failed to warm up database connection
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] [SSL] No SSL certificates found, running HTTP only on port 5000
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] [SLA] Next SLA refresh scheduled for 2025-07-01T00:00:00.000Z
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] HTTP server running on port 5000 (host: 0.0.0.0)
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] [SSL] To enable HTTPS, provide SSL certificates via environment variables or ./ssl/ directory
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] [AUTO-CLOSE] Error during auto-close process: error: permission denied for table tickets
+Jun 17 12:37:07 ip-172-31-85-178 servicedesk[26160]: 12:37:07 PM [express] [OVERDUE] Error during overdue check process: error: permission denied for table changes
+
+=== Fresh Deployment Complete ===
