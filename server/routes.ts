@@ -9,8 +9,14 @@ import MemoryStore from "memorystore";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 
 const MemoryStoreSession = MemoryStore(session);
+
+// Utility function to generate secure approval tokens
+function generateApprovalToken(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
 
 // Configure multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -509,19 +515,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid manager selected" });
       }
 
-      // Update ticket to pending approval status with selected manager
+      // Generate secure approval token
+      const approvalToken = generateApprovalToken();
+      
+      // Update ticket to pending approval status with selected manager and token
       const approvalComments = comments ? `Agent comments: ${comments}` : 'Ticket sent for management approval';
       const updatedTicket = await storage.updateTicketWithHistory(id, {
         approvalStatus: 'pending',
-        approvedBy: selectedManager.name // Store which manager should approve
+        approvedBy: selectedManager.name, // Store which manager should approve
+        approvalToken // Store secure token for email approval
       }, currentUser.id, approvalComments);
 
       if (!updatedTicket) {
         return res.status(404).json({ message: "Failed to update ticket" });
       }
 
-      // Send email only to the selected manager
-      await emailService.sendTicketApprovalEmail(updatedTicket, selectedManager.email, selectedManager.name);
+      // Send email with approval links to the selected manager
+      await emailService.sendTicketApprovalEmailWithLinks(updatedTicket, selectedManager.email, selectedManager.name, approvalToken);
 
       res.json({ message: "Ticket sent for approval", ticket: updatedTicket });
     } catch (error) {

@@ -28,7 +28,8 @@ export const tickets = pgTable("tickets", {
   approvalStatus: varchar("approval_status", { length: 20 }), // null, 'pending', 'approved', 'rejected'
   approvedBy: text("approved_by"),
   approvedAt: timestamp("approved_at"),
-  approvalComments: text("approval_comments")
+  approvalComments: text("approval_comments"),
+  approvalToken: text("approval_token") // Secure token for email-based approval
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({
