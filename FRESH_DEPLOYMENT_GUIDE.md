@@ -1,189 +1,127 @@
-# Fresh Server Deployment Guide
+# Complete Fresh Server Deployment Guide
 
-## Complete Application Reset on Ubuntu Server
+## Quick Start
 
-### Step 1: Connect to Server
+1. **Make the script executable:**
+   ```bash
+   chmod +x complete_deployment.sh
+   ```
+
+2. **Run the deployment:**
+   ```bash
+   ./complete_deployment.sh
+   ```
+
+3. **Follow the prompts:**
+   - Enter your server IP address
+   - Provide path to your SSH key (.pem file)
+   - Create a database password
+
+## What the Script Does
+
+### System Setup
+- Updates Ubuntu packages
+- Installs Node.js 20, npm, PostgreSQL, PM2
+- Configures firewall (allows ports 22, 80, 443, 5000, 5001)
+
+### Database Setup
+- Creates PostgreSQL database `servicedesk`
+- Creates database user `servicedesk_user`
+- Configures authentication
+
+### Application Deployment
+- Creates `/home/ubuntu/servicedesk` directory
+- Extracts and builds the application
+- Generates SSL certificates
+- Configures environment variables
+- Runs database migrations
+- Starts application with PM2
+
+## After Deployment
+
+### Access Your Application
+- **HTTPS:** `https://YOUR_SERVER_IP:5001`
+- **HTTP:** `http://YOUR_SERVER_IP:5000` (redirects to HTTPS)
+
+### Add SendGrid Email (Optional)
 ```bash
-ssh your-username@54.160.177.174
-```
-
-### Step 2: Stop and Remove Current Application
-```bash
-# Stop PM2 process
-pm2 stop servicedesk
-pm2 delete servicedesk
-
-# Remove existing application directory
-sudo rm -rf /home/ubuntu/servicedesk
-
-# Kill any remaining Node processes (if needed)
-sudo pkill -f node
-```
-
-### Step 3: Fresh Clone from Git
-```bash
-# Navigate to home directory
-cd /home/ubuntu
-
-# Clone fresh copy from repository
-git clone <your-git-repository-url> servicedesk
-
-# Navigate to project directory
-cd servicedesk
-```
-
-### Step 4: Install Dependencies and Build
-```bash
-# Install Node.js dependencies
-npm install
-
-# Build the client application
-npm run build
-
-# Move build files to expected location for production
-mkdir -p server/public
-cp -r dist/public/* server/public/ 2>/dev/null || true
-```
-
-### Step 5: Environment Configuration
-```bash
-# Create environment file
+ssh -i your-key.pem ubuntu@YOUR_SERVER_IP
+cd /home/ubuntu/servicedesk
 nano .env
-
-# Add these environment variables:
-NODE_ENV=production
-DATABASE_URL=your_postgresql_connection_string
-SENDGRID_API_KEY=your_sendgrid_api_key
-PORT=5000
+# Add: SENDGRID_API_KEY=your_actual_key_here
+pm2 restart calpion-service-desk
 ```
 
-### Step 6: Database Setup
+### Monitor Application
 ```bash
-# Push database schema
-npm run db:push
+# Check status
+ssh -i your-key.pem ubuntu@YOUR_SERVER_IP 'pm2 status'
+
+# View logs
+ssh -i your-key.pem ubuntu@YOUR_SERVER_IP 'pm2 logs'
+
+# Restart if needed
+ssh -i your-key.pem ubuntu@YOUR_SERVER_IP 'pm2 restart calpion-service-desk'
 ```
 
-### Step 7: Start Application with PM2
+### SSL Certificate Notes
+- Self-signed certificates are generated automatically
+- Valid for 1 year
+- Browsers will show security warnings (expected for self-signed)
+- For production, consider Let's Encrypt (see optional setup below)
+
+## Optional: Let's Encrypt SSL Setup
+
+For production environments, replace self-signed certificates with Let's Encrypt:
+
 ```bash
-# Create logs directory
-mkdir -p logs
+ssh -i your-key.pem ubuntu@YOUR_SERVER_IP
 
-# Option 1: Use .cjs config file
-pm2 start ecosystem.config.cjs
+# Install Certbot
+sudo apt install snapd
+sudo snap install --classic certbot
 
-# Option 2: Direct PM2 start (if config issues persist)
-pm2 start server/index.ts --name servicedesk --interpreter node --interpreter-args "--import tsx" --env production
+# Stop application temporarily
+pm2 stop calpion-service-desk
 
-# Save PM2 configuration
-pm2 save
+# Get certificate (replace YOUR_DOMAIN with actual domain)
+sudo certbot certonly --standalone -d YOUR_DOMAIN
 
-# Setup PM2 to start on system boot
-pm2 startup
+# Copy certificates to application
+sudo cp /etc/letsencrypt/live/YOUR_DOMAIN/privkey.pem /home/ubuntu/servicedesk/ssl/key.pem
+sudo cp /etc/letsencrypt/live/YOUR_DOMAIN/fullchain.pem /home/ubuntu/servicedesk/ssl/cert.pem
+sudo chown ubuntu:ubuntu /home/ubuntu/servicedesk/ssl/*.pem
+chmod 600 /home/ubuntu/servicedesk/ssl/key.pem
+
+# Restart application
+pm2 start calpion-service-desk
 ```
-
-### Step 8: Verify Deployment
-```bash
-# Check PM2 status
-pm2 status
-
-# View application logs
-pm2 logs servicedesk --lines 20
-
-# Test application
-curl http://localhost:5000
-```
-
-### Step 9: Configure Nginx (if needed)
-```bash
-# Edit Nginx configuration
-sudo nano /etc/nginx/sites-available/default
-
-# Add proxy configuration:
-location / {
-    proxy_pass http://localhost:5000;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection 'upgrade';
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_cache_bypass $http_upgrade;
-}
-
-# Restart Nginx
-sudo systemctl restart nginx
-```
-
-### Step 10: Final Verification
-1. Access application: http://54.160.177.174:5000
-2. Login with: john.doe / password123
-3. Test email settings in Admin Console
-4. Verify all functionality works
-
-## New Features in This Deployment
-
-### Email Integration
-- Complete SendGrid integration
-- Dynamic email configuration
-- Professional email templates
-- Admin email settings interface
-- Automatic notifications for tickets/changes
-
-### Enhanced Admin Console
-- Direct `/admin` URL access
-- Email settings management
-- API key configuration
-- Test email functionality
-
-### Improved User Experience
-- Fixed modal scrolling
-- Better error handling
-- Enhanced routing
-- Professional Calpion branding
-
-## Post-Deployment Tasks
-
-1. **Complete SendGrid Setup**:
-   - Login to SendGrid dashboard
-   - Verify sender identity for `noreply@calpion.com`
-   - Or authenticate the `calpion.com` domain
-
-2. **Test Email Functionality**:
-   - Go to Admin Console > Email Settings
-   - Configure SendGrid API key
-   - Send test email to verify setup
-
-3. **Configure User Accounts**:
-   - Update user passwords if needed
-   - Set up additional admin users
-   - Configure department assignments
 
 ## Troubleshooting
 
-### If Application Won't Start
+### Database Connection Issues
 ```bash
-# Check Node.js version
-node --version
-
-# Should be v20.x.x
-# If not, update Node.js:
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
+sudo systemctl status postgresql
+sudo -u postgres psql -c "\l"  # List databases
 ```
 
-### If Database Connection Fails
+### Application Not Starting
 ```bash
-# Verify PostgreSQL connection
-psql $DATABASE_URL
-
-# Check environment variables
-printenv | grep DATABASE_URL
+pm2 logs calpion-service-desk
+cd /home/ubuntu/servicedesk && npm run db:push
 ```
 
-### If Email Not Working
-1. Check API key in Admin Console
-2. Verify sender identity in SendGrid
-3. Check application logs: `pm2 logs servicedesk`
+### Firewall Issues
+```bash
+sudo ufw status
+sudo ufw allow 5001/tcp
+```
 
-This fresh deployment will give you the complete updated application with all email integration features working properly.
+### SSL Certificate Issues
+```bash
+cd /home/ubuntu/servicedesk/ssl
+ls -la
+openssl x509 -in cert.pem -text -noout
+```
+
+Your IT Service Desk will be fully operational with HTTPS security, database persistence, and production-ready configuration.
