@@ -1,0 +1,67 @@
+# Update service with correct path
+sudo tee /etc/systemd/system/servicedesk.service << EOF
+[Unit]
+Description=Calpion IT Service Desk
+After=network.target postgresql.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/servicedesk
+Environment=NODE_ENV=production
+Environment=PORT=5000
+Environment=HOST=127.0.0.1
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+echo "If still not working, check: sudo journalctl -fu servicedesk""
+=== Fixing tsx path for systemd service ===
+tsx found at: /usr/bin/tsx
+npx found at: /usr/bin/npx
+Using global tsx installation...
+Using command: /usr/bin/tsx server/index.ts
+[Unit]
+Description=Calpion IT Service Desk
+After=network.target postgresql.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/servicedesk
+Environment=NODE_ENV=production
+Environment=PORT=5000
+Environment=HOST=127.0.0.1
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/tsx server/index.ts
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=servicedesk
+
+[Install]
+WantedBy=multi-user.target
+Waiting for service to start...
+Service status:
+● servicedesk.service - Calpion IT Service Desk
+     Loaded: loaded (/etc/systemd/system/servicedesk.service; enabled; vendor preset: enabled)
+     Active: activating (auto-restart) (Result: exit-code) since Tue 2025-06-17 10:50:59 UTC; 6s ago
+    Process: 21957 ExecStart=/usr/bin/tsx server/index.ts (code=exited, status=1/FAILURE)
+   Main PID: 21957 (code=exited, status=1/FAILURE)
+        CPU: 3.131s
+
+Jun 17 10:50:59 ip-172-31-85-178 systemd[1]: servicedesk.service: Failed with result 'exit-code'.
+Jun 17 10:50:59 ip-172-31-85-178 systemd[1]: servicedesk.service: Consumed 3.131s CPU time.
+
+Testing application response:
+
+Recent logs:
+Jun 17 10:50:59 ip-172-31-85-178 servicedesk[21969]:     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+Jun 17 10:50:59 ip-172-31-85-178 servicedesk[21969]: Node.js v20.19.2
+Jun 17 10:50:59 ip-172-31-85-178 systemd[1]: servicedesk.service: Main process exited, code=exited, status=1/FAILURE
+Jun 17 10:50:59 ip-172-31-85-178 systemd[1]: servicedesk.service: Failed with result 'exit-code'.
+Jun 17 10:50:59 ip-172-31-85-178 systemd[1]: servicedesk.service: Consumed 3.131s CPU time.
+
+If still not working, check: sudo journalctl -fu servicedesk
