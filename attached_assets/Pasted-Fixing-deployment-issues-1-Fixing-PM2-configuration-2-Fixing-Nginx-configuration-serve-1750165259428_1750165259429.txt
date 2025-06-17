@@ -1,0 +1,59 @@
+Fixing deployment issues...
+1. Fixing PM2 configuration...
+2. Fixing Nginx configuration...
+server {
+    listen 80;
+    server_name 172.31.85.178;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+
+        # Security headers
+        add_header X-Frame-Options DENY;
+        add_header X-Content-Type-Options nosniff;
+        add_header X-XSS-Protection "1; mode=block";
+    }
+
+    # Serve static files
+    location /static/ {
+        alias /var/www/servicedesk/dist/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    client_max_body_size 10M;
+}
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+✓ Nginx configuration fixed
+3. Starting PM2 application...
+[PM2] Applying action deleteProcessId on app [servicedesk](ids: [ 0 ])
+[PM2] [servicedesk](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2][WARN] Applications servicedesk not running, starting...
+[PM2] App [servicedesk] launched (1 instances)
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ N/A     │ cluster │ 32781    │ 0s     │ 0    │ online    │ 0%       │ 39.3mb   │ ubuntu   │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /home/ubuntu/.pm2/dump.pm2
+4. Checking application status...
+localhost:5432 - accepting connections
+✓ Database connection successful
+✗ Application not responding on port 3000
+Checking PM2 logs...
+[TAILING] Tailing last 10 lines for [servicedesk] process (change the value with --lines option)
+/var/log/servicedesk/out-0.log last 10 lines:
+/var/log/servicedesk/error-0.log last 10 lines:
