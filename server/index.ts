@@ -1,9 +1,104 @@
 import express, { type Request, Response, NextFunction } from "express";
+import https from "https";
+import http from "http";
+import fs from "fs";
+import path from "path";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
 
+// SSL Certificate configuration
+function getSSLCredentials() {
+  try {
+    // Try to load SSL certificates from various possible locations
+    const certPaths = [
+      // Let's Encrypt paths
+      '/etc/letsencrypt/live/domain/fullchain.pem',
+      '/etc/letsencrypt/live/domain/privkey.pem',
+      // Custom certificate paths
+      './ssl/cert.pem',
+      './ssl/key.pem',
+      // Environment variable paths
+      process.env.SSL_CERT_PATH,
+      process.env.SSL_KEY_PATH
+    ].filter(Boolean);
+
+    if (process.env.SSL_CERT && process.env.SSL_KEY) {
+      return {
+        cert: process.env.SSL_CERT,
+        key: process.env.SSL_KEY
+      };
+    }
+
+    // Try to read from files
+    if (fs.existsSync('./ssl/cert.pem') && fs.existsSync('./ssl/key.pem')) {
+      return {
+        cert: fs.readFileSync('./ssl/cert.pem', 'utf8'),
+        key: fs.readFileSync('./ssl/key.pem', 'utf8')
+      };
+    }
+
+    return null;
+  } catch (error) {
+    log(`[SSL] Error loading SSL certificates: ${error}`);
+    return null;
+  }
+}
+
+// Create self-signed certificate for development
+function createSelfSignedCert() {
+  const forge = require('node-forge');
+  const pki = forge.pki;
+
+  // Generate key pair
+  const keys = pki.rsa.generateKeyPair(2048);
+
+  // Create certificate
+  const cert = pki.createCertificate();
+  cert.publicKey = keys.publicKey;
+  cert.serialNumber = '01';
+  cert.validity.notBefore = new Date();
+  cert.validity.notAfter = new Date();
+  cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
+
+  const attrs = [{
+    name: 'commonName',
+    value: 'localhost'
+  }, {
+    name: 'organizationName',
+    value: 'Calpion IT Service Desk'
+  }];
+
+  cert.setSubject(attrs);
+  cert.setIssuer(attrs);
+  cert.sign(keys.privateKey);
+
+  return {
+    cert: pki.certificateToPem(cert),
+    key: pki.privateKeyToPem(keys.privateKey)
+  };
+}
+
 const app = express();
+
+// Force HTTPS in production
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production' && !req.secure && req.get('x-forwarded-proto') !== 'https') {
+    return res.redirect(301, `https://${req.get('host')}${req.url}`);
+  }
+  next();
+});
+
+// Security headers for HTTPS
+app.use((req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 app.use(express.json({ limit: '50mb' })); // Increase JSON payload limit for file uploads
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
@@ -164,20 +259,49 @@ function startOverdueChangeScheduler() {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen(port, "0.0.0.0", () => {
-    log(`serving on port ${port} (host: 0.0.0.0)`);
+  // HTTPS Configuration
+  const sslCredentials = getSSLCredentials();
+  const httpsPort = 5001;
+  const httpPort = 5000;
+
+  if (sslCredentials) {
+    // Create HTTPS server
+    const httpsServer = https.createServer(sslCredentials, app);
     
-    // Start the monthly SLA scheduler
-    startSLAScheduler();
+    // Start HTTPS server
+    httpsServer.listen(httpsPort, "0.0.0.0", () => {
+      log(`HTTPS server running on port ${httpsPort} (host: 0.0.0.0)`);
+    });
+
+    // Create HTTP server for redirection
+    const httpApp = express();
+    httpApp.use((req, res) => {
+      const host = req.get('host') || 'localhost';
+      const httpsUrl = `https://${host.replace(`:${httpPort}`, `:${httpsPort}`)}${req.url}`;
+      res.redirect(301, httpsUrl);
+    });
+
+    const httpServer = http.createServer(httpApp);
+    httpServer.listen(httpPort, "0.0.0.0", () => {
+      log(`HTTP server running on port ${httpPort} (redirecting to HTTPS)`);
+    });
+
+    // Use HTTPS server for Vite setup
+    if (app.get("env") === "development") {
+      await setupVite(app, httpsServer);
+    }
+  } else {
+    log(`[SSL] No SSL certificates found, running HTTP only on port ${httpPort}`);
     
-    // Start the auto-close scheduler
-    startAutoCloseScheduler();
-    
-    // Start the overdue change monitoring scheduler
-    startOverdueChangeScheduler();
-  });
+    // Fallback to HTTP only
+    server.listen(httpPort, "0.0.0.0", () => {
+      log(`HTTP server running on port ${httpPort} (host: 0.0.0.0)`);
+      log(`[SSL] To enable HTTPS, provide SSL certificates via environment variables or ./ssl/ directory`);
+    });
+  }
+
+  // Start schedulers
+  startSLAScheduler();
+  startAutoCloseScheduler();
+  startOverdueChangeScheduler();
 })();
