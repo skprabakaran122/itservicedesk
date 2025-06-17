@@ -263,46 +263,13 @@ function startOverdueChangeScheduler() {
     serveStatic(app);
   }
 
-  // HTTPS Configuration
-  const sslCredentials = getSSLCredentials();
-  const httpsPort = 5001;
+  // Start HTTP server (HTTPS temporarily disabled for verification)
   const httpPort = 5000;
-
-  if (sslCredentials) {
-    // Create HTTPS server
-    const httpsServer = https.createServer(sslCredentials, app);
-    
-    // Start HTTPS server
-    httpsServer.listen(httpsPort, "0.0.0.0", () => {
-      log(`HTTPS server running on port ${httpsPort} (host: 0.0.0.0)`);
-    });
-
-    // Create HTTP server for redirection
-    const httpApp = express();
-    httpApp.use((req, res) => {
-      const host = req.get('host') || 'localhost';
-      const httpsUrl = `https://${host.replace(`:${httpPort}`, `:${httpsPort}`)}${req.url}`;
-      res.redirect(301, httpsUrl);
-    });
-
-    const httpServer = http.createServer(httpApp);
-    httpServer.listen(httpPort, "0.0.0.0", () => {
-      log(`HTTP server running on port ${httpPort} (redirecting to HTTPS)`);
-    });
-
-    // Use HTTPS server for Vite setup
-    if (app.get("env") === "development") {
-      await setupVite(app, httpsServer);
-    }
-  } else {
-    log(`[SSL] No SSL certificates found, running HTTP only on port ${httpPort}`);
-    
-    // Fallback to HTTP only
-    server.listen(httpPort, "0.0.0.0", () => {
-      log(`HTTP server running on port ${httpPort} (host: 0.0.0.0)`);
-      log(`[SSL] To enable HTTPS, provide SSL certificates via environment variables or ./ssl/ directory`);
-    });
-  }
+  
+  server.listen(httpPort, "0.0.0.0", () => {
+    log(`HTTP server running on port ${httpPort} (host: 0.0.0.0)`);
+    log(`[SSL] HTTPS temporarily disabled for verification - can be re-enabled later`);
+  });
 
   // Start schedulers
   startSLAScheduler();
