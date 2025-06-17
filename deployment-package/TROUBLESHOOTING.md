@@ -7,9 +7,17 @@
 **Symptoms:**
 - PM2 shows application as "online" but curl fails
 - Empty PM2 logs
-- Nginx configuration is correct
+- Error: "DATABASE_URL must be set" when testing manually
+- ES modules vs CommonJS conflicts
 
 **Solutions:**
+
+#### Fix Environment Variable Loading (Most Common Issue)
+```bash
+./fix_es_modules_env.sh
+```
+
+This fixes dotenv loading for ES modules applications.
 
 #### Check tsx Installation
 ```bash
