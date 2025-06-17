@@ -6,6 +6,12 @@ class EmailService {
   private isEnabled: boolean = false;
   private fromEmail: string = '';
 
+  private getBaseUrl(): string {
+    // Production URL takes priority, then Replit domain, then localhost fallback
+    return process.env.BASE_URL || 
+           (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'http://localhost:5000');
+  }
+
   constructor() {
     this.initialize();
   }
@@ -307,7 +313,7 @@ class EmailService {
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/dashboard?tab=changes" class="btn">📋 REVIEW CHANGE REQUEST</a>
+            <a href="${this.getBaseUrl()}/dashboard?tab=changes" class="btn">📋 REVIEW CHANGE REQUEST</a>
           </div>
 
           <p style="color: #dc2626; font-weight: bold; text-align: center; font-size: 16px;">
@@ -452,9 +458,7 @@ This is an automated notification from Calpion Change Management System.
       return;
     }
 
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'http://localhost:5000';
+    const baseUrl = this.getBaseUrl();
 
     const approveUrl = `${baseUrl}/api/tickets/${ticket.id}/email-approve/${approvalToken}`;
     const rejectUrl = `${baseUrl}/api/tickets/${ticket.id}/email-reject/${approvalToken}`;
@@ -682,9 +686,7 @@ This is an automated notification from Calpion IT Service Desk.
       return;
     }
 
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'http://localhost:5000';
+    const baseUrl = this.getBaseUrl();
 
     const approveUrl = `${baseUrl}/api/changes/${change.id}/email-approve/${approvalToken}`;
     const rejectUrl = `${baseUrl}/api/changes/${change.id}/email-reject/${approvalToken}`;
