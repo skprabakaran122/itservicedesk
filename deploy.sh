@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Complete IT Service Desk Production Deployment
-# Single script for Nginx + Git + PostgreSQL + PM2
+# Updated with proven systemd + Nginx + HTTPS configuration
 
 set -e
 
@@ -40,12 +40,12 @@ echo -e "${GREEN}Starting deployment to $DOMAIN...${NC}"
 # System update
 echo -e "${YELLOW}Installing system packages...${NC}"
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl wget build-essential git ufw nginx postgresql postgresql-contrib
+sudo apt install -y curl wget build-essential git ufw nginx postgresql postgresql-contrib certbot
 
-# Install Node.js 20
+# Install Node.js 20 and tsx
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
-sudo npm install -g pm2
+sudo npm install -g tsx
 
 # Setup PostgreSQL
 echo -e "${YELLOW}Configuring database...${NC}"
@@ -201,81 +201,60 @@ if [ "$SSL_OPTION" = "1" ]; then
     sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN
 fi
 
-# PM2 setup
-sudo tee $APP_DIR/ecosystem.config.cjs << EOF
-module.exports = {
-  apps: [{
-    name: 'servicedesk',
-    script: 'dist/index.js',
-    cwd: '$APP_DIR',
-    instances: 'max',
-    exec_mode: 'cluster',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 5000,
-      HOST: '127.0.0.1'
-    },
-    error_file: '/var/log/pm2/servicedesk-error.log',
-    out_file: '/var/log/pm2/servicedesk-out.log',
-    log_file: '/var/log/pm2/servicedesk.log',
-    time: true
-  }]
-};
-EOF
-
-# Start application
-echo -e "${YELLOW}Starting application...${NC}"
+# Application build and setup
+echo -e "${YELLOW}Building application...${NC}"
 cd $APP_DIR
 
-# Create PM2 directories
-sudo mkdir -p /var/www/.pm2 /var/log/pm2
-sudo chown -R www-data:www-data /var/www/.pm2 /var/log/pm2
+# Install dependencies and build
+sudo -u www-data npm install
+sudo -u www-data npm run build
 
-# Verify build output exists
-if [ ! -f "dist/index.js" ]; then
-    echo -e "${RED}Error: Build output not found at dist/index.js${NC}"
-    echo "Build files present:"
-    ls -la dist/ || echo "No dist directory found"
+# Verify client build exists
+if [ ! -d "dist/public" ] && [ ! -d "dist" ]; then
+    echo -e "${RED}Error: Client build not found${NC}"
+    echo "Available files:"
+    ls -la dist/ 2>/dev/null || echo "No dist directory"
     exit 1
 fi
 
-# Initialize PM2 for www-data user
-sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 start ecosystem.config.cjs
-sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 save
+# Create expected public directory structure for production
+sudo -u www-data mkdir -p server/public
+if [ -d "dist/public" ]; then
+    sudo -u www-data cp -r dist/public/* server/public/
+elif [ -d "dist" ]; then
+    sudo -u www-data cp -r dist/* server/public/
+fi
 
-# Set up PM2 startup script
-sudo env PATH=$PATH:/usr/bin PM2_HOME=/var/www/.pm2 pm2 startup systemd -u www-data --hp /var/www
-
-# Create systemd service file with correct PM2_HOME
-sudo tee /etc/systemd/system/pm2-www-data.service << EOF
+# Create systemd service
+echo -e "${YELLOW}Configuring systemd service...${NC}"
+sudo tee /etc/systemd/system/servicedesk.service << EOF
 [Unit]
-Description=PM2 process manager
-Documentation=https://pm2.keymetrics.io/
-After=network.target
+Description=Calpion IT Service Desk
+After=network.target postgresql.service
+Wants=network.target
 
 [Service]
-Type=forking
+Type=simple
 User=www-data
-LimitNOFILE=infinity
-LimitNPROC=infinity
-LimitCORE=infinity
-Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/bin
-Environment=PM2_HOME=/var/www/.pm2
-PIDFile=/var/www/.pm2/pm2.pid
-Restart=on-failure
-
-ExecStart=/usr/lib/node_modules/pm2/bin/pm2 resurrect
-ExecReload=/usr/lib/node_modules/pm2/bin/pm2 reload all
-ExecStop=/usr/lib/node_modules/pm2/bin/pm2 kill
+Group=www-data
+WorkingDirectory=$APP_DIR
+EnvironmentFile=$APP_DIR/.env
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/tsx server/index.ts
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=servicedesk
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# Enable and start the PM2 service
+# Start and enable service
 sudo systemctl daemon-reload
-sudo systemctl enable pm2-www-data
-sudo systemctl start pm2-www-data
+sudo systemctl enable servicedesk.service
+sudo systemctl start servicedesk.service
 
 # Update script
 sudo tee /usr/local/bin/update-servicedesk << 'EOF'
@@ -285,20 +264,25 @@ cd /var/www/servicedesk
 echo "Pulling latest changes from Git..."
 sudo -u www-data git pull
 
-echo "Installing all dependencies..."
-sudo -u www-data npm ci
+echo "Installing dependencies..."
+sudo -u www-data npm install
 
 echo "Building application..."
 sudo -u www-data npm run build
 
+echo "Updating client build structure..."
+sudo -u www-data mkdir -p server/public
+if [ -d "dist/public" ]; then
+    sudo -u www-data cp -r dist/public/* server/public/
+elif [ -d "dist" ]; then
+    sudo -u www-data cp -r dist/* server/public/
+fi
+
 echo "Updating database schema..."
 sudo -u www-data npm run db:push
 
-echo "Installing production dependencies only..."
-sudo -u www-data npm ci --omit=dev
-
 echo "Restarting application..."
-sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 restart servicedesk
+sudo systemctl restart servicedesk.service
 
 echo "Update complete!"
 EOF
@@ -308,6 +292,11 @@ sudo chmod +x /usr/local/bin/update-servicedesk
 sudo ufw --force enable
 sudo ufw allow ssh
 sudo ufw allow 'Nginx Full'
+
+# Final verification
+echo -e "${YELLOW}Testing application startup...${NC}"
+sleep 10
+sudo systemctl status servicedesk.service --no-pager -l
 
 echo ""
 echo -e "${GREEN}=== Deployment Complete! ===${NC}"
@@ -322,21 +311,27 @@ fi
 echo ""
 echo -e "${GREEN}Management Commands:${NC}"
 echo -e "  Update app:     sudo update-servicedesk"
-echo -e "  Check status:   sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 status"
-echo -e "  View logs:      sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 logs"
-echo -e "  Restart app:    sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 restart servicedesk"
-echo -e "  Stop app:       sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 stop servicedesk"
+echo -e "  Check status:   sudo systemctl status servicedesk"
+echo -e "  View logs:      sudo journalctl -fu servicedesk"
+echo -e "  Restart app:    sudo systemctl restart servicedesk"
+echo -e "  Stop app:       sudo systemctl stop servicedesk"
 echo ""
 echo -e "${GREEN}Configuration Files:${NC}"
 echo -e "  App directory:  $APP_DIR"
 echo -e "  Nginx config:   /etc/nginx/sites-available/servicedesk"
+echo -e "  Systemd service: /etc/systemd/system/servicedesk.service"
 echo -e "  Environment:    $APP_DIR/.env"
 if [ "$SSL_OPTION" = "2" ]; then
-    echo -e "  SSL cert:       /etc/nginx/ssl/servicedesk.crt"
-    echo -e "  SSL key:        /etc/nginx/ssl/servicedesk.key"
+    echo -e "  SSL cert:       /etc/ssl/servicedesk/server.crt"
+    echo -e "  SSL key:        /etc/ssl/servicedesk/server.key"
 fi
 echo ""
-echo -e "${YELLOW}Next Steps:${NC}"
-echo -e "1. Add your SendGrid API key to $APP_DIR/.env"
-echo -e "2. Restart: sudo -u www-data pm2 restart servicedesk"
+echo -e "${YELLOW}Features Available:${NC}"
+echo -e "✓ Ticket Management with SLA tracking"
+echo -e "✓ Change Management with approval workflows"  
+echo -e "✓ User Administration with role-based access"
+echo -e "✓ Email notifications via SendGrid"
+echo -e "✓ File attachment support"
+echo -e "✓ Anonymous ticket submission"
+echo ""
 echo -e "3. Updates: sudo update-servicedesk (pulls from Git)"
