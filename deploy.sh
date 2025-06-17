@@ -222,9 +222,48 @@ EOF
 # Start application
 echo -e "${YELLOW}Starting application...${NC}"
 cd $APP_DIR
-sudo -u www-data pm2 start ecosystem.config.cjs
-sudo -u www-data pm2 save
-sudo env PATH=$PATH:/usr/bin pm2 startup -u www-data --hp /var/www
+
+# Create PM2 home directory for www-data user
+sudo mkdir -p /var/www/.pm2
+sudo chown -R www-data:www-data /var/www/.pm2
+
+# Initialize PM2 for www-data user
+sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 start ecosystem.config.cjs
+sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 save
+
+# Set up PM2 startup script
+sudo env PATH=$PATH:/usr/bin PM2_HOME=/var/www/.pm2 pm2 startup systemd -u www-data --hp /var/www
+
+# Create systemd service file with correct PM2_HOME
+sudo tee /etc/systemd/system/pm2-www-data.service << EOF
+[Unit]
+Description=PM2 process manager
+Documentation=https://pm2.keymetrics.io/
+After=network.target
+
+[Service]
+Type=forking
+User=www-data
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/bin
+Environment=PM2_HOME=/var/www/.pm2
+PIDFile=/var/www/.pm2/pm2.pid
+Restart=on-failure
+
+ExecStart=/usr/lib/node_modules/pm2/bin/pm2 resurrect
+ExecReload=/usr/lib/node_modules/pm2/bin/pm2 reload all
+ExecStop=/usr/lib/node_modules/pm2/bin/pm2 kill
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start the PM2 service
+sudo systemctl daemon-reload
+sudo systemctl enable pm2-www-data
+sudo systemctl start pm2-www-data
 
 # Update script
 sudo tee /usr/local/bin/update-servicedesk << 'EOF'
@@ -247,7 +286,7 @@ echo "Installing production dependencies only..."
 sudo -u www-data npm ci --omit=dev
 
 echo "Restarting application..."
-sudo -u www-data pm2 restart servicedesk
+sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 restart servicedesk
 
 echo "Update complete!"
 EOF
@@ -271,9 +310,10 @@ fi
 echo ""
 echo -e "${GREEN}Management Commands:${NC}"
 echo -e "  Update app:     sudo update-servicedesk"
-echo -e "  Check status:   sudo -u www-data pm2 status"
-echo -e "  View logs:      sudo -u www-data pm2 logs"
-echo -e "  Restart app:    sudo -u www-data pm2 restart servicedesk"
+echo -e "  Check status:   sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 status"
+echo -e "  View logs:      sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 logs"
+echo -e "  Restart app:    sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 restart servicedesk"
+echo -e "  Stop app:       sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 stop servicedesk"
 echo ""
 echo -e "${GREEN}Configuration Files:${NC}"
 echo -e "  App directory:  $APP_DIR"
