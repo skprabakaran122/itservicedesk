@@ -208,7 +208,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
   const canRequestApproval = (ticket: Ticket): boolean => {
     return currentUser?.role === 'agent' && 
            !ticket.approvalStatus && 
-           ['pending', 'open'].includes(ticket.status);
+           ticket.status === 'open';
   };
 
   const canApprove = (ticket: Ticket): boolean => {
