@@ -1,6 +1,6 @@
 import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, like, sql, not, isNull, lte, notInArray } from "drizzle-orm";
+import { eq, and, desc, or, like, sql, not, isNull, lte, notInArray, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // Ticket methods

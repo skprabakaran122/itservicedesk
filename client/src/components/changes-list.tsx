@@ -69,6 +69,18 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
   const handleStatusUpdate = (id: number, status: string) => {
     const change = sortedChanges.find(c => c.id === id);
     
+    // Check if trying to close an overdue change without admin privileges
+    if ((status === 'completed' || status === 'failed' || status === 'cancelled') && 
+        change?.isOverdue === 'true' && 
+        currentUser?.role !== 'admin') {
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can close overdue changes. Please contact an admin for assistance.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Check if trying to move to implementation before start time
     if (status === 'in-progress' && change?.startDate) {
       const now = new Date();

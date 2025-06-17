@@ -96,6 +96,34 @@ function startAutoCloseScheduler() {
   scheduleDaily();
 }
 
+// Overdue change monitoring scheduler
+function startOverdueChangeScheduler() {
+  const runOverdueCheck = async () => {
+    try {
+      const result = await storage.sendOverdueNotifications();
+      if (result.notificationCount > 0) {
+        log(`[OVERDUE] Sent ${result.notificationCount} overdue notifications for ${result.changes.length} changes`);
+      }
+    } catch (error) {
+      log(`[OVERDUE] Error during overdue check process: ${error}`);
+    }
+  };
+
+  // Run immediately on startup
+  runOverdueCheck();
+  
+  // Run every hour to check for overdue changes
+  const scheduleHourly = () => {
+    setTimeout(async () => {
+      await runOverdueCheck();
+      // Schedule the next run
+      scheduleHourly();
+    }, 60 * 60 * 1000); // 1 hour
+  };
+  
+  scheduleHourly();
+}
+
 (async () => {
   // Initialize storage data once at startup
   await storage.initializeData();
@@ -148,5 +176,8 @@ function startAutoCloseScheduler() {
     
     // Start the auto-close scheduler
     startAutoCloseScheduler();
+    
+    // Start the overdue change monitoring scheduler
+    startOverdueChangeScheduler();
   });
 })();
