@@ -8,16 +8,13 @@ if (!process.env.DATABASE_URL) {
 
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
-  min: 1, // Minimal connections to reduce timeouts
-  max: 5, // Lower max to avoid overwhelming remote database
-  idleTimeoutMillis: 60000, // Longer idle timeout for stability
-  connectionTimeoutMillis: 15000, // Extended timeout for remote connections
+  ssl: false, // No SSL needed for local PostgreSQL
+  min: 2, // Adequate for local database
+  max: 10, // Can handle more connections locally
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000, // Shorter timeout for local connections
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
-  // Additional retry configuration
-  query_timeout: 30000,
-  statement_timeout: 30000,
 });
 
 export const db = drizzle(pool, { schema });
