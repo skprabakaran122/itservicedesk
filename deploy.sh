@@ -81,18 +81,20 @@ HOST=127.0.0.1
 EOF
 
 # Build application
-echo -e "${YELLOW}Building application...${NC}"
-# Install all dependencies first (including dev dependencies for build)
+echo -e "${YELLOW}Installing dependencies and building...${NC}"
+# Install all dependencies first (including dev dependencies for build and db operations)
 sudo npm ci
+# Set ownership before running operations
+sudo chown -R www-data:www-data $APP_DIR
 # Build the application
-sudo npm run build
-# Remove dev dependencies for production
-sudo npm ci --only=production
-# Create directories and set permissions
+sudo -u www-data npm run build
+# Setup database schema (needs drizzle-kit dev dependency)
+sudo -u www-data npm run db:push
+# Create directories
 sudo mkdir -p uploads
 sudo chown -R www-data:www-data $APP_DIR
-# Setup database schema
-sudo -u www-data npm run db:push
+# Clean install production dependencies only for runtime
+sudo npm ci --omit=dev
 
 # SSL Setup
 if [ "$SSL_OPTION" = "2" ]; then
@@ -232,17 +234,17 @@ cd /var/www/servicedesk
 echo "Pulling latest changes from Git..."
 sudo -u www-data git pull
 
-echo "Installing dependencies..."
+echo "Installing all dependencies..."
 sudo -u www-data npm ci
 
 echo "Building application..."
 sudo -u www-data npm run build
 
-echo "Installing production dependencies..."
-sudo -u www-data npm ci --only=production
-
 echo "Updating database schema..."
 sudo -u www-data npm run db:push
+
+echo "Installing production dependencies only..."
+sudo -u www-data npm ci --omit=dev
 
 echo "Restarting application..."
 sudo -u www-data pm2 restart servicedesk
