@@ -185,15 +185,50 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(tickets.createdAt));
     }
     
-    // For agents and managers - filter by assigned products
-    if (!user.assignedProducts || user.assignedProducts.length === 0) {
-      // If no assigned products, agents/managers see no tickets
+    // For agents and managers - show tickets assigned to them OR in their assigned products
+    const conditions = [];
+    
+    // Show tickets assigned to this user
+    conditions.push(eq(tickets.assignedTo, user.username));
+    
+    // Also show tickets for their assigned products (if they have any)
+    if (user.assignedProducts && user.assignedProducts.length > 0) {
+      // Get all actual product names from database for better matching
+      const allProducts = await this.getProducts();
+      const assignedProductNames = [];
+      
+      for (const assignedProduct of user.assignedProducts) {
+        // Direct match
+        const directMatch = allProducts.find(p => p.name === assignedProduct);
+        if (directMatch) {
+          assignedProductNames.push(directMatch.name);
+        }
+        
+        // Partial match for product variations (e.g., "Olympus 1.0" matches "Olympus RPA Solution")
+        const partialMatches = allProducts.filter(p => 
+          p.name.toLowerCase().includes(assignedProduct.toLowerCase().split(' ')[0]) ||
+          assignedProduct.toLowerCase().includes(p.name.toLowerCase().split(' ')[0])
+        );
+        
+        partialMatches.forEach(match => {
+          if (!assignedProductNames.includes(match.name)) {
+            assignedProductNames.push(match.name);
+          }
+        });
+      }
+      
+      // Add product-based conditions
+      if (assignedProductNames.length > 0) {
+        conditions.push(or(...assignedProductNames.map(product => eq(tickets.product, product))));
+      }
+    }
+    
+    if (conditions.length === 0) {
       return [];
     }
     
-    // Filter tickets by assigned products for agents and managers
     return await db.select().from(tickets)
-      .where(or(...user.assignedProducts.map(product => eq(tickets.product, product))))
+      .where(or(...conditions))
       .orderBy(desc(tickets.createdAt));
   }
 
