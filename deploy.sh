@@ -1,155 +1,123 @@
 #!/bin/bash
 
-# IT Service Desk Deployment Script for Ubuntu
-# Run with: bash deploy.sh
+# Complete IT Service Desk Production Deployment
+# Single script for Nginx + Git + PostgreSQL + PM2
 
 set -e
 
-echo "=== IT Service Desk Deployment Script ==="
-echo "This will install and configure the IT Service Desk application on Ubuntu"
-echo ""
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m'
 
-# Check if running as root
-if [[ $EUID -eq 0 ]]; then
-   echo "Please do not run this script as root. Use a regular user with sudo privileges."
-   exit 1
+echo -e "${BLUE}=== IT Service Desk Production Deployment ===${NC}"
+
+# Get inputs
+read -p "Git repository URL: " GIT_REPO
+read -p "Domain name (or IP): " DOMAIN
+read -s -p "Database password: " DB_PASSWORD
+echo ""
+echo "SSL Certificate Options:"
+echo "1) Let's Encrypt (free, trusted, requires domain)"
+echo "2) Self-signed (free, browser warning, works with IP)"
+echo "3) No SSL (HTTP only)"
+read -p "Choose SSL option (1/2/3): " SSL_OPTION
+
+# Validate
+if [ -z "$GIT_REPO" ] || [ -z "$DOMAIN" ] || [ -z "$DB_PASSWORD" ]; then
+    echo -e "${RED}Error: All fields required${NC}"
+    exit 1
 fi
 
-# Get user inputs
-read -p "Enter database password for servicedesk_user: " -s DB_PASSWORD
-echo ""
-read -p "Enter session secret (32+ characters): " -s SESSION_SECRET
-echo ""
-read -p "Enter application domain (or IP address): " DOMAIN
-read -p "Install Nginx reverse proxy? (y/n): " INSTALL_NGINX
+APP_DIR="/var/www/servicedesk"
+DB_NAME="servicedesk"
+DB_USER="servicedesk_user"
 
-# Update system
-echo "Updating system packages..."
+echo -e "${GREEN}Starting deployment to $DOMAIN...${NC}"
+
+# System update
+echo -e "${YELLOW}Installing system packages...${NC}"
 sudo apt update && sudo apt upgrade -y
-
-# Install dependencies
-echo "Installing system dependencies..."
-sudo apt install -y curl wget git build-essential
+sudo apt install -y curl wget build-essential git ufw nginx postgresql postgresql-contrib
 
 # Install Node.js 20
-echo "Installing Node.js 20..."
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
+sudo apt install -y nodejs
+sudo npm install -g pm2
 
-# Verify Node.js installation
-NODE_VERSION=$(node --version)
-NPM_VERSION=$(npm --version)
-echo "Node.js version: $NODE_VERSION"
-echo "NPM version: $NPM_VERSION"
-
-# Install PostgreSQL
-echo "Installing PostgreSQL..."
-sudo apt install -y postgresql postgresql-contrib
-
-# Start PostgreSQL service
+# Setup PostgreSQL
+echo -e "${YELLOW}Configuring database...${NC}"
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
 
-# Create database and user
-echo "Setting up database..."
 sudo -u postgres psql << EOF
-DROP DATABASE IF EXISTS servicedesk;
-DROP USER IF EXISTS servicedesk_user;
-CREATE DATABASE servicedesk;
-CREATE USER servicedesk_user WITH PASSWORD '$DB_PASSWORD';
-GRANT ALL PRIVILEGES ON DATABASE servicedesk TO servicedesk_user;
-ALTER USER servicedesk_user CREATEDB;
+CREATE DATABASE $DB_NAME;
+CREATE USER $DB_USER WITH ENCRYPTED PASSWORD '$DB_PASSWORD';
+GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
+ALTER USER $DB_USER CREATEDB;
 \q
 EOF
 
-# Clone the application repository
-echo "Cloning application repository..."
-if [ -d "servicedesk" ]; then
-    echo "Removing existing servicedesk directory..."
-    rm -rf servicedesk
-fi
+PG_VERSION=$(sudo -u postgres psql -t -c "SELECT version();" | grep -oP 'PostgreSQL \K[0-9]+')
+echo "host $DB_NAME $DB_USER 127.0.0.1/32 md5" | sudo tee -a "/etc/postgresql/$PG_VERSION/main/pg_hba.conf"
+sudo systemctl restart postgresql
 
-git clone https://github.com/skprabakaran122/itservicedesk.git servicedesk
-cd servicedesk
+# Clone repository
+echo -e "${YELLOW}Cloning from Git...${NC}"
+sudo rm -rf $APP_DIR
+sudo git clone $GIT_REPO $APP_DIR
+sudo chown -R www-data:www-data $APP_DIR
+cd $APP_DIR
 
-# Get application directory
-APP_DIR=$(pwd)
-
-# Install application dependencies
-echo "Installing application dependencies..."
-npm install
-
-# Install global packages
-sudo npm install -g tsx typescript pm2
-
-# Create environment file
-echo "Creating environment configuration..."
-cat > .env << EOF
-DATABASE_URL=postgresql://servicedesk_user:$DB_PASSWORD@localhost:5432/servicedesk
+# Environment setup
+sudo tee .env << EOF
 NODE_ENV=production
+DATABASE_URL=postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME
+SENDGRID_API_KEY=
 PORT=5000
-SESSION_SECRET=$SESSION_SECRET
+HOST=127.0.0.1
 EOF
 
-# Setup database schema
-echo "Setting up database schema..."
-npm run db:push
+# Build application
+echo -e "${YELLOW}Building application...${NC}"
+sudo npm ci --only=production
+sudo npm run build
+sudo mkdir -p uploads
+sudo chown -R www-data:www-data $APP_DIR
+sudo -u www-data npm run db:push
 
-# Create logs directory
-mkdir -p logs
-
-# Create PM2 ecosystem file
-echo "Creating PM2 configuration..."
-cat > ecosystem.config.cjs << EOF
-module.exports = {
-  apps: [{
-    name: 'servicedesk',
-    script: 'server/index.ts',
-    interpreter: 'node',
-    interpreter_args: '--import tsx',
-    instances: 1,
-    exec_mode: 'fork',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 5000
-    },
-    error_file: './logs/pm2-error.log',
-    out_file: './logs/pm2-out.log',
-    log_file: './logs/pm2-combined.log',
-    time: true,
-    max_memory_restart: '1G',
-    restart_delay: 4000,
-    max_restarts: 5,
-    min_uptime: '10s'
-  }]
-};
-EOF
-
-# Start application with PM2
-echo "Starting application with PM2..."
-pm2 start ecosystem.config.cjs
-pm2 save
-
-# Setup PM2 startup
-echo "Configuring PM2 startup..."
-PM2_STARTUP_CMD=$(pm2 startup | grep "sudo env" | head -1)
-if [ ! -z "$PM2_STARTUP_CMD" ]; then
-    eval $PM2_STARTUP_CMD
+# SSL Setup
+if [ "$SSL_OPTION" = "2" ]; then
+    echo -e "${YELLOW}Creating self-signed SSL certificate...${NC}"
+    sudo mkdir -p /etc/nginx/ssl
+    sudo openssl req -x509 -newkey rsa:4096 -keyout /etc/nginx/ssl/servicedesk.key -out /etc/nginx/ssl/servicedesk.crt -days 365 -nodes \
+        -subj "/C=US/ST=State/L=City/O=Calpion/OU=IT/CN=$DOMAIN"
+    sudo chmod 600 /etc/nginx/ssl/servicedesk.key
+    sudo chmod 644 /etc/nginx/ssl/servicedesk.crt
+    SSL_CERT="/etc/nginx/ssl/servicedesk.crt"
+    SSL_KEY="/etc/nginx/ssl/servicedesk.key"
+else
+    SSL_CERT="/etc/ssl/certs/ssl-cert-snakeoil.pem"
+    SSL_KEY="/etc/ssl/private/ssl-cert-snakeoil.key"
 fi
 
-# Install and configure Nginx if requested
-if [[ $INSTALL_NGINX == "y" || $INSTALL_NGINX == "Y" ]]; then
-    echo "Installing and configuring Nginx..."
-    sudo apt install -y nginx
-    
-    # Create Nginx configuration
+# Nginx configuration
+echo -e "${YELLOW}Configuring Nginx...${NC}"
+if [ "$SSL_OPTION" = "3" ]; then
+    # HTTP only configuration
     sudo tee /etc/nginx/sites-available/servicedesk << EOF
 server {
     listen 80;
     server_name $DOMAIN;
 
+    client_max_body_size 10M;
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
+
     location / {
-        proxy_pass http://localhost:5000;
+        proxy_pass http://127.0.0.1:5000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -159,121 +127,142 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_cache_bypass \$http_upgrade;
     }
+
+    location /uploads/ {
+        alias $APP_DIR/uploads/;
+        expires 1y;
+    }
 }
 EOF
+else
+    # HTTPS configuration
+    sudo tee /etc/nginx/sites-available/servicedesk << EOF
+server {
+    listen 80;
+    server_name $DOMAIN;
+    return 301 https://\$server_name\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name $DOMAIN;
+
+    ssl_certificate $SSL_CERT;
+    ssl_certificate_key $SSL_KEY;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384;
+    ssl_prefer_server_ciphers on;
     
-    # Enable site
-    sudo ln -sf /etc/nginx/sites-available/servicedesk /etc/nginx/sites-enabled/
-    sudo rm -f /etc/nginx/sites-enabled/default
-    
-    # Test and restart Nginx
-    sudo nginx -t && sudo systemctl restart nginx
-    sudo systemctl enable nginx
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    client_max_body_size 10M;
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+
+    location /uploads/ {
+        alias $APP_DIR/uploads/;
+        expires 1y;
+    }
+}
+EOF
 fi
 
-# Configure firewall
-echo "Configuring firewall..."
-sudo ufw --force reset
-sudo ufw allow OpenSSH
-if [[ $INSTALL_NGINX == "y" || $INSTALL_NGINX == "Y" ]]; then
-    sudo ufw allow 'Nginx Full'
-else
-    sudo ufw allow 5000
+sudo ln -sf /etc/nginx/sites-available/servicedesk /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+
+# Let's Encrypt SSL
+if [ "$SSL_OPTION" = "1" ]; then
+    echo -e "${YELLOW}Installing Let's Encrypt SSL certificate...${NC}"
+    sudo apt install -y certbot python3-certbot-nginx
+    sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN
 fi
+
+# PM2 setup
+sudo tee $APP_DIR/ecosystem.config.cjs << EOF
+module.exports = {
+  apps: [{
+    name: 'servicedesk',
+    script: 'server/index.js',
+    cwd: '$APP_DIR',
+    instances: 'max',
+    exec_mode: 'cluster',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 5000,
+      HOST: '127.0.0.1'
+    }
+  }]
+};
+EOF
+
+# Start application
+echo -e "${YELLOW}Starting application...${NC}"
+cd $APP_DIR
+sudo -u www-data pm2 start ecosystem.config.cjs
+sudo -u www-data pm2 save
+sudo env PATH=$PATH:/usr/bin pm2 startup -u www-data --hp /var/www
+
+# Update script
+sudo tee /usr/local/bin/update-servicedesk << 'EOF'
+#!/bin/bash
+cd /var/www/servicedesk
+sudo -u www-data git pull
+sudo -u www-data npm ci --only=production
+sudo -u www-data npm run build
+sudo -u www-data npm run db:push
+sudo -u www-data pm2 restart servicedesk
+echo "Update complete!"
+EOF
+sudo chmod +x /usr/local/bin/update-servicedesk
+
+# Firewall
 sudo ufw --force enable
-
-# Create backup script
-echo "Setting up backup script..."
-sudo tee /etc/cron.daily/servicedesk-backup << 'EOF'
-#!/bin/bash
-BACKUP_DIR="/var/backups/servicedesk"
-DATE=$(date +%Y%m%d_%H%M%S)
-mkdir -p $BACKUP_DIR
-
-# Database backup
-sudo -u postgres pg_dump servicedesk > $BACKUP_DIR/servicedesk_$DATE.sql
-
-# Keep only last 7 days of backups
-find $BACKUP_DIR -name "servicedesk_*.sql" -mtime +7 -delete
-
-echo "Backup completed: $DATE"
-EOF
-
-sudo chmod +x /etc/cron.daily/servicedesk-backup
-
-# Create status check script
-cat > check_status.sh << 'EOF'
-#!/bin/bash
-echo "=== IT Service Desk Status ==="
-echo ""
-echo "Application Status:"
-pm2 status servicedesk
+sudo ufw allow ssh
+sudo ufw allow 'Nginx Full'
 
 echo ""
-echo "Application Logs (last 10 lines):"
-pm2 logs servicedesk --lines 10 --nostream
-
+echo -e "${GREEN}=== Deployment Complete! ===${NC}"
 echo ""
-echo "System Resources:"
-echo "Memory Usage:"
-free -h
-echo ""
-echo "Disk Usage:"
-df -h
-
-echo ""
-echo "Network Status:"
-if command -v nginx &> /dev/null; then
-    sudo systemctl status nginx --no-pager -l
-fi
-
-echo ""
-echo "Database Status:"
-sudo systemctl status postgresql --no-pager -l
-EOF
-
-chmod +x check_status.sh
-
-# Create restart script
-cat > restart_app.sh << 'EOF'
-#!/bin/bash
-echo "Restarting IT Service Desk application..."
-pm2 restart servicedesk
-pm2 logs servicedesk --lines 5 --nostream
-echo "Application restarted successfully!"
-EOF
-
-chmod +x restart_app.sh
-
-echo ""
-echo "=== Deployment Complete! ==="
-echo ""
-echo "Application is running on:"
-if [[ $INSTALL_NGINX == "y" || $INSTALL_NGINX == "Y" ]]; then
-    echo "  External URL: http://$DOMAIN"
-    echo "  Direct URL:  http://$DOMAIN:5000"
+if [ "$SSL_OPTION" = "1" ]; then
+    echo -e "Access: https://$DOMAIN (Let's Encrypt SSL)"
+elif [ "$SSL_OPTION" = "2" ]; then
+    echo -e "Access: https://$DOMAIN (Self-signed SSL - browser will show warning)"
 else
-    echo "  URL: http://$DOMAIN:5000"
+    echo -e "Access: http://$DOMAIN (HTTP only)"
 fi
 echo ""
-echo "Default login credentials:"
-echo "  Admin:   john.doe / password123"
-echo "  Agent:   jane.smith / password123"
-echo "  Manager: skprabakaran122 / password123"
+echo -e "${GREEN}Management Commands:${NC}"
+echo -e "  Update app:     sudo update-servicedesk"
+echo -e "  Check status:   sudo -u www-data pm2 status"
+echo -e "  View logs:      sudo -u www-data pm2 logs"
+echo -e "  Restart app:    sudo -u www-data pm2 restart servicedesk"
 echo ""
-echo "IMPORTANT: Change these passwords immediately!"
+echo -e "${GREEN}Configuration Files:${NC}"
+echo -e "  App directory:  $APP_DIR"
+echo -e "  Nginx config:   /etc/nginx/sites-available/servicedesk"
+echo -e "  Environment:    $APP_DIR/.env"
+if [ "$SSL_OPTION" = "2" ]; then
+    echo -e "  SSL cert:       /etc/nginx/ssl/servicedesk.crt"
+    echo -e "  SSL key:        /etc/nginx/ssl/servicedesk.key"
+fi
 echo ""
-echo "Management Commands:"
-echo "  Check status: ./check_status.sh"
-echo "  Restart app:  ./restart_app.sh"
-echo "  View logs:    pm2 logs servicedesk"
-echo "  Stop app:     pm2 stop servicedesk"
-echo "  Start app:    pm2 start servicedesk"
-echo ""
-echo "Application logs are stored in: $APP_DIR/logs/"
-echo "Database backups are stored in: /var/backups/servicedesk/"
-echo ""
-
-# Show final status
-echo "Current application status:"
-pm2 status servicedesk
+echo -e "${YELLOW}Next Steps:${NC}"
+echo -e "1. Add your SendGrid API key to $APP_DIR/.env"
+echo -e "2. Restart: sudo -u www-data pm2 restart servicedesk"
+echo -e "3. Updates: sudo update-servicedesk (pulls from Git)"
