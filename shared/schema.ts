@@ -25,6 +25,10 @@ export const tickets = pgTable("tickets", {
   slaTargetResolution: integer("sla_target_resolution"), // target resolution time in minutes
   slaResponseMet: varchar("sla_response_met", { length: 10 }), // 'met', 'breached', 'pending'
   slaResolutionMet: varchar("sla_resolution_met", { length: 10 }), // 'met', 'breached', 'pending'
+  approvalStatus: varchar("approval_status", { length: 20 }), // null, 'pending', 'approved', 'rejected'
+  approvedBy: text("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  approvalComments: text("approval_comments")
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({

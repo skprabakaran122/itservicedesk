@@ -479,6 +479,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Send ticket for approval
+  app.post("/api/tickets/:id/request-approval", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const currentUser = (req as any).session?.user;
+      if (!currentUser || !['agent', 'admin'].includes(currentUser.role)) {
+        return res.status(403).json({ message: "Agent access required" });
+      }
+
+      const ticket = await storage.getTicket(id);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+
+      if (ticket.approvalStatus === 'pending') {
+        return res.status(400).json({ message: "Ticket is already pending approval" });
+      }
+
+      // Update ticket to pending approval status
+      const updatedTicket = await storage.updateTicketWithHistory(id, {
+        approvalStatus: 'pending'
+      }, currentUser.id, 'Ticket sent for management approval');
+
+      if (!updatedTicket) {
+        return res.status(404).json({ message: "Failed to update ticket" });
+      }
+
+      // Send email to managers for approval
+      const managers = await storage.getUsers();
+      const managerUsers = managers.filter(user => 
+        user.role === 'manager' || user.role === 'admin'
+      );
+
+      for (const manager of managerUsers) {
+        await emailService.sendTicketApprovalEmail(updatedTicket, manager.email, manager.name);
+      }
+
+      res.json({ message: "Ticket sent for approval", ticket: updatedTicket });
+    } catch (error) {
+      console.error('Error requesting ticket approval:', error);
+      res.status(500).json({ message: "Failed to request approval" });
+    }
+  });
+
+  // Approve or reject ticket
+  app.post("/api/tickets/:id/approve", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { action, comments } = req.body; // action: 'approve' or 'reject'
+      const currentUser = (req as any).session?.user;
+      
+      if (!currentUser || !['manager', 'admin'].includes(currentUser.role)) {
+        return res.status(403).json({ message: "Manager access required" });
+      }
+
+      if (!['approve', 'reject'].includes(action)) {
+        return res.status(400).json({ message: "Invalid action. Must be 'approve' or 'reject'" });
+      }
+
+      const ticket = await storage.getTicket(id);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+
+      if (ticket.approvalStatus !== 'pending') {
+        return res.status(400).json({ message: "Ticket is not pending approval" });
+      }
+
+      // Update ticket with approval decision
+      const approvalStatus = action === 'approve' ? 'approved' : 'rejected';
+      const newStatus = action === 'approve' ? 'open' : ticket.status; // Open ticket if approved
+      
+      const updatedTicket = await storage.updateTicketWithHistory(id, {
+        approvalStatus,
+        approvedBy: currentUser.name,
+        approvedAt: new Date(),
+        approvalComments: comments,
+        status: newStatus
+      }, currentUser.id, `Ticket ${action}d by ${currentUser.name}${comments ? ': ' + comments : ''}`);
+
+      if (!updatedTicket) {
+        return res.status(404).json({ message: "Failed to update ticket" });
+      }
+
+      // Send email notification to requester
+      if (updatedTicket.requesterEmail) {
+        await emailService.sendTicketUpdatedEmail(
+          updatedTicket, 
+          updatedTicket.requesterEmail, 
+          `Your ticket has been ${action}d by management${comments ? ': ' + comments : ''}`
+        );
+      }
+
+      res.json({ message: `Ticket ${action}d successfully`, ticket: updatedTicket });
+    } catch (error) {
+      console.error('Error processing ticket approval:', error);
+      res.status(500).json({ message: "Failed to process approval" });
+    }
+  });
+
   app.get("/api/tickets/:id/history", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

@@ -320,6 +320,98 @@ class EmailService {
       default: return '24 hours';
     }
   }
+
+  async sendTicketApprovalEmail(ticket: Ticket, approverEmail: string, approverName: string): Promise<void> {
+    if (!this.isEnabled) return;
+
+    const subject = `[Ticket Approval Required] ${ticket.title}`;
+    const priorityColor = this.getPriorityColor(ticket.priority);
+    
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">Ticket Approval Required</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Calpion IT Service Desk</p>
+        </div>
+        
+        <div style="padding: 30px; background-color: #f8f9fa;">
+          <p style="font-size: 16px; color: #333; margin-bottom: 20px;">
+            Dear ${approverName},
+          </p>
+          
+          <p style="color: #666; line-height: 1.6;">
+            A support ticket requires your approval before it can be worked on. Please review the details below:
+          </p>
+          
+          <div style="background: white; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #333; margin: 0 0 15px 0; font-size: 18px;">${ticket.title}</h3>
+            
+            <div style="display: grid; grid-template-columns: 120px 1fr; gap: 10px; margin-bottom: 15px;">
+              <strong style="color: #555;">Ticket ID:</strong>
+              <span style="color: #333;">#${ticket.id}</span>
+              
+              <strong style="color: #555;">Priority:</strong>
+              <span style="color: ${priorityColor}; font-weight: bold; text-transform: uppercase;">${ticket.priority}</span>
+              
+              <strong style="color: #555;">Category:</strong>
+              <span style="color: #333;">${ticket.category}</span>
+              
+              <strong style="color: #555;">Product:</strong>
+              <span style="color: #333;">${ticket.product || 'Not specified'}</span>
+              
+              <strong style="color: #555;">Requester:</strong>
+              <span style="color: #333;">${ticket.requesterName || 'Unknown'}</span>
+              
+              <strong style="color: #555;">Department:</strong>
+              <span style="color: #333;">${ticket.requesterDepartment || 'Not specified'}</span>
+            </div>
+            
+            <div style="border-top: 1px solid #eee; padding-top: 15px;">
+              <strong style="color: #555; display: block; margin-bottom: 8px;">Description:</strong>
+              <p style="color: #333; line-height: 1.6; margin: 0;">${ticket.description}</p>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <p style="color: #666; margin-bottom: 15px;">Please review and approve this ticket to allow agents to begin work.</p>
+            <p style="color: #888; font-size: 14px; margin: 20px 0;">
+              Log in to the Calpion IT Service Desk to approve or reject this ticket.
+            </p>
+          </div>
+        </div>
+        
+        <div style="background-color: #667eea; color: white; padding: 20px; text-align: center;">
+          <p style="margin: 0; font-size: 14px;">
+            This is an automated notification from Calpion IT Service Desk
+          </p>
+        </div>
+      </div>
+    `;
+
+    const text = `
+Ticket Approval Required - ${ticket.title}
+
+Dear ${approverName},
+
+A support ticket requires your approval before it can be worked on:
+
+Ticket ID: #${ticket.id}
+Title: ${ticket.title}
+Priority: ${ticket.priority}
+Category: ${ticket.category}
+Product: ${ticket.product || 'Not specified'}
+Requester: ${ticket.requesterName || 'Unknown'}
+Department: ${ticket.requesterDepartment || 'Not specified'}
+
+Description: ${ticket.description}
+
+Please log in to the Calpion IT Service Desk to review and approve this ticket.
+
+This is an automated notification from Calpion IT Service Desk.
+    `;
+
+    await this.sendEmail(approverEmail, subject, html, text);
+  }
 }
 
 export const emailService = new EmailService();
