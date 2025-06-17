@@ -270,43 +270,88 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
       )}
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue={initialTab || "tickets"} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-16 p-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-lg">
-          <TabsTrigger 
-            value="tickets" 
-            className="text-lg font-semibold py-4 px-6 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200"
-          >
-            <TicketIcon className="h-6 w-6 mr-3" />
-            Support Tickets
-          </TabsTrigger>
-          {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+      <Tabs defaultValue={initialTab || "tickets"} className="space-y-8">
+        <div className="relative">
+          {/* Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-emerald-500/10 rounded-2xl blur-xl"></div>
+          
+          <TabsList className="relative grid w-full grid-cols-2 lg:grid-cols-4 h-20 p-3 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 border-2 border-gray-200/50 dark:border-gray-600/50 rounded-2xl shadow-2xl backdrop-blur-sm">
+            
             <TabsTrigger 
-              value="changes"
-              className="text-lg font-semibold py-4 px-6 rounded-lg data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all duration-200"
+              value="tickets" 
+              className="group relative text-lg font-bold py-5 px-8 rounded-xl overflow-hidden data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-blue-500/25 hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100 dark:hover:from-blue-900/30 dark:hover:to-blue-800/30 transition-all duration-300 transform hover:scale-105 data-[state=active]:scale-105"
             >
-              <Settings className="h-6 w-6 mr-3" />
-              Change Requests
+              {/* Animated Background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-blue-600/20 opacity-0 group-hover:opacity-100 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
+              
+              {/* Content */}
+              <div className="relative flex items-center justify-center">
+                <TicketIcon className="h-7 w-7 mr-3 transition-transform duration-300 group-hover:rotate-12 group-data-[state=active]:rotate-12" />
+                <span className="font-bold tracking-wide">Support Tickets</span>
+              </div>
+              
+              {/* Shine Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
             </TabsTrigger>
-          )}
-          {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
-            <TabsTrigger 
-              value="sla"
-              className="text-lg font-semibold py-4 px-6 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-green-50 dark:hover:bg-green-900/30 transition-all duration-200"
-            >
-              <Target className="h-6 w-6 mr-3" />
-              SLA Metrics
-            </TabsTrigger>
-          )}
-          {currentUser?.role === 'admin' && (
-            <TabsTrigger 
-              value="admin"
-              className="text-lg font-semibold py-4 px-6 rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200"
-            >
-              <Settings className="h-6 w-6 mr-3" />
-              Admin Console
-            </TabsTrigger>
-          )}
-        </TabsList>
+            
+            {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+              <TabsTrigger 
+                value="changes"
+                className="group relative text-lg font-bold py-5 px-8 rounded-xl overflow-hidden data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-purple-500/25 hover:bg-gradient-to-br hover:from-purple-50 hover:to-purple-100 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30 transition-all duration-300 transform hover:scale-105 data-[state=active]:scale-105"
+              >
+                {/* Animated Background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-purple-600/20 opacity-0 group-hover:opacity-100 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Content */}
+                <div className="relative flex items-center justify-center">
+                  <Settings className="h-7 w-7 mr-3 transition-transform duration-300 group-hover:rotate-90 group-data-[state=active]:rotate-90" />
+                  <span className="font-bold tracking-wide">Change Requests</span>
+                </div>
+                
+                {/* Shine Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              </TabsTrigger>
+            )}
+            
+            {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+              <TabsTrigger 
+                value="sla"
+                className="group relative text-lg font-bold py-5 px-8 rounded-xl overflow-hidden data-[state=active]:bg-gradient-to-br data-[state=active]:from-emerald-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-emerald-500/25 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-emerald-100 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30 transition-all duration-300 transform hover:scale-105 data-[state=active]:scale-105"
+              >
+                {/* Animated Background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-emerald-600/20 opacity-0 group-hover:opacity-100 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Content */}
+                <div className="relative flex items-center justify-center">
+                  <Target className="h-7 w-7 mr-3 transition-transform duration-300 group-hover:scale-110 group-data-[state=active]:scale-110" />
+                  <span className="font-bold tracking-wide">SLA Metrics</span>
+                </div>
+                
+                {/* Shine Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              </TabsTrigger>
+            )}
+            
+            {currentUser?.role === 'admin' && (
+              <TabsTrigger 
+                value="admin"
+                className="group relative text-lg font-bold py-5 px-8 rounded-xl overflow-hidden data-[state=active]:bg-gradient-to-br data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-red-500/25 hover:bg-gradient-to-br hover:from-red-50 hover:to-red-100 dark:hover:from-red-900/30 dark:hover:to-red-800/30 transition-all duration-300 transform hover:scale-105 data-[state=active]:scale-105"
+              >
+                {/* Animated Background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-red-600/20 opacity-0 group-hover:opacity-100 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Content */}
+                <div className="relative flex items-center justify-center">
+                  <Settings className="h-7 w-7 mr-3 transition-transform duration-300 group-hover:rotate-180 group-data-[state=active]:rotate-180" />
+                  <span className="font-bold tracking-wide">Admin Console</span>
+                </div>
+                
+                {/* Shine Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </div>
 
         <TabsContent value="tickets">
           <TicketsList 
