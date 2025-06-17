@@ -82,10 +82,16 @@ EOF
 
 # Build application
 echo -e "${YELLOW}Building application...${NC}"
-sudo npm ci --only=production
+# Install all dependencies first (including dev dependencies for build)
+sudo npm ci
+# Build the application
 sudo npm run build
+# Remove dev dependencies for production
+sudo npm ci --only=production
+# Create directories and set permissions
 sudo mkdir -p uploads
 sudo chown -R www-data:www-data $APP_DIR
+# Setup database schema
 sudo -u www-data npm run db:push
 
 # SSL Setup
@@ -222,11 +228,25 @@ sudo env PATH=$PATH:/usr/bin pm2 startup -u www-data --hp /var/www
 sudo tee /usr/local/bin/update-servicedesk << 'EOF'
 #!/bin/bash
 cd /var/www/servicedesk
+
+echo "Pulling latest changes from Git..."
 sudo -u www-data git pull
-sudo -u www-data npm ci --only=production
+
+echo "Installing dependencies..."
+sudo -u www-data npm ci
+
+echo "Building application..."
 sudo -u www-data npm run build
+
+echo "Installing production dependencies..."
+sudo -u www-data npm ci --only=production
+
+echo "Updating database schema..."
 sudo -u www-data npm run db:push
+
+echo "Restarting application..."
 sudo -u www-data pm2 restart servicedesk
+
 echo "Update complete!"
 EOF
 sudo chmod +x /usr/local/bin/update-servicedesk
