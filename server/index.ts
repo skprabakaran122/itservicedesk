@@ -264,9 +264,9 @@ function startOverdueChangeScheduler() {
   }
 
   // Start HTTP server (HTTPS temporarily disabled for verification)
-  const httpPort = process.env.PORT || 5000;
+  const httpPort = parseInt(process.env.PORT || "5000", 10);
   
-  server.listen(httpPort, "0.0.0.0", () => {
+  server.listen(httpPort, () => {
     log(`HTTP server running on port ${httpPort} (host: 0.0.0.0)`);
     log(`[SSL] HTTPS temporarily disabled for verification - can be re-enabled later`);
     
@@ -274,6 +274,9 @@ function startOverdueChangeScheduler() {
     if (process.env.REPLIT_DEV_DOMAIN) {
       log(`[Replit] Preview URL: https://${process.env.REPLIT_DEV_DOMAIN}`);
     }
+    
+    // Test external accessibility
+    log(`[Network] Server bound to all interfaces on port ${httpPort}`);
   });
 
   // Start schedulers
