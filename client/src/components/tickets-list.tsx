@@ -512,6 +512,90 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Request Approval Dialog */}
+      <Dialog open={showRequestApprovalDialog} onOpenChange={setShowRequestApprovalDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request Ticket Approval</DialogTitle>
+            <DialogDescription>
+              {requestingApprovalTicket && `Select a manager to review and approve ticket #${requestingApprovalTicket.id}: ${requestingApprovalTicket.title}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {requestingApprovalTicket && (
+            <Form {...requestApprovalForm}>
+              <form onSubmit={requestApprovalForm.handleSubmit(onRequestApprovalSubmit)} className="space-y-4">
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Ticket Details</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>Priority:</strong> {requestingApprovalTicket.priority}</div>
+                    <div><strong>Category:</strong> {requestingApprovalTicket.category}</div>
+                    <div><strong>Requester:</strong> {getRequesterName(requestingApprovalTicket)}</div>
+                    <div><strong>Description:</strong> {requestingApprovalTicket.description}</div>
+                  </div>
+                </div>
+
+                <FormField
+                  control={requestApprovalForm.control}
+                  name="managerId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select Manager</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a manager for approval" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {users
+                            .filter(user => ['manager', 'admin'].includes(user.role))
+                            .map(manager => (
+                              <SelectItem key={manager.id} value={manager.id.toString()}>
+                                {manager.name} ({manager.role})
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={requestApprovalForm.control}
+                  name="comments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Comments (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Add any additional information for the manager..."
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowRequestApprovalDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={requestApprovalMutation.isPending}
+                  >
+                    {requestApprovalMutation.isPending ? "Sending..." : "Send for Approval"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

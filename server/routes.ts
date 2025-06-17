@@ -483,9 +483,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tickets/:id/request-approval", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const { managerId, comments } = req.body;
       const currentUser = (req as any).session?.user;
+      
       if (!currentUser || !['agent', 'admin'].includes(currentUser.role)) {
         return res.status(403).json({ message: "Agent access required" });
+      }
+
+      if (!managerId) {
+        return res.status(400).json({ message: "Manager ID is required" });
       }
 
       const ticket = await storage.getTicket(id);
@@ -497,24 +503,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Ticket is already pending approval" });
       }
 
-      // Update ticket to pending approval status
+      // Verify the selected manager exists and has proper role
+      const selectedManager = await storage.getUser(managerId);
+      if (!selectedManager || !['manager', 'admin'].includes(selectedManager.role)) {
+        return res.status(400).json({ message: "Invalid manager selected" });
+      }
+
+      // Update ticket to pending approval status with selected manager
+      const approvalComments = comments ? `Agent comments: ${comments}` : 'Ticket sent for management approval';
       const updatedTicket = await storage.updateTicketWithHistory(id, {
-        approvalStatus: 'pending'
-      }, currentUser.id, 'Ticket sent for management approval');
+        approvalStatus: 'pending',
+        approvedBy: selectedManager.name // Store which manager should approve
+      }, currentUser.id, approvalComments);
 
       if (!updatedTicket) {
         return res.status(404).json({ message: "Failed to update ticket" });
       }
 
-      // Send email to managers for approval
-      const managers = await storage.getUsers();
-      const managerUsers = managers.filter(user => 
-        user.role === 'manager' || user.role === 'admin'
-      );
-
-      for (const manager of managerUsers) {
-        await emailService.sendTicketApprovalEmail(updatedTicket, manager.email, manager.name);
-      }
+      // Send email only to the selected manager
+      await emailService.sendTicketApprovalEmail(updatedTicket, selectedManager.email, selectedManager.name);
 
       res.json({ message: "Ticket sent for approval", ticket: updatedTicket });
     } catch (error) {
