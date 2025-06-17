@@ -8,11 +8,11 @@ if (!process.env.DATABASE_URL) {
 
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  ssl: false,
-  min: 5, // Minimum connections in pool (increased)
-  max: 20, // Maximum connections in pool
-  idleTimeoutMillis: 300000, // Keep idle connections for 5 minutes
-  connectionTimeoutMillis: 2000, // Timeout for new connections
+  ssl: process.env.DATABASE_URL?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
+  min: 2, // Reduced minimum connections
+  max: 10, // Reduced maximum connections  
+  idleTimeoutMillis: 30000, // Shorter idle timeout
+  connectionTimeoutMillis: 5000, // Longer connection timeout
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
 });

@@ -383,8 +383,8 @@ This is an automated notification from Calpion Change Management System.
             </div>
             
             <div style="margin-bottom: 15px;">
-              <strong style="color: #374151;">Implementation Date:</strong>
-              <span style="color: #6b7280;">${new Date(change.scheduledDate).toLocaleDateString()}</span>
+              <strong style="color: #374151;">Planned Date:</strong>
+              <span style="color: #6b7280;">${change.plannedDate ? new Date(change.plannedDate).toLocaleDateString() : 'Not scheduled'}</span>
             </div>
             
             <div style="margin-top: 20px;">
