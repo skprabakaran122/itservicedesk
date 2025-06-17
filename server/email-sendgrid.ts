@@ -550,6 +550,151 @@ This is an automated notification from Calpion IT Service Desk.
 
     await this.sendEmail(approverEmail, subject, html, text);
   }
+
+  async sendChangeApprovalEmailWithLinks(change: Change, approverEmail: string, approverName: string, approvalToken: string): Promise<void> {
+    if (!this.isEnabled) {
+      console.log('[Email] Service not enabled, skipping change approval email with links');
+      return;
+    }
+
+    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+      : 'http://localhost:5000';
+
+    const approveUrl = `${baseUrl}/api/changes/${change.id}/email-approve/${approvalToken}`;
+    const rejectUrl = `${baseUrl}/api/changes/${change.id}/email-reject/${approvalToken}`;
+
+    const priorityColor = this.getPriorityColor(change.priority);
+    const riskColor = change.riskLevel === 'high' ? '#ef4444' : change.riskLevel === 'medium' ? '#f59e0b' : '#10b981';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Change Request Approval Required</title>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: white; padding: 30px; border: 1px solid #e5e7eb; }
+          .footer { background: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+          .change-info { background: #faf5ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${priorityColor}; }
+          .approval-buttons { text-align: center; margin: 30px 0; }
+          .btn { display: inline-block; padding: 15px 30px; margin: 10px; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; transition: all 0.3s ease; }
+          .btn-approve { background: #10b981; color: white; }
+          .btn-approve:hover { background: #059669; }
+          .btn-reject { background: #ef4444; color: white; }
+          .btn-reject:hover { background: #dc2626; }
+          .priority-${change.priority} { color: ${priorityColor}; font-weight: bold; }
+          .risk-${change.riskLevel} { color: ${riskColor}; font-weight: bold; }
+          .urgent-notice { background: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin: 20px 0; }
+          .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">🔄 Calpion Change Management</div>
+            <h1 style="margin: 0; font-size: 24px;">Change Request Approval Required</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Your approval is needed to proceed with this change</p>
+          </div>
+
+          <div class="content">
+            <h2>Hello ${approverName},</h2>
+            <p>A change request has been submitted and requires your approval before implementation can begin. You can approve or reject this request directly from this email.</p>
+
+            <div class="change-info">
+              <h3 style="margin-top: 0; color: #1f2937;">Change Request Details</h3>
+              <p><strong>Change ID:</strong> #${change.id}</p>
+              <p><strong>Title:</strong> ${change.title}</p>
+              <p><strong>Priority:</strong> <span class="priority-${change.priority}">${change.priority.toUpperCase()}</span></p>
+              <p><strong>Risk Level:</strong> <span class="risk-${change.riskLevel}">${change.riskLevel.toUpperCase()}</span></p>
+              <p><strong>Change Type:</strong> ${change.changeType}</p>
+              <p><strong>Category:</strong> ${change.category}</p>
+              <p><strong>Product:</strong> ${change.product || 'Not specified'}</p>
+              <p><strong>Requested By:</strong> ${change.requestedBy}</p>
+              ${change.plannedDate ? `<p><strong>Planned Date:</strong> ${new Date(change.plannedDate).toLocaleDateString()}</p>` : ''}
+              <p><strong>Description:</strong></p>
+              <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #e5e7eb;">
+                ${change.description}
+              </div>
+              ${change.rollbackPlan ? `
+                <p><strong>Rollback Plan:</strong></p>
+                <div style="background: #fffbeb; padding: 15px; border-radius: 4px; border: 1px solid #fed7aa;">
+                  ${change.rollbackPlan}
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="approval-buttons">
+              <h3>Click to make your decision:</h3>
+              <a href="${approveUrl}" class="btn btn-approve">✓ APPROVE CHANGE</a>
+              <a href="${rejectUrl}" class="btn btn-reject">✗ REJECT CHANGE</a>
+            </div>
+
+            <div class="urgent-notice">
+              <p><strong>⚠️ Risk Assessment:</strong> This is a <span class="risk-${change.riskLevel}">${change.riskLevel.toUpperCase()} RISK</span> change</p>
+              <p style="margin: 5px 0 0 0;">Please review all details carefully before making your decision.</p>
+            </div>
+
+            <p style="margin-top: 30px;">
+              <strong>What happens next?</strong><br>
+              • If you <strong>approve</strong>: The change will be scheduled for implementation<br>
+              • If you <strong>reject</strong>: The change will be returned to the requester for revision
+            </p>
+
+            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+              You can also log into the Change Management portal to review this request in detail if needed.
+            </p>
+          </div>
+
+          <div class="footer">
+            <p>Calpion Change Management System | Automated Notification</p>
+            <p>This email was sent automatically. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+Change Request Approval Required
+
+Hello ${approverName},
+
+A change request has been submitted and requires your approval.
+
+Change Details:
+- ID: #${change.id}
+- Title: ${change.title}
+- Priority: ${change.priority.toUpperCase()}
+- Risk Level: ${change.riskLevel.toUpperCase()}
+- Change Type: ${change.changeType}
+- Category: ${change.category}
+- Product: ${change.product || 'Not specified'}
+- Requested By: ${change.requestedBy}
+- Description: ${change.description}
+
+To approve this change, visit: ${approveUrl}
+To reject this change, visit: ${rejectUrl}
+
+Calpion Change Management System
+    `;
+
+    try {
+      await this.sendEmail(
+        approverEmail,
+        `🔄 Change Approval Required: #${change.id} - ${change.title}`,
+        html,
+        text
+      );
+      console.log(`[Email] Change approval email with links sent to ${approverEmail} for change #${change.id}`);
+    } catch (error) {
+      console.error('[Email] Failed to send change approval email with links:', error);
+      throw error;
+    }
+  }
 }
 
 export const emailService = new EmailService();

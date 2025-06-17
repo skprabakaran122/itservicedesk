@@ -809,6 +809,175 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email-based change approval endpoints (no login required)
+  app.get("/api/changes/:id/email-approve/:token", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const token = req.params.token;
+
+      const change = await storage.getChange(id);
+      if (!change) {
+        return res.status(404).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #dc3545;">Change Request Not Found</h2>
+              <p>The change request you're trying to approve could not be found.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      if (change.approvalToken !== token) {
+        return res.status(403).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #dc3545;">Invalid Approval Link</h2>
+              <p>This approval link is invalid or has expired.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      if (change.status !== 'pending') {
+        return res.status(400).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #ffc107;">Already Processed</h2>
+              <p>This change request has already been ${change.status}.</p>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                <h4>Change Details:</h4>
+                <p><strong>ID:</strong> #${change.id}</p>
+                <p><strong>Title:</strong> ${change.title}</p>
+                <p><strong>Status:</strong> ${change.status}</p>
+              </div>
+            </body>
+          </html>
+        `);
+      }
+
+      // Process approval
+      const updatedChange = await storage.updateChangeWithHistory(id, {
+        status: 'approved',
+        approvalToken: null // Clear token after use
+      }, 0, `Change approved via email by ${change.approvedBy}`);
+
+      res.send(`
+        <html>
+          <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #28a745;">✓ Change Request Approved Successfully</h2>
+            <p>Thank you for approving this change request. The implementation can now proceed according to the planned schedule.</p>
+            <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #28a745;">
+              <h4>Change Details:</h4>
+              <p><strong>ID:</strong> #${change.id}</p>
+              <p><strong>Title:</strong> ${change.title}</p>
+              <p><strong>Priority:</strong> ${change.priority}</p>
+              <p><strong>Risk Level:</strong> ${change.riskLevel}</p>
+              <p><strong>Change Type:</strong> ${change.changeType}</p>
+              <p><strong>Status:</strong> Approved (Ready for implementation)</p>
+            </div>
+            <p style="margin-top: 20px; color: #6c757d; font-size: 14px;">
+              This change request is now approved and can be implemented according to the planned timeline.
+            </p>
+          </body>
+        </html>
+      `);
+    } catch (error) {
+      console.error('Error processing email change approval:', error);
+      res.status(500).send(`
+        <html>
+          <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #dc3545;">Error</h2>
+            <p>An error occurred while processing your approval. Please try again or contact support.</p>
+          </body>
+        </html>
+      `);
+    }
+  });
+
+  app.get("/api/changes/:id/email-reject/:token", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const token = req.params.token;
+
+      const change = await storage.getChange(id);
+      if (!change) {
+        return res.status(404).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #dc3545;">Change Request Not Found</h2>
+              <p>The change request you're trying to reject could not be found.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      if (change.approvalToken !== token) {
+        return res.status(403).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #dc3545;">Invalid Approval Link</h2>
+              <p>This approval link is invalid or has expired.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      if (change.status !== 'pending') {
+        return res.status(400).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #ffc107;">Already Processed</h2>
+              <p>This change request has already been ${change.status}.</p>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                <h4>Change Details:</h4>
+                <p><strong>ID:</strong> #${change.id}</p>
+                <p><strong>Title:</strong> ${change.title}</p>
+                <p><strong>Status:</strong> ${change.status}</p>
+              </div>
+            </body>
+          </html>
+        `);
+      }
+
+      // Process rejection
+      const updatedChange = await storage.updateChangeWithHistory(id, {
+        status: 'rejected',
+        approvalToken: null // Clear token after use
+      }, 0, `Change rejected via email by ${change.approvedBy}`);
+
+      res.send(`
+        <html>
+          <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #dc3545;">✗ Change Request Rejected</h2>
+            <p>You have rejected this change request. The requester has been notified and the change will not proceed.</p>
+            <div style="background-color: #f8d7da; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #dc3545;">
+              <h4>Change Details:</h4>
+              <p><strong>ID:</strong> #${change.id}</p>
+              <p><strong>Title:</strong> ${change.title}</p>
+              <p><strong>Priority:</strong> ${change.priority}</p>
+              <p><strong>Risk Level:</strong> ${change.riskLevel}</p>
+              <p><strong>Change Type:</strong> ${change.changeType}</p>
+              <p><strong>Status:</strong> Rejected</p>
+            </div>
+            <p style="margin-top: 20px; color: #6c757d; font-size: 14px;">
+              The requester will be notified about this rejection and can revise the change request if needed.
+            </p>
+          </body>
+        </html>
+      `);
+    } catch (error) {
+      console.error('Error processing email change rejection:', error);
+      res.status(500).send(`
+        <html>
+          <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #dc3545;">Error</h2>
+            <p>An error occurred while processing your rejection. Please try again or contact support.</p>
+          </body>
+        </html>
+      `);
+    }
+  });
+
   // Change routes
   app.get("/api/changes", async (req, res) => {
     try {

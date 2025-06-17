@@ -127,18 +127,24 @@ This is a comprehensive IT Service Desk application built with modern web techno
 
 ## Recent Changes
 
-### June 17, 2025 - Ticket Approval Workflow & Visibility Improvements
-- **Ticket Approval System**: Complete workflow allowing agents to request manager approval before working on tickets
+### June 17, 2025 - Email-Based Approval System & Enhanced Workflows
+- **Email-Based Approval System**: Managers can approve tickets and changes directly from email links
+  - Secure token-based authentication for one-click approvals
+  - Professional email templates with approve/reject buttons
+  - Works for both tickets and change requests
+  - No login required - streamlined approval process
+- **Ticket Approval Workflow**: Complete system for agent-to-manager approval requests
   - Manager selection dialog for targeted approval requests
   - Email notifications to selected managers only
   - Approval status tracking with comments and timestamps
-  - Status protection during pending approval
+  - Status protection during pending approval (only open tickets can request approval)
 - **Agent Ticket Visibility**: Enhanced visibility rules for agents
   - Agents can now see tickets they created for any product
   - Agents see tickets assigned to them for work
   - Agents see tickets for their assigned products (expertise area)
-- **Product Synchronization**: Fixed automatic product name matching for agent assignments
-- **Database Schema**: Added approval fields (approvalStatus, approvedBy, approvedAt, approvalComments)
+- **Database Schema Enhancements**: 
+  - Added approval fields for tickets (approvalStatus, approvedBy, approvedAt, approvalComments, approvalToken)
+  - Added approval token field for changes (approvalToken)
 - **Email Integration**: SendGrid configuration complete (IP whitelisting needed for production)
 
 ## Changelog

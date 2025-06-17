@@ -59,6 +59,7 @@ export const changes = pgTable("changes", {
   riskLevel: varchar("risk_level", { length: 20 }).notNull(), // low, medium, high
   changeType: varchar("change_type", { length: 20 }).notNull().default('normal'), // standard, normal, emergency
   rollbackPlan: text("rollback_plan"),
+  approvalToken: text("approval_token"), // Secure token for email-based approval
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
