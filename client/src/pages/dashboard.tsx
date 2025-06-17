@@ -270,21 +270,39 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
       )}
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue={initialTab || "tickets"} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="tickets">Support Tickets</TabsTrigger>
+      <Tabs defaultValue={initialTab || "tickets"} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-16 p-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-lg">
+          <TabsTrigger 
+            value="tickets" 
+            className="text-lg font-semibold py-4 px-6 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200"
+          >
+            <TicketIcon className="h-6 w-6 mr-3" />
+            Support Tickets
+          </TabsTrigger>
           {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
-            <TabsTrigger value="changes">Change Requests</TabsTrigger>
+            <TabsTrigger 
+              value="changes"
+              className="text-lg font-semibold py-4 px-6 rounded-lg data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all duration-200"
+            >
+              <Settings className="h-6 w-6 mr-3" />
+              Change Requests
+            </TabsTrigger>
           )}
           {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
-            <TabsTrigger value="sla">
-              <Target className="h-4 w-4 mr-2" />
+            <TabsTrigger 
+              value="sla"
+              className="text-lg font-semibold py-4 px-6 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-green-50 dark:hover:bg-green-900/30 transition-all duration-200"
+            >
+              <Target className="h-6 w-6 mr-3" />
               SLA Metrics
             </TabsTrigger>
           )}
           {currentUser?.role === 'admin' && (
-            <TabsTrigger value="admin">
-              <Settings className="h-4 w-4 mr-2" />
+            <TabsTrigger 
+              value="admin"
+              className="text-lg font-semibold py-4 px-6 rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200"
+            >
+              <Settings className="h-6 w-6 mr-3" />
               Admin Console
             </TabsTrigger>
           )}
