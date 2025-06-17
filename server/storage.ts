@@ -185,17 +185,20 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(tickets.createdAt));
     }
     
-    // For agents and managers - show tickets assigned to them OR in their assigned products
+    // For agents and managers - show tickets assigned to them, tickets they created, OR in their assigned products
     const conditions = [];
     
     // Show tickets assigned to this user
     conditions.push(eq(tickets.assignedTo, user.username));
     
+    // Show tickets created by this user (agents can create tickets for any product)
+    conditions.push(eq(tickets.requesterId, userId));
+    
     // Also show tickets for their assigned products (if they have any)
     if (user.assignedProducts && user.assignedProducts.length > 0) {
       // Get all actual product names from database for better matching
       const allProducts = await this.getProducts();
-      const assignedProductNames = [];
+      const assignedProductNames: string[] = [];
       
       for (const assignedProduct of user.assignedProducts) {
         // Direct match
