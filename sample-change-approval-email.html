@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Change Request Approval Required</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: white; padding: 30px; border: 1px solid #e5e7eb; }
+    .footer { background: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+    .change-info { background: #faf5ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b; }
+    .approval-buttons { text-align: center; margin: 30px 0; }
+    .btn { display: inline-block; padding: 15px 30px; margin: 10px; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; transition: all 0.3s ease; }
+    .btn-approve { background: #10b981; color: white; }
+    .btn-approve:hover { background: #059669; }
+    .btn-reject { background: #ef4444; color: white; }
+    .btn-reject:hover { background: #dc2626; }
+    .priority-medium { color: #f59e0b; font-weight: bold; }
+    .risk-medium { color: #f59e0b; font-weight: bold; }
+    .urgent-notice { background: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin: 20px 0; }
+    .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🔄 Calpion Change Management</div>
+      <h1 style="margin: 0; font-size: 24px;">Change Request Approval Required</h1>
+      <p style="margin: 10px 0 0 0; opacity: 0.9;">Your approval is needed to proceed with this change</p>
+    </div>
+
+    <div class="content">
+      <h2>Hello Mike Wilson,</h2>
+      <p>A change request has been submitted and requires your approval before implementation can begin. You can approve or reject this request directly from this email.</p>
+
+      <div class="change-info">
+        <h3 style="margin-top: 0; color: #1f2937;">Change Request Details</h3>
+        <p><strong>Change ID:</strong> #4</p>
+        <p><strong>Title:</strong> Database Server Upgrade - Production Environment</p>
+        <p><strong>Priority:</strong> <span class="priority-medium">MEDIUM</span></p>
+        <p><strong>Risk Level:</strong> <span class="risk-medium">MEDIUM RISK</span></p>
+        <p><strong>Change Type:</strong> normal</p>
+        <p><strong>Category:</strong> infrastructure</p>
+        <p><strong>Product:</strong> Olympus RPA Solution</p>
+        <p><strong>Requested By:</strong> John Smith</p>
+        <p><strong>Planned Date:</strong> June 20, 2025</p>
+        <p><strong>Description:</strong></p>
+        <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #e5e7eb;">
+          Upgrade the production database server from PostgreSQL 13 to PostgreSQL 15 to improve performance and security. This includes backing up current data, installing the new version, and migrating all databases with minimal downtime during the maintenance window.
+        </div>
+        <p><strong>Rollback Plan:</strong></p>
+        <div style="background: #fffbeb; padding: 15px; border-radius: 4px; border: 1px solid #fed7aa;">
+          In case of issues: 1) Stop new PostgreSQL service, 2) Restore from backup to previous PostgreSQL 13 installation, 3) Verify data integrity, 4) Restart application services. Estimated rollback time: 30 minutes.
+        </div>
+      </div>
+
+      <div class="approval-buttons">
+        <h3>Click to make your decision:</h3>
+        <a href="http://localhost:5000/api/changes/4/email-approve/xyz789token123" class="btn btn-approve">✓ APPROVE CHANGE</a>
+        <a href="http://localhost:5000/api/changes/4/email-reject/xyz789token123" class="btn btn-reject">✗ REJECT CHANGE</a>
+      </div>
+
+      <div class="urgent-notice">
+        <p><strong>⚠️ Risk Assessment:</strong> This is a <span class="risk-medium">MEDIUM RISK</span> change</p>
+        <p style="margin: 5px 0 0 0;">Please review all details carefully before making your decision.</p>
+      </div>
+
+      <p style="margin-top: 30px;">
+        <strong>What happens next?</strong><br>
+        • If you <strong>approve</strong>: The change will be scheduled for implementation<br>
+        • If you <strong>reject</strong>: The change will be returned to the requester for revision
+      </p>
+
+      <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+        You can also log into the Change Management portal to review this request in detail if needed.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>Calpion Change Management System | Automated Notification</p>
+      <p>This email was sent automatically. Please do not reply to this email.</p>
+    </div>
+  </div>
+</body>
+</html>

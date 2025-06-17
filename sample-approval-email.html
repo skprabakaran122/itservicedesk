@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ticket Approval Required</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: white; padding: 30px; border: 1px solid #e5e7eb; }
+    .footer { background: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+    .ticket-info { background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444; }
+    .approval-buttons { text-align: center; margin: 30px 0; }
+    .btn { display: inline-block; padding: 15px 30px; margin: 10px; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; transition: all 0.3s ease; }
+    .btn-approve { background: #10b981; color: white; }
+    .btn-approve:hover { background: #059669; }
+    .btn-reject { background: #ef4444; color: white; }
+    .btn-reject:hover { background: #dc2626; }
+    .priority-high { color: #ef4444; font-weight: bold; }
+    .urgent-notice { background: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin: 20px 0; }
+    .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🏢 Calpion IT Service Desk</div>
+      <h1 style="margin: 0; font-size: 24px;">Ticket Approval Required</h1>
+      <p style="margin: 10px 0 0 0; opacity: 0.9;">An agent is requesting your approval to proceed</p>
+    </div>
+
+    <div class="content">
+      <h2>Hello Mike Wilson,</h2>
+      <p>An agent has requested your approval to work on the following ticket. You can approve or reject this request directly from this email.</p>
+
+      <div class="ticket-info">
+        <h3 style="margin-top: 0; color: #1f2937;">Ticket Details</h3>
+        <p><strong>Ticket ID:</strong> #35</p>
+        <p><strong>Title:</strong> System Access Request - New Employee</p>
+        <p><strong>Priority:</strong> <span class="priority-high">HIGH</span></p>
+        <p><strong>Category:</strong> access</p>
+        <p><strong>Product:</strong> Olympus RPA Solution</p>
+        <p><strong>Description:</strong></p>
+        <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #e5e7eb;">
+          Need to set up system access for new employee John Miller in Finance department. Requires access to financial reporting systems and shared drives.
+        </div>
+        <p><strong>Agent Comments:</strong></p>
+        <div style="background: #fffbeb; padding: 15px; border-radius: 4px; border: 1px solid #fed7aa;">
+          This is urgent as the employee starts tomorrow and needs immediate access to complete onboarding.
+        </div>
+      </div>
+
+      <div class="approval-buttons">
+        <h3>Click to make your decision:</h3>
+        <a href="http://localhost:5000/api/tickets/35/email-approve/abc123token456" class="btn btn-approve">✓ APPROVE TICKET</a>
+        <a href="http://localhost:5000/api/tickets/35/email-reject/abc123token456" class="btn btn-reject">✗ REJECT TICKET</a>
+      </div>
+
+      <div class="urgent-notice">
+        <p><strong>⏰ Response Time:</strong> 1 hour</p>
+        <p style="margin: 5px 0 0 0;">Please review and respond promptly to maintain our service level commitments.</p>
+      </div>
+
+      <p style="margin-top: 30px;">
+        <strong>What happens next?</strong><br>
+        • If you <strong>approve</strong>: The ticket will be opened and the agent can begin work<br>
+        • If you <strong>reject</strong>: The ticket will remain in its current state and the agent will be notified
+      </p>
+
+      <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+        You can also log into the IT Service Desk portal to review this request in detail if needed.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>Calpion IT Service Desk | Automated Notification System</p>
+      <p>This email was sent automatically. Please do not reply to this email.</p>
+    </div>
+  </div>
+</body>
+</html>
