@@ -24,10 +24,17 @@ interface TicketsListProps {
   currentUser: any;
 }
 
+const approvalSchema = z.object({
+  action: z.enum(['approve', 'reject']),
+  comments: z.string().optional()
+});
+
 export function TicketsList({ tickets, getStatusColor, getPriorityColor, currentUser }: TicketsListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [approvingTicket, setApprovingTicket] = useState<Ticket | null>(null);
 
   // Tickets are already filtered by the server based on user role
   const filteredTickets = tickets;
@@ -52,6 +59,62 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
       toast({
         title: "Error",
         description: "Failed to update ticket status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const requestApprovalMutation = useMutation({
+    mutationFn: async (ticketId: number) => {
+      const response = await apiRequest("POST", `/api/tickets/${ticketId}/request-approval`);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Ticket sent for approval successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send ticket for approval",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const approvalForm = useForm<z.infer<typeof approvalSchema>>({
+    resolver: zodResolver(approvalSchema),
+    defaultValues: {
+      action: 'approve',
+      comments: ''
+    }
+  });
+
+  const approvalMutation = useMutation({
+    mutationFn: async (data: { ticketId: number; action: string; comments?: string }) => {
+      const response = await apiRequest("POST", `/api/tickets/${data.ticketId}/approve`, {
+        action: data.action,
+        comments: data.comments
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Ticket approval processed successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+      setShowApprovalDialog(false);
+      setApprovingTicket(null);
+      approvalForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to process approval",
         variant: "destructive",
       });
     },
@@ -91,8 +154,57 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
     updateStatusMutation.mutate({ id: ticketId, status: newStatus });
   };
 
+  const handleRequestApproval = (ticket: Ticket) => {
+    requestApprovalMutation.mutate(ticket.id);
+  };
+
+  const handleApprovalAction = (ticket: Ticket) => {
+    setApprovingTicket(ticket);
+    setShowApprovalDialog(true);
+  };
+
+  const onApprovalSubmit = (data: z.infer<typeof approvalSchema>) => {
+    if (!approvingTicket) return;
+    approvalMutation.mutate({
+      ticketId: approvingTicket.id,
+      action: data.action,
+      comments: data.comments
+    });
+  };
+
+  const canRequestApproval = (ticket: Ticket): boolean => {
+    return currentUser?.role === 'agent' && 
+           !ticket.approvalStatus && 
+           ['pending', 'open'].includes(ticket.status);
+  };
+
+  const canApprove = (ticket: Ticket): boolean => {
+    return ['manager', 'admin'].includes(currentUser?.role) && 
+           ticket.approvalStatus === 'pending';
+  };
+
+  const getApprovalStatusBadge = (ticket: Ticket) => {
+    if (!ticket.approvalStatus) return null;
+    
+    switch (ticket.approvalStatus) {
+      case 'pending':
+        return <Badge variant="outline" className="text-orange-600 border-orange-600">Pending Approval</Badge>;
+      case 'approved':
+        return <Badge variant="outline" className="text-green-600 border-green-600">Approved</Badge>;
+      case 'rejected':
+        return <Badge variant="outline" className="text-red-600 border-red-600">Rejected</Badge>;
+      default:
+        return null;
+    }
+  };
+
   // Get allowed status options for a specific ticket
   const getAllowedStatusOptions = (ticket: Ticket) => {
+    // Don't allow status changes for tickets pending approval
+    if (ticket.approvalStatus === 'pending') {
+      return [];
+    }
+    
     // Closed tickets cannot be moved to any other status - they are final
     if (ticket.status === 'closed') {
       return [];
@@ -148,6 +260,7 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
                 <Badge variant="secondary" className={getStatusColor(ticket.status)}>
                   {ticket.status.replace('-', ' ').toUpperCase()}
                 </Badge>
+                {getApprovalStatusBadge(ticket)}
               </div>
             </div>
           </CardHeader>
@@ -211,6 +324,32 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
                     </SelectContent>
                   </Select>
                 )}
+                
+                {canRequestApproval(ticket) && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleRequestApproval(ticket)}
+                    disabled={requestApprovalMutation.isPending}
+                    className="flex items-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                  >
+                    <Send className="h-3 w-3" />
+                    Request Approval
+                  </Button>
+                )}
+                
+                {canApprove(ticket) && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleApprovalAction(ticket)}
+                    className="flex items-center gap-1 text-orange-600 border-orange-600 hover:bg-orange-50"
+                  >
+                    <CheckCircle className="h-3 w-3" />
+                    Review Approval
+                  </Button>
+                )}
+                
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -246,6 +385,100 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
           getPriorityColor={getPriorityColor}
         />
       )}
+
+      {/* Approval Dialog */}
+      <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Review Ticket Approval</DialogTitle>
+            <DialogDescription>
+              {approvingTicket && `Review and approve or reject ticket #${approvingTicket.id}: ${approvingTicket.title}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {approvingTicket && (
+            <Form {...approvalForm}>
+              <form onSubmit={approvalForm.handleSubmit(onApprovalSubmit)} className="space-y-4">
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Ticket Details</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>Priority:</strong> {approvingTicket.priority}</div>
+                    <div><strong>Category:</strong> {approvingTicket.category}</div>
+                    <div><strong>Requester:</strong> {getRequesterName(approvingTicket)}</div>
+                    <div><strong>Description:</strong> {approvingTicket.description}</div>
+                  </div>
+                </div>
+
+                <FormField
+                  control={approvalForm.control}
+                  name="action"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Decision</FormLabel>
+                      <FormControl>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              value="approve"
+                              checked={field.value === 'approve'}
+                              onChange={() => field.onChange('approve')}
+                              className="text-green-600"
+                            />
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            Approve
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              value="reject"
+                              checked={field.value === 'reject'}
+                              onChange={() => field.onChange('reject')}
+                              className="text-red-600"
+                            />
+                            <XCircle className="h-4 w-4 text-red-600" />
+                            Reject
+                          </label>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={approvalForm.control}
+                  name="comments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Comments (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Add comments about your decision..."
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowApprovalDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={approvalMutation.isPending}
+                  >
+                    {approvalMutation.isPending ? "Processing..." : "Submit Decision"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
