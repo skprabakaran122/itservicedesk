@@ -540,6 +540,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email-based approval endpoints (no login required)
+  app.get("/api/tickets/:id/email-approve/:token", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const token = req.params.token;
+
+      const ticket = await storage.getTicket(id);
+      if (!ticket) {
+        return res.status(404).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #dc3545;">Ticket Not Found</h2>
+              <p>The ticket you're trying to approve could not be found.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      if (ticket.approvalToken !== token) {
+        return res.status(403).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #dc3545;">Invalid Approval Link</h2>
+              <p>This approval link is invalid or has expired.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      if (ticket.approvalStatus !== 'pending') {
+        return res.status(400).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #ffc107;">Already Processed</h2>
+              <p>This ticket has already been ${ticket.approvalStatus}.</p>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                <h4>Ticket Details:</h4>
+                <p><strong>ID:</strong> #${ticket.id}</p>
+                <p><strong>Title:</strong> ${ticket.title}</p>
+                <p><strong>Status:</strong> ${ticket.approvalStatus}</p>
+              </div>
+            </body>
+          </html>
+        `);
+      }
+
+      // Process approval
+      const updatedTicket = await storage.updateTicketWithHistory(id, {
+        approvalStatus: 'approved',
+        approvedAt: new Date(),
+        status: 'open', // Open ticket when approved
+        approvalToken: null // Clear token after use
+      }, 0, `Ticket approved via email by ${ticket.approvedBy}`);
+
+      res.send(`
+        <html>
+          <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #28a745;">✓ Ticket Approved Successfully</h2>
+            <p>Thank you for approving this ticket. The agent can now proceed with their work.</p>
+            <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #28a745;">
+              <h4>Ticket Details:</h4>
+              <p><strong>ID:</strong> #${ticket.id}</p>
+              <p><strong>Title:</strong> ${ticket.title}</p>
+              <p><strong>Priority:</strong> ${ticket.priority}</p>
+              <p><strong>Category:</strong> ${ticket.category}</p>
+              <p><strong>Status:</strong> Open (Ready for work)</p>
+            </div>
+            <p style="margin-top: 20px; color: #6c757d; font-size: 14px;">
+              This ticket is now available for the assigned agent to work on.
+            </p>
+          </body>
+        </html>
+      `);
+    } catch (error) {
+      console.error('Error processing email approval:', error);
+      res.status(500).send(`
+        <html>
+          <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #dc3545;">Error</h2>
+            <p>An error occurred while processing your approval. Please try again or contact support.</p>
+          </body>
+        </html>
+      `);
+    }
+  });
+
+  app.get("/api/tickets/:id/email-reject/:token", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const token = req.params.token;
+
+      const ticket = await storage.getTicket(id);
+      if (!ticket) {
+        return res.status(404).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #dc3545;">Ticket Not Found</h2>
+              <p>The ticket you're trying to reject could not be found.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      if (ticket.approvalToken !== token) {
+        return res.status(403).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #dc3545;">Invalid Approval Link</h2>
+              <p>This approval link is invalid or has expired.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      if (ticket.approvalStatus !== 'pending') {
+        return res.status(400).send(`
+          <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #ffc107;">Already Processed</h2>
+              <p>This ticket has already been ${ticket.approvalStatus}.</p>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                <h4>Ticket Details:</h4>
+                <p><strong>ID:</strong> #${ticket.id}</p>
+                <p><strong>Title:</strong> ${ticket.title}</p>
+                <p><strong>Status:</strong> ${ticket.approvalStatus}</p>
+              </div>
+            </body>
+          </html>
+        `);
+      }
+
+      // Process rejection
+      const updatedTicket = await storage.updateTicketWithHistory(id, {
+        approvalStatus: 'rejected',
+        approvedAt: new Date(),
+        approvalToken: null // Clear token after use
+      }, 0, `Ticket rejected via email by ${ticket.approvedBy}`);
+
+      res.send(`
+        <html>
+          <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #dc3545;">✗ Ticket Rejected</h2>
+            <p>You have rejected this ticket. The agent has been notified and the ticket will remain in its current state.</p>
+            <div style="background-color: #f8d7da; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #dc3545;">
+              <h4>Ticket Details:</h4>
+              <p><strong>ID:</strong> #${ticket.id}</p>
+              <p><strong>Title:</strong> ${ticket.title}</p>
+              <p><strong>Priority:</strong> ${ticket.priority}</p>
+              <p><strong>Category:</strong> ${ticket.category}</p>
+              <p><strong>Status:</strong> Rejected</p>
+            </div>
+            <p style="margin-top: 20px; color: #6c757d; font-size: 14px;">
+              The agent will be notified about this rejection and can take appropriate action.
+            </p>
+          </body>
+        </html>
+      `);
+    } catch (error) {
+      console.error('Error processing email rejection:', error);
+      res.status(500).send(`
+        <html>
+          <body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #dc3545;">Error</h2>
+            <p>An error occurred while processing your rejection. Please try again or contact support.</p>
+          </body>
+        </html>
+      `);
+    }
+  });
+
   // Approve or reject ticket
   app.post("/api/tickets/:id/approve", async (req, res) => {
     try {

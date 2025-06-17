@@ -321,6 +321,144 @@ class EmailService {
     }
   }
 
+  async sendTicketApprovalEmailWithLinks(ticket: Ticket, approverEmail: string, approverName: string, approvalToken: string): Promise<void> {
+    if (!this.isEnabled) {
+      console.log('[Email] Service not enabled, skipping approval email with links');
+      return;
+    }
+
+    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+      : 'http://localhost:5000';
+
+    const approveUrl = `${baseUrl}/api/tickets/${ticket.id}/email-approve/${approvalToken}`;
+    const rejectUrl = `${baseUrl}/api/tickets/${ticket.id}/email-reject/${approvalToken}`;
+
+    const priorityColor = this.getPriorityColor(ticket.priority);
+    const responseTime = this.getResponseTime(ticket.priority);
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Ticket Approval Required</title>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: white; padding: 30px; border: 1px solid #e5e7eb; }
+          .footer { background: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+          .ticket-info { background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${priorityColor}; }
+          .approval-buttons { text-align: center; margin: 30px 0; }
+          .btn { display: inline-block; padding: 15px 30px; margin: 10px; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; transition: all 0.3s ease; }
+          .btn-approve { background: #10b981; color: white; }
+          .btn-approve:hover { background: #059669; }
+          .btn-reject { background: #ef4444; color: white; }
+          .btn-reject:hover { background: #dc2626; }
+          .priority-${ticket.priority} { color: ${priorityColor}; font-weight: bold; }
+          .urgent-notice { background: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin: 20px 0; }
+          .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">🏢 Calpion IT Service Desk</div>
+            <h1 style="margin: 0; font-size: 24px;">Ticket Approval Required</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">An agent is requesting your approval to proceed</p>
+          </div>
+
+          <div class="content">
+            <h2>Hello ${approverName},</h2>
+            <p>An agent has requested your approval to work on the following ticket. You can approve or reject this request directly from this email.</p>
+
+            <div class="ticket-info">
+              <h3 style="margin-top: 0; color: #1f2937;">Ticket Details</h3>
+              <p><strong>Ticket ID:</strong> #${ticket.id}</p>
+              <p><strong>Title:</strong> ${ticket.title}</p>
+              <p><strong>Priority:</strong> <span class="priority-${ticket.priority}">${ticket.priority.toUpperCase()}</span></p>
+              <p><strong>Category:</strong> ${ticket.category}</p>
+              <p><strong>Product:</strong> ${ticket.product || 'Not specified'}</p>
+              <p><strong>Description:</strong></p>
+              <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #e5e7eb;">
+                ${ticket.description}
+              </div>
+              ${ticket.approvalComments ? `
+                <p><strong>Agent Comments:</strong></p>
+                <div style="background: #fffbeb; padding: 15px; border-radius: 4px; border: 1px solid #fed7aa;">
+                  ${ticket.approvalComments}
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="approval-buttons">
+              <h3>Click to make your decision:</h3>
+              <a href="${approveUrl}" class="btn btn-approve">✓ APPROVE TICKET</a>
+              <a href="${rejectUrl}" class="btn btn-reject">✗ REJECT TICKET</a>
+            </div>
+
+            <div class="urgent-notice">
+              <p><strong>⏰ Response Time:</strong> ${responseTime}</p>
+              <p style="margin: 5px 0 0 0;">Please review and respond promptly to maintain our service level commitments.</p>
+            </div>
+
+            <p style="margin-top: 30px;">
+              <strong>What happens next?</strong><br>
+              • If you <strong>approve</strong>: The ticket will be opened and the agent can begin work<br>
+              • If you <strong>reject</strong>: The ticket will remain in its current state and the agent will be notified
+            </p>
+
+            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+              You can also log into the IT Service Desk portal to review this request in detail if needed.
+            </p>
+          </div>
+
+          <div class="footer">
+            <p>Calpion IT Service Desk | Automated Notification System</p>
+            <p>This email was sent automatically. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+Ticket Approval Required
+
+Hello ${approverName},
+
+An agent has requested your approval to work on ticket #${ticket.id}.
+
+Ticket Details:
+- Title: ${ticket.title}
+- Priority: ${ticket.priority.toUpperCase()}
+- Category: ${ticket.category}
+- Product: ${ticket.product || 'Not specified'}
+- Description: ${ticket.description}
+
+To approve this ticket, visit: ${approveUrl}
+To reject this ticket, visit: ${rejectUrl}
+
+Response Time: ${responseTime}
+
+Calpion IT Service Desk
+    `;
+
+    try {
+      await this.sendEmail(
+        approverEmail,
+        `🔔 Approval Required: Ticket #${ticket.id} - ${ticket.title}`,
+        html,
+        text
+      );
+      console.log(`[Email] Approval email with links sent to ${approverEmail} for ticket #${ticket.id}`);
+    } catch (error) {
+      console.error('[Email] Failed to send approval email with links:', error);
+      throw error;
+    }
+  }
+
   async sendTicketApprovalEmail(ticket: Ticket, approverEmail: string, approverName: string): Promise<void> {
     if (!this.isEnabled) return;
 
