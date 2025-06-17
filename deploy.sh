@@ -206,7 +206,7 @@ sudo tee $APP_DIR/ecosystem.config.cjs << EOF
 module.exports = {
   apps: [{
     name: 'servicedesk',
-    script: 'server/index.js',
+    script: 'dist/index.js',
     cwd: '$APP_DIR',
     instances: 'max',
     exec_mode: 'cluster',
@@ -214,7 +214,11 @@ module.exports = {
       NODE_ENV: 'production',
       PORT: 5000,
       HOST: '127.0.0.1'
-    }
+    },
+    error_file: '/var/log/pm2/servicedesk-error.log',
+    out_file: '/var/log/pm2/servicedesk-out.log',
+    log_file: '/var/log/pm2/servicedesk.log',
+    time: true
   }]
 };
 EOF
@@ -223,9 +227,17 @@ EOF
 echo -e "${YELLOW}Starting application...${NC}"
 cd $APP_DIR
 
-# Create PM2 home directory for www-data user
-sudo mkdir -p /var/www/.pm2
-sudo chown -R www-data:www-data /var/www/.pm2
+# Create PM2 directories
+sudo mkdir -p /var/www/.pm2 /var/log/pm2
+sudo chown -R www-data:www-data /var/www/.pm2 /var/log/pm2
+
+# Verify build output exists
+if [ ! -f "dist/index.js" ]; then
+    echo -e "${RED}Error: Build output not found at dist/index.js${NC}"
+    echo "Build files present:"
+    ls -la dist/ || echo "No dist directory found"
+    exit 1
+fi
 
 # Initialize PM2 for www-data user
 sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 start ecosystem.config.cjs
