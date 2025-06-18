@@ -78,7 +78,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { username, password } = req.body;
       const user = await storage.getUserByUsernameOrEmail(username);
       
-      if (!user || user.password !== password) {
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Check password - handle both bcrypt hashes and plain text for backward compatibility
+      let passwordValid = false;
+      
+      if (user.password.startsWith('$2b$')) {
+        // Bcrypt hash - use bcrypt comparison (for production)
+        const bcrypt = require('bcrypt');
+        passwordValid = await bcrypt.compare(password, user.password);
+      } else {
+        // Plain text password (for development/testing)
+        passwordValid = user.password === password;
+      }
+      
+      if (!passwordValid) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
