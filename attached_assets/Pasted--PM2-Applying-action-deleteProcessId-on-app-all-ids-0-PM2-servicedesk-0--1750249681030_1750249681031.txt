@@ -1,0 +1,142 @@
+[PM2] Applying action deleteProcessId on app [all](ids: [ 0 ])
+[PM2] [servicedesk](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Cloning from GitHub...
+Cloning into '.'...
+/var/www/itservicedesk/.git: Permission denied
+Installing Node.js...
+2025-06-18 12:27:05 - Installing pre-requisites
+Hit:1 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy InRelease
+Get:2 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+Get:3 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+Hit:4 https://deb.nodesource.com/node_20.x nodistro InRelease
+Get:5 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+Get:6 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [2624 kB]
+Get:7 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1212 kB]
+Fetched 4220 kB in 2s (2673 kB/s)
+Reading package lists... Done
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+ca-certificates is already the newest version (20240203~22.04.1).
+curl is already the newest version (7.81.0-1ubuntu1.20).
+gnupg is already the newest version (2.2.27-3ubuntu2.3).
+apt-transport-https is already the newest version (2.4.14).
+The following packages were automatically installed and are no longer required:
+  javascript-common libc-ares2 libjs-highlight.js libnode72
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+Hit:1 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy InRelease
+Hit:2 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates InRelease
+Hit:3 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-backports InRelease
+Hit:4 https://deb.nodesource.com/node_20.x nodistro InRelease
+Hit:5 http://security.ubuntu.com/ubuntu jammy-security InRelease
+Reading package lists... Done
+2025-06-18 12:27:13 - Repository configured successfully.
+2025-06-18 12:27:13 - To install Node.js, run: apt-get install nodejs -y
+2025-06-18 12:27:13 - You can use N|solid Runtime as a node.js alternative
+2025-06-18 12:27:13 - To install N|solid Runtime, run: apt-get install nsolid -y
+
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+nodejs is already the newest version (20.19.2-1nodesource1).
+The following packages were automatically installed and are no longer required:
+  javascript-common libc-ares2 libjs-highlight.js libnode72
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+Installing dependencies...
+npm warn config production Use `--omit=dev` instead.
+npm error code EACCES
+npm error syscall open
+npm error path /var/www/itservicedesk/package-lock.json
+npm error errno -13
+npm error Error: EACCES: permission denied, open '/var/www/itservicedesk/package-lock.json'
+npm error     at async open (node:internal/fs/promises:639:25)
+npm error     at async writeFile (node:internal/fs/promises:1216:14)
+npm error     at async Promise.all (index 0)
+npm error     at async [saveIdealTree] (/usr/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:1526:7)
+npm error     at async Arborist.reify (/usr/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:148:5)
+npm error     at async Install.exec (/usr/lib/node_modules/npm/lib/commands/install.js:150:5)
+npm error     at async Npm.exec (/usr/lib/node_modules/npm/lib/npm.js:207:9)
+npm error     at async module.exports (/usr/lib/node_modules/npm/lib/cli/entry.js:74:5) {
+npm error   errno: -13,
+npm error   code: 'EACCES',
+npm error   syscall: 'open',
+npm error   path: '/var/www/itservicedesk/package-lock.json'
+npm error }
+npm error
+npm error The operation was rejected by your operating system.
+npm error It is likely you do not have the permissions to access this file as the current user
+npm error
+npm error If you believe this might be a permissions issue, please double-check the
+npm error permissions of the file and its containing directories, or try running
+npm error the command again as root/Administrator.
+npm error A complete log of this run can be found in: /home/ubuntu/.npm/_logs/2025-06-18T12_27_14_357Z-debug-0.log
+Setting up database...
+DROP DATABASE
+DROP ROLE
+CREATE ROLE
+CREATE DATABASE
+GRANT
+You are now connected to database "servicedesk" as user "postgres".
+GRANT
+GRANT
+GRANT
+ALTER ROLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+GRANT
+GRANT
+INSERT 0 5
+INSERT 0 5
+INSERT 0 3
+INSERT 0 2
+INSERT 0 3
+
+changed 135 packages in 9s
+
+13 packages are looking for funding
+  run `npm fund` for details
+./deploy.sh: line 205: ecosystem.config.js: Permission denied
+[PM2][ERROR] File ecosystem.config.js not found
+[PM2] Init System found: systemd
+[PM2] To setup the Startup Script, copy/paste the following command:
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+[PM2] Saving current process list...
+[PM2][WARN] PM2 is not managing any process, skipping save...
+[PM2][WARN] To force saving use: pm2 save --force
+Waiting for server startup...
+Testing deployment...
+Health check: {"status":"ERROR"}
+✗ Server startup failed
+[TAILING] Tailing last 20 lines for [all] processes (change the value with --lines option)
+/home/ubuntu/.pm2/pm2.log last 20 lines:
+PM2        | 2025-06-18T11:35:11: PM2 log: App [servicedesk:0] exited with code [0] via signal [SIGINT]
+PM2        | 2025-06-18T11:35:11: PM2 log: pid=122130 msg=process killed
+PM2        | 2025-06-18T11:35:11: PM2 log: App [servicedesk:0] starting in -cluster mode-
+PM2        | 2025-06-18T11:35:11: PM2 log: App [servicedesk:0] online
+PM2        | 2025-06-18T11:47:51: PM2 log: Stopping app:servicedesk id:0
+PM2        | 2025-06-18T11:47:51: PM2 log: App name:servicedesk id:0 disconnected
+PM2        | 2025-06-18T11:47:51: PM2 log: App [servicedesk:0] exited with code [0] via signal [SIGINT]
+PM2        | 2025-06-18T11:47:51: PM2 log: pid=122348 msg=process killed
+PM2        | 2025-06-18T11:47:51: PM2 log: App [servicedesk:0] starting in -cluster mode-
+PM2        | 2025-06-18T11:47:51: PM2 log: App [servicedesk:0] online
+PM2        | 2025-06-18T12:05:26: PM2 log: Stopping app:servicedesk id:0
+PM2        | 2025-06-18T12:05:26: PM2 log: App name:servicedesk id:0 disconnected
+PM2        | 2025-06-18T12:05:26: PM2 log: App [servicedesk:0] exited with code [0] via signal [SIGINT]
+PM2        | 2025-06-18T12:05:26: PM2 log: pid=122534 msg=process killed
+PM2        | 2025-06-18T12:05:26: PM2 log: App [servicedesk:0] starting in -cluster mode-
+PM2        | 2025-06-18T12:05:26: PM2 log: App [servicedesk:0] online
+PM2        | 2025-06-18T12:27:03: PM2 log: Stopping app:servicedesk id:0
+PM2        | 2025-06-18T12:27:03: PM2 log: App name:servicedesk id:0 disconnected
+PM2        | 2025-06-18T12:27:03: PM2 log: App [servicedesk:0] exited with code [0] via signal [SIGINT]
+PM2        | 2025-06-18T12:27:03: PM2 log: pid=122732 msg=process killed
