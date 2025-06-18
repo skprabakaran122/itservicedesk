@@ -23,7 +23,7 @@ export function ProductSelect({
     queryKey: ["/api/products"],
   });
 
-  const activeProducts = products.filter(p => p.isActive === "true");
+  const activeProducts = products.filter(p => p.isActive === "true" || p.isActive === true);
 
   return (
     <FormField
