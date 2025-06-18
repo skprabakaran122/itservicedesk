@@ -11,11 +11,15 @@ curl -sSL https://raw.githubusercontent.com/skprabakaran122/itservicedesk/main/d
 ## What Gets Deployed
 
 - **Frontend**: Production React build with Calpion branding
-- **Backend**: Express.js server with all API endpoints
+- **Backend**: CommonJS Express server (PM2 compatible) with all API endpoints
 - **Database**: Connects to your existing PostgreSQL
-- **Security**: HTTPS with SSL certificates
-- **Process Manager**: PM2 for reliable service management
+- **Security**: HTTPS with SSL certificates  
+- **Process Manager**: PM2 with proper ES module handling
 - **Reverse Proxy**: Nginx for external access
+
+## Fixed PM2 Issues
+
+The deployment now uses `server/production.cjs` (CommonJS) instead of ES modules to avoid PM2 configuration conflicts. This eliminates the "module is not defined" errors that occur with ecosystem.config.js parsing.
 
 ## Access Your Application
 

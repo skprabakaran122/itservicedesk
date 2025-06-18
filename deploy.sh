@@ -47,9 +47,10 @@ npm install --production=false
 echo "🔨 Building frontend..."
 npm run build
 
-# Build backend for production
-echo "🔨 Building backend..."
-npx esbuild server/production.ts --platform=node --format=esm --bundle --outfile=dist/production.js --external:pg-native
+# Copy production server (CommonJS for PM2 compatibility)
+echo "🔨 Preparing production server..."
+mkdir -p dist
+cp server/production.cjs dist/production.cjs
 
 # Create logs directory
 mkdir -p logs
