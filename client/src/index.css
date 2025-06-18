@@ -1,9 +1,9 @@
+/* Force Tailwind styles to load */
+@import url('https://cdn.tailwindcss.com/3.4.0');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Force Tailwind styles to load */
-@import url('https://cdn.tailwindcss.com/3.4.0');
 
 :root {
   --background: hsl(0, 0%, 100%);

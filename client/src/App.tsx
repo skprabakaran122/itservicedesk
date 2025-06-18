@@ -9,30 +9,30 @@ import Login from "@/pages/login";
 import PublicTicketPage from "@/pages/public-ticket";
 import NotFound from "@/pages/not-found";
 
-function Router({ currentUser, onLogout }: { currentUser: any; onLogout: () => void }) {
+function Router({ currentUser, onLogout, onLogin }: { currentUser: any; onLogout: () => void; onLogin: (user: any) => void }) {
   return (
     <Switch>
       <Route path="/support" component={PublicTicketPage} />
       <Route path="/public-ticket" component={PublicTicketPage} />
       <Route path="/admin">
         {currentUser ? (
-          <Dashboard currentUser={currentUser} onLogout={handleLogout} initialTab="admin" />
+          <Dashboard currentUser={currentUser} onLogout={onLogout} initialTab="admin" />
         ) : (
-          <Login onLoginSuccess={handleLogin} />
+          <Login onLoginSuccess={onLogin} />
         )}
       </Route>
       <Route path="/dashboard">
         {currentUser ? (
-          <Dashboard currentUser={currentUser} onLogout={handleLogout} />
+          <Dashboard currentUser={currentUser} onLogout={onLogout} />
         ) : (
-          <Login onLoginSuccess={handleLogin} />
+          <Login onLoginSuccess={onLogin} />
         )}
       </Route>
       <Route path="/">
         {currentUser ? (
-          <Dashboard currentUser={currentUser} onLogout={handleLogout} />
+          <Dashboard currentUser={currentUser} onLogout={onLogout} />
         ) : (
-          <Login onLoginSuccess={handleLogin} />
+          <Login onLoginSuccess={onLogin} />
         )}
       </Route>
       <Route component={NotFound} />
@@ -95,7 +95,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router currentUser={currentUser} onLogout={handleLogout} />
+        <Router currentUser={currentUser} onLogout={handleLogout} onLogin={handleLogin} />
       </TooltipProvider>
     </QueryClientProvider>
   );
