@@ -1,62 +1,48 @@
 #!/bin/bash
 
-echo "Simple Ubuntu Server Fix - Direct Node.js Approach"
-echo "=================================================="
+echo "Simple Ubuntu Server Fix - Install Missing Build Tools"
+echo "===================================================="
 
 cat << 'EOF'
-# Simple fix for module resolution issues
-# Run on Ubuntu server 98.81.235.7:
-
-# Stop all processes
-pm2 delete all 2>/dev/null || true
-sudo fuser -k 3000/tcp 2>/dev/null || true
+# Run on Ubuntu server to install missing build dependencies:
 
 cd /var/www/itservicedesk
 
-# Skip the build process - run directly with tsx
-npm install tsx -g
-npm install
+# Check current status
+echo "Current PM2 status:"
+pm2 status
 
-# Create simple PM2 config that runs TypeScript directly
-cat > simple.config.js << 'SIMPLE_EOF'
-module.exports = {
-  apps: [{
-    name: 'servicedesk',
-    script: 'tsx',
-    args: 'server/index.ts',
-    instances: 1,
-    autorestart: true,
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000,
-      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk'
-    }
-  }]
-};
-SIMPLE_EOF
+# Install missing build tools
+echo "Installing build dependencies..."
+npm install vite esbuild
 
-# Start with the direct TypeScript approach
-pm2 start simple.config.js
-pm2 save
+# Verify installation
+ls -la node_modules/.bin/ | grep -E "(vite|esbuild)"
 
-# Wait and test
+# Build application with installed tools
+echo "Building application..."
+./node_modules/.bin/vite build
+./node_modules/.bin/esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+# Restart application with fresh build
+pm2 restart servicedesk
+
+# Test the updated application
 sleep 10
-
-echo "Testing direct TypeScript approach..."
-curl -X POST http://localhost:3000/api/auth/login \
+echo "Testing updated application..."
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"test.user","password":"password123"}'
 
 echo ""
-echo "Status:"
+echo "Application status after update:"
 pm2 status
-pm2 logs servicedesk --lines 5
 
 EOF
 
 echo ""
-echo "This approach:"
-echo "- Bypasses build issues by running TypeScript directly"
-echo "- Uses tsx (TypeScript executor) instead of compiled JavaScript"
-echo "- Avoids module resolution problems"
-echo "- Should work immediately without build artifacts"
+echo "This will:"
+echo "- Install vite and esbuild locally"
+echo "- Build the application properly"
+echo "- Restart with updated code"
+echo "- Test authentication system"

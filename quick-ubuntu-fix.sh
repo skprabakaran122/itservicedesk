@@ -1,40 +1,40 @@
 #!/bin/bash
 
-# Quick Ubuntu Server Fix - Run on 98.81.235.7
-echo "Quick TypeScript Direct Execution Fix"
+echo "Quick Ubuntu Build Fix"
+echo "====================="
 
-# Stop everything
-pm2 delete all
-sudo fuser -k 3000/tcp
+cat << 'EOF'
+# Run these commands on Ubuntu server:
 
 cd /var/www/itservicedesk
 
-# Install tsx globally if not present
-npm install -g tsx
+# Install build dependencies
+npm install vite esbuild
 
-# Install dependencies
-npm install
+# Verify they're installed
+echo "Checking installed build tools:"
+ls -la node_modules/.bin/ | grep -E "(vite|esbuild)"
 
-# Create simple PM2 config for direct TypeScript execution
-cat > tsx.config.js << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'servicedesk',
-    script: 'tsx',
-    args: 'server/index.ts',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000,
-      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk'
-    }
-  }]
-};
+# Build the application
+echo "Building frontend..."
+npx vite build
+
+echo "Building backend..."
+npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+# Check build output
+echo "Build output:"
+ls -la dist/
+
+# Restart with fresh build
+pm2 restart servicedesk
+
+# Test application
+sleep 5
+curl -s http://localhost:5000/api/auth/me | head -20
+
+echo ""
+echo "PM2 Status:"
+pm2 status
+
 EOF
-
-# Start application
-pm2 start tsx.config.js
-pm2 save
-
-# Test after 10 seconds
-sleep 10
-curl -X POST http://localhost:3000/api/auth/login -H "Content-Type: application/json" -d '{"username":"test.user","password":"password123"}'
