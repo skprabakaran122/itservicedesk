@@ -1,68 +1,110 @@
 #!/bin/bash
 
-echo "Fixing Frontend Authentication Flow"
-echo "=================================="
+echo "Fix Frontend Authentication - Ubuntu Server"
+echo "========================================="
+
+cat << 'EOF'
+# Complete authentication debugging and fix:
 
 cd /var/www/itservicedesk
 
-# Check if there's a session configuration issue in the server
-sudo -u ubuntu pm2 stop servicedesk
+# Check PM2 logs for specific authentication errors
+echo "PM2 authentication logs:"
+pm2 logs servicedesk --lines 15 | grep -A5 -B5 "auth\|login\|Login" || pm2 logs servicedesk --lines 10
 
-# Update the environment with proper session configuration
-sudo -u ubuntu tee .env << 'EOF'
-DATABASE_URL=postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk
-NODE_ENV=production
-PORT=3000
-SESSION_SECRET=calpion-service-desk-secret-key-2025
-CORS_ORIGIN=https://98.81.235.7
-EOF
+# Check if bcrypt is properly loaded
+echo ""
+echo "Testing bcrypt availability:"
+node -e "try { const bcrypt = require('bcrypt'); console.log('bcrypt available'); } catch(e) { console.log('bcrypt error:', e.message); }"
 
-# Check if there's a frontend routing issue - rebuild with production config
-echo "Rebuilding frontend with production settings..."
-sudo -u ubuntu npm run build
+# Verify user exists and test direct database query
+echo ""
+echo "Direct database authentication test:"
+sudo -u postgres psql -d servicedesk -c "
+SELECT username, password, role 
+FROM users 
+WHERE username = 'auth.test' AND password = 'password123';
+"
 
-# Start application
-sudo -u ubuntu pm2 start servicedesk
+# Create a simple test script to debug authentication
+cat > test-auth.js << 'AUTH_TEST_EOF'
+const { Pool } = require('pg');
 
-sleep 10
+async function testAuth() {
+  const pool = new Pool({ 
+    connectionString: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk' 
+  });
+  
+  try {
+    // Test database connection
+    const result = await pool.query('SELECT username, password FROM users WHERE username = $1', ['auth.test']);
+    console.log('User found:', result.rows[0]);
+    
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      console.log('Password match test:', user.password === 'password123');
+    }
+    
+  } catch (error) {
+    console.error('Database error:', error.message);
+  } finally {
+    await pool.end();
+  }
+}
 
-# Test the complete authentication flow
-echo "Testing complete authentication flow..."
+testAuth();
+AUTH_TEST_EOF
 
-# Step 1: Get login page
-echo "1. Testing login page access..."
-curl -s -c test-cookies.txt -o /dev/null -w "Login page: %{http_code}\n" https://localhost/ -k
+echo ""
+echo "Running authentication test:"
+node test-auth.js
 
-# Step 2: Login
-echo "2. Testing login..."
-LOGIN_RESULT=$(curl -s -b test-cookies.txt -c test-cookies.txt -w "%{http_code}" \
-  -X POST https://localhost/api/auth/login \
+# Test the API directly with minimal request
+echo ""
+echo "Testing API with minimal request:"
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"john.doe","password":"password123"}' -k)
+  -d '{"username":"auth.test","password":"password123"}' \
+  -w "\nResponse Code: %{http_code}\n" \
+  -s
 
-echo "Login result: $LOGIN_RESULT"
+# Check if session middleware is working
+echo ""
+echo "Testing session endpoint:"
+curl -s http://localhost:5000/api/auth/me
 
-# Step 3: Check if authenticated
-echo "3. Testing authentication status..."
-AUTH_STATUS=$(curl -s -b test-cookies.txt -w "%{http_code}" \
-  https://localhost/api/auth/me -k)
+# Rebuild with additional debugging
+echo ""
+echo "Rebuilding with error handling:"
+npx esbuild server/production.ts \
+  --platform=node \
+  --packages=external \
+  --bundle \
+  --format=esm \
+  --outfile=dist/production.js \
+  --keep-names \
+  --sourcemap
 
-echo "Auth status: $AUTH_STATUS"
+pm2 restart servicedesk
+sleep 8
 
-# Clean up
-rm -f test-cookies.txt
+# Final authentication test
+echo ""
+echo "Final authentication test after rebuild:"
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"auth.test","password":"password123"}' \
+  -s | head -10
 
 echo ""
-echo "Application status:"
-sudo -u ubuntu pm2 status
+echo "Testing external HTTPS:"
+curl -k https://98.81.235.7/api/auth/login \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"username":"auth.test","password":"password123"}' \
+  -s | head -10
 
-echo ""
-echo "Recent logs:"
-sudo -u ubuntu pm2 logs servicedesk --lines 10
+# Clean up test file
+rm -f test-auth.js
 
-echo ""
-echo "If login still redirects, try these steps:"
-echo "1. Clear your browser cache and cookies"
-echo "2. Open https://98.81.235.7 in incognito/private mode"
-echo "3. Accept the certificate warning"
-echo "4. Login with: john.doe / password123"
+EOF
