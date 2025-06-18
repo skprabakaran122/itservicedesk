@@ -11,7 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Settings, Users, Headphones } from "lucide-react";
 import { Link } from "wouter";
-import calpionLogo from "@assets/image_1749619432130.png";
+// Using placeholder for Calpion logo - can be replaced with actual logo file
+const calpionLogo = "/calpion-logo.png";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username or email is required"),
