@@ -106,6 +106,21 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 18, 2025 - Port 5000 Standardization and Ubuntu Server Fix ✓ COMPLETED
+- **Port Configuration**: Standardized application to use port 5000 across all environments
+  - Updated server/index.ts to use port 5000 consistently for development and production
+  - Modified .env file to set PORT=5000 as default
+  - Eliminated port conflicts between Replit (5000) and Ubuntu server configurations
+- **Ubuntu Server Deployment**: Successfully resolved production server issues
+  - Fixed "vite not found" build errors by using local node_modules binaries
+  - Configured Nginx proxy to forward HTTPS traffic from 443 to application port 5000
+  - PM2 process manager running servicedesk application successfully (PID 119416)
+  - Authentication system fully functional with proper session handling
+- **Authentication Verification**: Confirmed working login system
+  - Successfully tested POST /api/auth/login with test.user/password123
+  - Proper JSON response with user data and secure session cookies
+  - Application accessible at https://98.81.235.7 with HTTPS redirect
+
 ### June 18, 2025 - UI Styling and Logo Enhancement ✓ COMPLETED
 - **CSS Styling Fix**: Resolved Tailwind CSS processing issue preventing rich UI display
   - Added Tailwind CDN fallback to ensure styles load properly
