@@ -63,13 +63,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }),
     secret: process.env.SESSION_SECRET || 'your-secret-key-here',
     resave: false,
-    saveUninitialized: true, // Create session for unauthenticated users
+    saveUninitialized: false, // Don't create session for unauthenticated users
     name: 'connect.sid', // Standard session name
     cookie: {
       secure: false, // Set to true in production with HTTPS
       httpOnly: true, // Secure cookies
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax'
+      sameSite: 'none' // Allow cross-site requests for Replit preview
     }
   }));
   // Authentication routes
