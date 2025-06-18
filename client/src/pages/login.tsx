@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Settings, Users, Headphones } from "lucide-react";
 import { Link } from "wouter";
-// Using placeholder for Calpion logo - can be replaced with actual logo file
 const calpionLogo = "/calpion-logo.png";
 
 const loginSchema = z.object({
@@ -109,11 +108,17 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex items-center justify-center mb-6">
-            <img 
-              src={calpionLogo} 
-              alt="Calpion Logo" 
-              className="h-16 w-auto object-contain"
-            />
+            <div className="h-16 w-16 bg-primary rounded-lg flex items-center justify-center">
+              <img 
+                src={calpionLogo} 
+                alt="Calpion Logo" 
+                className="h-12 w-auto object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement!.innerHTML = '<span class="text-white font-bold text-xl">C</span>';
+                }}
+              />
+            </div>
           </div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             IT Service Desk
