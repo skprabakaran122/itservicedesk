@@ -1,0 +1,40 @@
+Fixing ES modules environment variable loading...
+[PM2] Applying action deleteProcessId on app [servicedesk](ids: [ 0 ])
+[PM2] [servicedesk](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Checking current server/index.ts...
+dotenv import already exists
+Testing environment variable loading with ES modules...
+DATABASE_URL: Found
+NODE_ENV: production
+PORT: 3000
+Database URL starts with: postgresql://service...
+Updating PM2 configuration for ES modules...
+Testing direct startup...
+[1] 34677
+/var/www/servicedesk/server/db.ts:6
+  throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
+        ^
+
+
+Error: DATABASE_URL must be set. Did you forget to provision a database?
+    at <anonymous> (/var/www/servicedesk/server/db.ts:6:9)
+    at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v20.19.2
+[1]+  Exit 1                  timeout 10s tsx server/index.ts
+Application still failing, checking logs...
+Starting with PM2...
+[PM2][WARN] Applications servicedesk not running, starting...
+[PM2] App [servicedesk] launched (1 instances)
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ N/A     │ cluster │ 34709    │ 0s     │ 0    │ online    │ 0%       │ 39.5mb   │ ubuntu   │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /home/ubuntu/.pm2/dump.pm2

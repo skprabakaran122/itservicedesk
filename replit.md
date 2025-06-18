@@ -137,7 +137,8 @@ This is a comprehensive IT Service Desk application built with modern web techno
   - Nginx proxy configuration syntax issues
   - Application startup and port binding problems
   - Environment variable loading issue (DATABASE_URL not accessible to Node.js)
-  - Fixed with dotenv/config import and PM2 env_file configuration
+  - ES modules import order causing dotenv to load after database module
+  - Fixed with direct dotenv loading in server/db.ts and module preloading
 - **Deployment Strategy**: Simplified deployment process with comprehensive automation
   - Single script deployment with automatic dependency installation
   - Database setup with PostgreSQL local installation
