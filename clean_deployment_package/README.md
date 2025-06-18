@@ -4,17 +4,25 @@
 
 This package provides a complete clean deployment solution for the IT Service Desk application on Ubuntu servers. It includes comprehensive cleanup tools and a simplified deployment script that addresses all previously identified issues.
 
-## Quick Start
+## Deployment Options
 
-### Step 1: Complete Cleanup (if needed)
+### Option 1: Deploy from Files (Local Package)
+If you have application files locally:
+```bash
+./simple_deploy.sh
+```
+
+### Option 2: Deploy from Git Repository
+To clone and deploy directly from Git:
+```bash
+./git_deploy.sh
+```
+
+### Option 3: Complete Cleanup First
 If you have existing installations to remove:
 ```bash
 ./complete_cleanup.sh
-```
-
-### Step 2: Deploy Application
-```bash
-./simple_deploy.sh
+# Then run either simple_deploy.sh or git_deploy.sh
 ```
 
 ## What Gets Installed
