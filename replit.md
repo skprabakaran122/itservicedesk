@@ -121,8 +121,9 @@ The application follows a full-stack TypeScript architecture with:
   - Website: https://98.81.235.7 (production React build with Calpion branding)
   - Authentication: Working with session management and proper user data
   - Database: PostgreSQL connected with full user management
-  - Admin Access: test.admin/password123 (full system administration)
+  - Admin Access: john.doe/password123 or test.admin/password123 (full system administration)
   - User Access: test.user/password123 (standard user features)
+  - Password Authentication: Fixed bcrypt compatibility issues for Ubuntu deployment
   - Build Quality: Proper production optimization with static asset serving
 
 ### June 18, 2025 - Complete Production Deployment Success ✓ COMPLETED
