@@ -37,6 +37,11 @@ If immediate fix doesn't work, try the PM2 environment fix:
 ./pm2_env_fix.sh
 ```
 
+For ES modules environment issues:
+```bash
+./final_pm2_fix.sh
+```
+
 ## What Gets Installed
 
 - **Node.js 20** with npm package manager
