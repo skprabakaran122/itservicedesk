@@ -1,92 +1,92 @@
 #!/bin/bash
 
-echo "Final PM2 Configuration Fix"
-echo "=========================="
+echo "Final PM2 Fix - Production Ready Build"
+echo "====================================="
+
+cat << 'EOF'
+# Complete fix for Ubuntu server 98.81.235.7:
 
 cd /var/www/itservicedesk
 
-# Stop any running processes
-sudo -u ubuntu pm2 delete all 2>/dev/null || true
+# Clean shutdown
+pm2 delete all 2>/dev/null || true
+sudo pkill -f node 2>/dev/null || true
+sudo fuser -k 5000/tcp 2>/dev/null || true
 
-# Create PM2 config with .cjs extension for CommonJS
-sudo -u ubuntu tee pm2.config.cjs << 'EOF'
+# Install missing dependencies
+npm install vite esbuild
+
+# Build application properly for production
+echo "Building frontend..."
+npx vite build
+
+echo "Building backend with proper external handling..."
+npx esbuild server/index.ts \
+  --platform=node \
+  --packages=external \
+  --bundle \
+  --format=esm \
+  --outdir=dist \
+  --external:vite \
+  --external:@vitejs/plugin-react
+
+# Create production-ready PM2 config
+cat > production.config.cjs << 'PROD_EOF'
 module.exports = {
   apps: [{
     name: 'servicedesk',
-    script: './dist/index.js',
+    script: 'dist/index.js',
     cwd: '/var/www/itservicedesk',
     instances: 1,
     autorestart: true,
-    watch: false,
-    max_memory_restart: '1G',
+    max_restarts: 5,
+    restart_delay: 3000,
     env: {
       NODE_ENV: 'production',
-      PORT: 3000,
-      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk'
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk',
+      SESSION_SECRET: 'calpion-service-desk-secret-key-2025'
     },
-    error_file: '/var/www/itservicedesk/logs/error.log',
-    out_file: '/var/www/itservicedesk/logs/output.log',
-    log_file: '/var/www/itservicedesk/logs/combined.log',
-    time: true
+    error_file: '/var/log/pm2/servicedesk-error.log',
+    out_file: '/var/log/pm2/servicedesk-out.log'
   }]
 };
-EOF
+PROD_EOF
 
-# Start with the .cjs config
-echo "Starting application with PM2..."
-sudo -u ubuntu pm2 start pm2.config.cjs
+# Ensure log directory exists
+sudo mkdir -p /var/log/pm2
+sudo chown ubuntu:ubuntu /var/log/pm2
 
-# Save configuration
-sudo -u ubuntu pm2 save
+# Start application
+pm2 start production.config.cjs
+pm2 save
 
-echo "Waiting for application to fully start..."
-sleep 10
-
-# Test application
-echo "Testing application..."
-if curl -f http://localhost:3000 > /dev/null 2>&1; then
-    echo "✓ Application responding on port 3000"
-    
-    # Test HTTPS
-    if curl -k -f https://localhost > /dev/null 2>&1; then
-        echo "✓ HTTPS working through Nginx"
-        echo ""
-        echo "🎉 DEPLOYMENT COMPLETE!"
-        echo "====================================="
-        echo "Your IT Service Desk is now running at:"
-        echo "https://98.81.235.7"
-        echo ""
-        echo "Default Login Credentials:"
-        echo "Username: john.doe"
-        echo "Password: password123"
-        echo ""
-        echo "Features Available:"
-        echo "- Enhanced Calpion branding with professional logo"
-        echo "- Comprehensive dashboard with animated UI"
-        echo "- Ticket management system"
-        echo "- Change request workflows"
-        echo "- User management"
-        echo "- SLA tracking and metrics"
-        echo "- HTTPS security with self-signed certificate"
-        echo ""
-        echo "Management Commands:"
-        echo "sudo -u ubuntu pm2 status"
-        echo "sudo -u ubuntu pm2 logs servicedesk"
-        echo "sudo -u ubuntu pm2 restart servicedesk"
-        echo ""
-        echo "Note: Browser will show security warning for self-signed certificate."
-        echo "Click 'Advanced' then 'Proceed' to access the application."
-    else
-        echo "✗ HTTPS not responding - checking Nginx"
-        sudo nginx -t
-        sudo systemctl status nginx
+# Monitor startup
+echo "Monitoring startup..."
+for i in {1..20}; do
+    if netstat -tlnp 2>/dev/null | grep -q ":5000 " || ss -tlnp 2>/dev/null | grep -q ":5000 "; then
+        echo "✅ Application started on port 5000"
+        break
     fi
-else
-    echo "✗ Application not responding"
-    sudo -u ubuntu pm2 status
-    sudo -u ubuntu pm2 logs servicedesk --lines 10
-fi
+    echo "Waiting... ($i/20)"
+    sleep 3
+done
 
-echo ""
+# Test authentication
+echo "Testing authentication..."
+sleep 5
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.user","password":"password123"}' \
+  -w "\nStatus: %{http_code}\n"
+
+echo "Testing external access..."
+curl -k https://98.81.235.7/api/auth/me -w "\nStatus: %{http_code}\n"
+
 echo "PM2 Status:"
-sudo -u ubuntu pm2 status
+pm2 status
+
+echo "Application logs:"
+pm2 logs servicedesk --lines 5
+
+EOF
