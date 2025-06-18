@@ -1,38 +1,28 @@
 #!/bin/bash
 
-echo "Complete Ubuntu Authentication Fix"
-echo "================================="
+echo "Complete Ubuntu Server Authentication Fix"
+echo "======================================="
 
 cat << 'EOF'
-# Complete fix for Ubuntu server authentication:
+# Final fix for Ubuntu server authentication:
 
 cd /var/www/itservicedesk
 
-# Install bcrypt dependency
+# Check current PM2 errors
+echo "Current PM2 logs:"
+pm2 logs servicedesk --lines 8
+
+# Ensure bcrypt dependency is available
 npm install bcrypt
 
-# Check current authentication errors
-echo "PM2 logs:"
-pm2 logs servicedesk --lines 5
-
-# Reset all users to plain text passwords for compatibility
-echo ""
-echo "Resetting user passwords to plain text:"
+# Verify test users exist with correct passwords
 sudo -u postgres psql -d servicedesk -c "
-UPDATE users SET password = 'password123' WHERE username IN ('test.user', 'test.admin', 'john.doe');
-DELETE FROM users WHERE username = 'test.simple';
-INSERT INTO users (username, email, password, role, name, created_at) 
-VALUES ('test.simple', 'test.simple@company.com', 'password123', 'user', 'Test Simple User', NOW());
+UPDATE users SET password = 'password123' 
+WHERE username IN ('test.user', 'test.admin', 'john.doe');
+SELECT username, password FROM users WHERE username = 'test.user';
 "
 
-# Verify user data
-echo ""
-echo "Current test users:"
-sudo -u postgres psql -d servicedesk -c "SELECT username, password, role FROM users WHERE username LIKE 'test.%' OR username = 'john.doe';"
-
-# Rebuild production server
-echo ""
-echo "Rebuilding production server:"
+# Rebuild production with corrected configuration
 npx esbuild server/production.ts \
   --platform=node \
   --packages=external \
@@ -41,46 +31,67 @@ npx esbuild server/production.ts \
   --outfile=dist/production.js \
   --keep-names
 
-# Restart application
-pm2 restart servicedesk
-sleep 10
+# Create production PM2 config matching development
+cat > production.config.cjs << 'CONFIG_EOF'
+module.exports = {
+  apps: [{
+    name: 'servicedesk',
+    script: 'dist/production.js',
+    instances: 1,
+    autorestart: true,
+    max_restarts: 5,
+    restart_delay: 3000,
+    env: {
+      NODE_ENV: 'production',
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk',
+      SESSION_SECRET: 'calpion-service-desk-secret-key-2025'
+    },
+    error_file: '/tmp/servicedesk-error.log',
+    out_file: '/tmp/servicedesk-out.log'
+  }]
+};
+CONFIG_EOF
 
-# Test all authentication scenarios
+# Restart PM2 with new config
+pm2 delete servicedesk
+pm2 start production.config.cjs
+pm2 save
+sleep 12
+
+# Test authentication
 echo ""
-echo "Testing test.simple user:"
-curl -X POST http://localhost:5000/api/auth/login \
+echo "Testing authentication:"
+AUTH_RESULT=$(curl -s -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"test.simple","password":"password123"}' \
-  -w "\nStatus: %{http_code}\n"
+  -d '{"username":"test.user","password":"password123"}')
 
-echo ""
-echo "Testing test.user:"
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test.user","password":"password123"}' \
-  -w "\nStatus: %{http_code}\n"
+echo "Auth response: $AUTH_RESULT"
 
+# Test HTTPS
 echo ""
-echo "Testing test.admin:"
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test.admin","password":"password123"}' \
-  -w "\nStatus: %{http_code}\n"
-
-echo ""
-echo "Testing external HTTPS:"
-curl -k https://98.81.235.7/api/auth/login \
+echo "Testing HTTPS:"
+HTTPS_RESULT=$(curl -k -s https://98.81.235.7/api/auth/login \
   -X POST \
   -H "Content-Type: application/json" \
-  -d '{"username":"test.simple","password":"password123"}' \
-  -w "\nStatus: %{http_code}\n"
+  -d '{"username":"test.user","password":"password123"}')
 
+echo "HTTPS response: $HTTPS_RESULT"
+
+# Final status
 echo ""
-echo "Final PM2 status:"
+echo "PM2 Status:"
 pm2 status
 
-echo ""
-echo "Recent logs:"
-pm2 logs servicedesk --lines 3
+if echo "$AUTH_RESULT" | grep -q "user"; then
+    echo ""
+    echo "✅ SUCCESS: Authentication working on Ubuntu server!"
+    echo "Login at https://98.81.235.7 with test.user/password123"
+else
+    echo ""
+    echo "❌ Authentication still failing"
+    echo "Recent logs:"
+    pm2 logs servicedesk --lines 3
+fi
 
 EOF

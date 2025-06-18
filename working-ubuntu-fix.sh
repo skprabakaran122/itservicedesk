@@ -1,58 +1,122 @@
 #!/bin/bash
 
-echo "Working Ubuntu Server Fix"
-echo "========================"
+echo "Working Ubuntu Authentication Fix"
+echo "==============================="
 
 cat << 'EOF'
-# Copy and paste these commands on Ubuntu server 98.81.235.7:
+# Run on Ubuntu server to get authentication working like development:
 
 cd /var/www/itservicedesk
 
-# Clean stop
-pm2 delete all 2>/dev/null || true
-sudo fuser -k 3000/tcp 2>/dev/null || true
+# First check what's causing the authentication failure
+echo "=== CHECKING PM2 LOGS ==="
+pm2 logs servicedesk --lines 10
 
-# Install tsx locally (avoid permission issues)
-npm install tsx
+echo ""
+echo "=== TESTING DATABASE CONNECTION ==="
+sudo -u postgres psql -d servicedesk -c "SELECT username, password FROM users WHERE username = 'test.user';"
 
-# Create PM2 config with .cjs extension (fixes module error)
-cat > working.config.cjs << 'WORKING_EOF'
+# Install missing dependencies if needed
+echo ""
+echo "=== INSTALLING DEPENDENCIES ==="
+npm install bcrypt @types/bcrypt
+
+# Rebuild production server with exact same configuration as development
+echo ""
+echo "=== REBUILDING PRODUCTION SERVER ==="
+npx esbuild server/production.ts \
+  --platform=node \
+  --packages=external \
+  --bundle \
+  --format=esm \
+  --outfile=dist/production.js \
+  --keep-names \
+  --sourcemap
+
+# Update PM2 config with exact development environment variables
+cat > production-fixed.config.cjs << 'PM2_EOF'
 module.exports = {
   apps: [{
     name: 'servicedesk',
-    script: 'node_modules/.bin/tsx',
-    args: 'server/index.ts',
+    script: 'dist/production.js',
     instances: 1,
     autorestart: true,
+    max_restarts: 5,
+    restart_delay: 3000,
     env: {
       NODE_ENV: 'production',
-      PORT: 3000,
-      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk'
-    }
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk',
+      SESSION_SECRET: 'calpion-service-desk-secret-key-2025',
+      SENDGRID_API_KEY: 'SG.e1g2sll-fake-key-for-production',
+      FROM_EMAIL: 'no-reply@calpion.com'
+    },
+    error_file: '/tmp/servicedesk-error.log',
+    out_file: '/tmp/servicedesk-out.log',
+    log_file: '/tmp/servicedesk-combined.log'
   }]
 };
-WORKING_EOF
+PM2_EOF
 
-# Start application
-pm2 start working.config.cjs
+# Stop and restart PM2 with new configuration
+echo ""
+echo "=== RESTARTING PM2 ==="
+pm2 delete servicedesk
+pm2 start production-fixed.config.cjs
+pm2 save
 
-# Wait and test
+# Wait for startup
 sleep 15
 
-# Test authentication with fixed system
-curl -X POST http://localhost:3000/api/auth/login \
+# Test authentication exactly like development
+echo ""
+echo "=== TESTING AUTHENTICATION ==="
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"test.user","password":"password123"}'
+  -d '{"username":"test.user","password":"password123"}' \
+  -s | head -10
 
-# Check status
+# Test with test.admin
+echo ""
+echo "=== TESTING ADMIN LOGIN ==="
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.admin","password":"password123"}' \
+  -s | head -10
+
+# Test external HTTPS access
+echo ""
+echo "=== TESTING EXTERNAL HTTPS ==="
+curl -k https://98.81.235.7/api/auth/login \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.user","password":"password123"}' \
+  -s | head -10
+
+# Show final status
+echo ""
+echo "=== FINAL STATUS ==="
 pm2 status
-pm2 logs servicedesk --lines 3
-
-EOF
 
 echo ""
-echo "This approach:"
-echo "- Uses local tsx installation (no global permissions)"
-echo "- Uses .cjs extension to force CommonJS format"
-echo "- Includes authentication system fixes"
-echo "- Should resolve connection refused errors"
+echo "=== RECENT LOGS ==="
+pm2 logs servicedesk --lines 5
+
+# Check if authentication is now working
+AUTH_TEST=$(curl -s -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.user","password":"password123"}')
+
+if echo "$AUTH_TEST" | grep -q "user"; then
+    echo ""
+    echo "SUCCESS! Authentication is now working on Ubuntu server"
+    echo "You can login at https://98.81.235.7 with:"
+    echo "- test.user / password123"
+    echo "- test.admin / password123"
+else
+    echo ""
+    echo "Authentication still failing. Response: $AUTH_TEST"
+    echo "Check PM2 logs above for errors."
+fi
+
+EOF
