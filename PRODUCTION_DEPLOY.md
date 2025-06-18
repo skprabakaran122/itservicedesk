@@ -2,7 +2,13 @@
 
 ## Quick Deploy to Ubuntu Server
 
-Run this single command on your Ubuntu server:
+For Ubuntu servers with Node.js conflicts, use this fixed deployment:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/skprabakaran122/itservicedesk/main/ubuntu-deploy-fix.sh | sudo bash
+```
+
+Or use the standard deployment:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/skprabakaran122/itservicedesk/main/deploy.sh | sudo bash
