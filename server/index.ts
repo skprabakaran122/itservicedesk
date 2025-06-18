@@ -224,64 +224,71 @@ function startOverdueChangeScheduler() {
 }
 
 (async () => {
-  // Initialize storage data once at startup
-  await storage.initializeData();
-  
-  // Warm up database connection by running a simple query
   try {
-    await storage.getProducts();
-    log("Database connection warmed up");
-  } catch (error) {
-    log("Warning: Failed to warm up database connection");
-  }
-
-  // Keep database connections alive with periodic health checks
-  setInterval(async () => {
+    // Initialize storage data once at startup
+    await storage.initializeData();
+    
+    // Warm up database connection by running a simple query
     try {
       await storage.getProducts();
+      log("Database connection warmed up");
     } catch (error) {
-      // Silent health check - don't log errors
+      log(`Warning: Failed to warm up database connection: ${error}`);
     }
-  }, 60000); // Check every minute
-  
-  const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    // Keep database connections alive with periodic health checks
+    setInterval(async () => {
+      try {
+        await storage.getProducts();
+      } catch (error) {
+        // Silent health check - don't log errors
+      }
+    }, 60000); // Check every minute
+    
+    const server = await registerRoutes(app);
 
-    res.status(status).json({ message });
-    throw err;
-  });
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  const isDevelopment = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-  if (isDevelopment) {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+      res.status(status).json({ message });
+      throw err;
+    });
+
+    // importantly only setup vite in development and after
+    // setting up all the other routes so the catch-all route
+    // doesn't interfere with the other routes
+    const isDevelopment = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+    if (isDevelopment) {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // Start HTTP server (HTTPS temporarily disabled for verification)
+    const httpPort = parseInt(process.env.PORT || "5000", 10);
+    
+    server.listen(httpPort, () => {
+      log(`HTTP server running on port ${httpPort} (host: 0.0.0.0)`);
+      log(`[SSL] HTTPS temporarily disabled for verification - can be re-enabled later`);
+      
+      // Log Replit-specific access URLs for debugging
+      if (process.env.REPLIT_DEV_DOMAIN) {
+        log(`[Replit] Preview URL: https://${process.env.REPLIT_DEV_DOMAIN}`);
+      }
+      
+      // Test external accessibility
+      log(`[Network] Server bound to all interfaces on port ${httpPort}`);
+    });
+
+    // Start schedulers
+    startSLAScheduler();
+    startAutoCloseScheduler();
+    startOverdueChangeScheduler();
+    
+  } catch (error) {
+    log(`[CRITICAL] Server startup failed: ${error}`);
+    console.error(error);
+    process.exit(1);
   }
-
-  // Start HTTP server (HTTPS temporarily disabled for verification)
-  const httpPort = parseInt(process.env.PORT || "5000", 10);
-  
-  server.listen(httpPort, () => {
-    log(`HTTP server running on port ${httpPort} (host: 0.0.0.0)`);
-    log(`[SSL] HTTPS temporarily disabled for verification - can be re-enabled later`);
-    
-    // Log Replit-specific access URLs for debugging
-    if (process.env.REPLIT_DEV_DOMAIN) {
-      log(`[Replit] Preview URL: https://${process.env.REPLIT_DEV_DOMAIN}`);
-    }
-    
-    // Test external accessibility
-    log(`[Network] Server bound to all interfaces on port ${httpPort}`);
-  });
-
-  // Start schedulers
-  startSLAScheduler();
-  startAutoCloseScheduler();
-  startOverdueChangeScheduler();
 })();
