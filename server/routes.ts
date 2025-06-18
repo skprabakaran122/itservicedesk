@@ -12,6 +12,14 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 
+// Import bcrypt safely with fallback
+let bcrypt: any = null;
+try {
+  bcrypt = require('bcrypt');
+} catch (error) {
+  console.log('[Auth] bcrypt not available, using plain text password comparison');
+}
+
 const MemoryStoreSession = MemoryStore(session);
 
 // Utility function to generate secure approval tokens
@@ -85,9 +93,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check password - handle both bcrypt hashes and plain text for backward compatibility
       let passwordValid = false;
       
-      if (user.password.startsWith('$2b$')) {
+      if (user.password.startsWith('$2b$') && bcrypt) {
         // Bcrypt hash - use bcrypt comparison (for production)
-        const bcrypt = require('bcrypt');
         passwordValid = await bcrypt.compare(password, user.password);
       } else {
         // Plain text password (for development/testing)
