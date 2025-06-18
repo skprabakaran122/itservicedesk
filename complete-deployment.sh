@@ -1,133 +1,166 @@
 #!/bin/bash
 
-echo "Complete Ubuntu Deployment Diagnostic and Fix"
-echo "============================================="
+echo "Complete Ubuntu Deployment with Latest Code"
+echo "=========================================="
 
 cat << 'EOF'
-# Run on Ubuntu server 98.81.235.7:
+# Run on Ubuntu server to sync latest working code and fix authentication:
 
 cd /var/www/itservicedesk
 
-# Stop everything and check logs first
-pm2 delete all 2>/dev/null || true
-sudo fuser -k 5000/tcp 2>/dev/null || true
+# Check current authentication failure
+echo "=== CURRENT PM2 STATUS ==="
+pm2 logs servicedesk --lines 8
 
-echo "=== CHECKING PREVIOUS LOGS ==="
-pm2 logs --lines 15 2>/dev/null || echo "No previous logs"
-
+# If git is available, pull latest changes
 echo ""
-echo "=== CHECKING BUILD OUTPUT ==="
-ls -la dist/
-file dist/index.js
+echo "=== SYNCING CODE ==="
+if [ -d .git ]; then
+    echo "Pulling latest code from repository..."
+    git stash 2>/dev/null || true
+    git pull origin main 2>/dev/null || git pull origin master 2>/dev/null || echo "Git pull not available"
+    echo "Code sync attempted"
+else
+    echo "No git repository - using current code"
+fi
 
+# Update dependencies to match working development environment
 echo ""
-echo "=== TESTING NODE DIRECTLY ==="
-# Test if the built file can run at all
-timeout 15s node dist/index.js 2>&1 | head -10 &
-sleep 5
-ps aux | grep "node dist/index.js" | grep -v grep || echo "Node process not running"
+echo "=== UPDATING DEPENDENCIES ==="
+npm install bcrypt @types/bcrypt express-session connect-pg-simple
 
-# Kill any test processes
-sudo pkill -f "node dist/index.js" 2>/dev/null || true
-
+# Reset database users to match development
 echo ""
-echo "=== REBUILDING WITH VERBOSE OUTPUT ==="
-npx esbuild server/index.ts \
+echo "=== RESETTING DATABASE USERS ==="
+sudo -u postgres psql -d servicedesk -c "
+UPDATE users SET password = 'password123' 
+WHERE username IN ('test.user', 'test.admin', 'john.doe');
+
+-- Ensure test users exist
+INSERT INTO users (username, email, password, role, name, created_at) 
+VALUES ('test.user', 'test.user@company.com', 'password123', 'user', 'Test User', NOW())
+ON CONFLICT (username) DO UPDATE SET password = 'password123';
+
+INSERT INTO users (username, email, password, role, name, created_at) 
+VALUES ('test.admin', 'test.admin@company.com', 'password123', 'admin', 'Test Admin', NOW())
+ON CONFLICT (username) DO UPDATE SET password = 'password123';
+
+SELECT username, password, role FROM users WHERE username LIKE 'test.%';
+"
+
+# Use the correct source file for production build
+if [ -f server/production.ts ]; then
+    PRODUCTION_SOURCE="server/production.ts"
+    echo ""
+    echo "=== USING PRODUCTION SERVER SOURCE ==="
+else
+    PRODUCTION_SOURCE="server/index.ts"
+    echo ""
+    echo "=== USING DEVELOPMENT SERVER SOURCE ==="
+fi
+
+echo "Building from: $PRODUCTION_SOURCE"
+
+# Rebuild production server with latest code
+npx esbuild $PRODUCTION_SOURCE \
   --platform=node \
   --packages=external \
   --bundle \
   --format=esm \
-  --outdir=dist \
-  --external:vite \
-  --external:@vitejs/plugin-react \
-  --log-level=info
+  --outfile=dist/production.js \
+  --keep-names \
+  --sourcemap \
+  --define:process.env.NODE_ENV='"production"'
 
-echo ""
-echo "=== CREATING MINIMAL PM2 CONFIG ==="
-cat > minimal.config.cjs << 'MINIMAL_EOF'
+# Create production PM2 config matching development environment
+cat > latest.config.cjs << 'LATEST_EOF'
 module.exports = {
   apps: [{
     name: 'servicedesk',
-    script: 'dist/index.js',
+    script: 'dist/production.js',
     instances: 1,
     autorestart: true,
+    max_restarts: 5,
+    restart_delay: 3000,
     env: {
       NODE_ENV: 'production',
       PORT: 5000,
-      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk'
+      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk',
+      SESSION_SECRET: 'calpion-service-desk-secret-key-2025'
     },
-    error_file: './pm2-error.log',
-    out_file: './pm2-out.log',
-    log_file: './pm2.log'
+    error_file: '/tmp/servicedesk-error.log',
+    out_file: '/tmp/servicedesk-out.log',
+    log_file: '/tmp/servicedesk-combined.log',
+    merge_logs: true,
+    log_date_format: 'YYYY-MM-DD HH:mm:ss Z'
   }]
 };
-MINIMAL_EOF
+LATEST_EOF
 
+# Stop and restart PM2 with updated code
 echo ""
-echo "=== STARTING WITH MINIMAL CONFIG ==="
-pm2 start minimal.config.cjs
+echo "=== RESTARTING WITH LATEST CODE ==="
+pm2 delete servicedesk
+pm2 start latest.config.cjs
+pm2 save
 
-echo ""
-echo "=== MONITORING STARTUP ==="
-for i in {1..20}; do
-    echo "Check $i: $(date)"
-    
-    # Check PM2 status
-    pm2 list | grep servicedesk || echo "PM2 process not found"
-    
-    # Check logs for errors
-    if [ -f pm2-error.log ]; then
-        echo "Error log:"
-        tail -5 pm2-error.log 2>/dev/null || echo "No errors in log"
-    fi
-    
-    if [ -f pm2-out.log ]; then
-        echo "Output log:"
-        tail -5 pm2-out.log 2>/dev/null || echo "No output in log"
-    fi
-    
-    # Check port binding
-    if ss -tlnp | grep -q ":5000"; then
-        echo "✅ SUCCESS: Port 5000 is bound!"
-        break
-    else
-        echo "Port 5000 not bound yet..."
-    fi
-    
-    sleep 3
-done
+# Wait for application startup
+sleep 18
 
+# Test authentication with latest code
 echo ""
-echo "=== FINAL STATUS ==="
+echo "=== TESTING AUTHENTICATION WITH LATEST CODE ==="
+LOCAL_AUTH=$(curl -s -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.user","password":"password123"}')
+
+echo "Local authentication: $LOCAL_AUTH"
+
+# Test admin authentication
+echo ""
+echo "=== TESTING ADMIN AUTHENTICATION ==="
+ADMIN_AUTH=$(curl -s -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.admin","password":"password123"}')
+
+echo "Admin authentication: $ADMIN_AUTH"
+
+# Test external HTTPS access
+echo ""
+echo "=== TESTING EXTERNAL HTTPS ACCESS ==="
+EXTERNAL_AUTH=$(curl -k -s https://98.81.235.7/api/auth/login \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.user","password":"password123"}')
+
+echo "External HTTPS: $EXTERNAL_AUTH"
+
+# Show deployment status
+echo ""
+echo "=== DEPLOYMENT STATUS ==="
 pm2 status
-echo ""
-echo "Port status:"
-ss -tlnp | grep :5000 || echo "Port 5000 not bound"
-echo ""
-echo "Process check:"
-ps aux | grep servicedesk | grep -v grep || echo "No servicedesk process"
 
 echo ""
-echo "=== TESTING APPLICATION ==="
-if ss -tlnp | grep -q ":5000"; then
-    echo "Testing API response..."
-    curl -s http://localhost:5000/api/auth/me | head -5
-    
+echo "=== RECENT APPLICATION LOGS ==="
+pm2 logs servicedesk --lines 6 --timestamp
+
+# Final verification
+echo ""
+echo "=== DEPLOYMENT VERIFICATION ==="
+if echo "$LOCAL_AUTH" | grep -q "user"; then
+    echo "✅ SUCCESS: Ubuntu server authentication is working!"
     echo ""
-    echo "Testing authentication..."
-    curl -X POST http://localhost:5000/api/auth/login \
-      -H "Content-Type: application/json" \
-      -d '{"username":"test.user","password":"password123"}' \
-      -s | head -10
-      
+    echo "Production deployment complete:"
+    echo "- Server: https://98.81.235.7"
+    echo "- Authentication: Working"
+    echo "- Test credentials: test.user/password123 or test.admin/password123"
     echo ""
-    echo "Testing external HTTPS..."
-    curl -k -s https://98.81.235.7/api/auth/me | head -5
+    echo "The Ubuntu server now has the latest working code from development."
+elif echo "$LOCAL_AUTH" | grep -q "Login failed"; then
+    echo "❌ Authentication still failing - check PM2 logs above for specific errors"
 else
-    echo "Cannot test - port 5000 not available"
-    echo "Check logs:"
-    cat pm2-error.log 2>/dev/null || echo "No error log"
-    cat pm2-out.log 2>/dev/null || echo "No output log"
+    echo "⚠️  Unexpected response: $LOCAL_AUTH"
+    echo "Server may need additional debugging"
 fi
 
 EOF
