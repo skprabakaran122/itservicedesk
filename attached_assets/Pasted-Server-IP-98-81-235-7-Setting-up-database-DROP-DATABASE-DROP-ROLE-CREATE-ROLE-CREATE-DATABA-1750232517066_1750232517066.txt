@@ -1,0 +1,125 @@
+Server IP: 98.81.235.7
+Setting up database...
+DROP DATABASE
+DROP ROLE
+CREATE ROLE
+CREATE DATABASE
+GRANT
+Setting up application...
+-bash: .env: Permission denied
+npm warn config production Use `--omit=dev` instead.
+npm error code EACCES
+npm error syscall mkdir
+npm error path /var/www/itservicedesk/node_modules/@ampproject/remapping
+npm error errno -13
+npm error Error: EACCES: permission denied, mkdir '/var/www/itservicedesk/node_modules/@ampproject/remapping'
+npm error     at async mkdir (node:internal/fs/promises:858:10)
+npm error     at async /usr/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:624:20
+npm error     at async Promise.allSettled (index 0)
+npm error     at async [reifyPackages] (/usr/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:325:11)
+npm error     at async Arborist.reify (/usr/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:142:5)
+npm error     at async Install.exec (/usr/lib/node_modules/npm/lib/commands/install.js:150:5)
+npm error     at async Npm.exec (/usr/lib/node_modules/npm/lib/npm.js:207:9)
+npm error     at async module.exports (/usr/lib/node_modules/npm/lib/cli/entry.js:74:5) {
+npm error   errno: -13,
+npm error   code: 'EACCES',
+npm error   syscall: 'mkdir',
+npm error   path: '/var/www/itservicedesk/node_modules/@ampproject/remapping'
+npm error }
+npm error
+npm error The operation was rejected by your operating system.
+npm error It is likely you do not have the permissions to access this file as the current user
+npm error
+npm error If you believe this might be a permissions issue, please double-check the
+npm error permissions of the file and its containing directories, or try running
+npm error the command again as root/Administrator.
+npm error A complete log of this run can be found in: /home/ubuntu/.npm/_logs/2025-06-18T07_41_40_666Z-debug-0.log
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+sh: 1: vite: not found
+
+> rest-express@1.0.0 db:push
+> drizzle-kit push
+
+sh: 1: drizzle-kit: not found
+-bash: ecosystem.config.js: Permission denied
+mkdir: cannot create directory ‘logs’: Permission denied
+[PM2][ERROR] File ecosystem.config.js not found
+[PM2] Saving current process list...
+[PM2][WARN] PM2 is not managing any process, skipping save...
+[PM2][WARN] To force saving use: pm2 save --force
+[PM2] Init System found: systemd
+[PM2] To setup the Startup Script, copy/paste the following command:
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+Application started
+Setting up SSL certificate...
+...+..+.+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.............+.+..+.+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.+...+.+......+..+......+......+....+..............+.+..+.........................+.....+............+............+....+......+........+.............+...+..+.......+..+.+..+..........+...............+...+...+..+....+......+........+.......+..+...+...+.........+.......+......+.....+..........+..+...+.......+..+......+...+.+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+.+.+.....+....+.....+..........+.................+....+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*..........+...+.........+.........+..+...+............+...+.+.....+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*..............+....+........+.+.........+...+...+..+.........+.........+.......+........+......+.+..+...+.......+........+.......+.................+....+......+...+............+.....+...+...............+...+....+...........+...+.+...+..................+....................+...+.......+..+............+....+.....+......+...+...+..........+..+......+..........+.....+.......+...+..+.......+......+......+........+.......+........+.+......+......+.....+.......+........+...+.+......+.....+.......+......+..+............+.+..+...+....+............+...+..+...+...............+...+....+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-----
+SSL certificate created
+Configuring Nginx...
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    server_name 98.81.235.7;
+    return 301 https://$server_name$request_uri;
+}
+
+# HTTPS server
+server {
+    listen 443 ssl http2;
+    server_name 98.81.235.7;
+
+    # SSL Configuration
+    ssl_certificate /etc/nginx/ssl/servicedesk.crt;
+    ssl_certificate_key /etc/nginx/ssl/servicedesk.key;
+
+    # SSL Security Settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_timeout 10m;
+    ssl_session_cache shared:SSL:10m;
+
+    # Security Headers
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # Application Proxy
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_cache_bypass $http_upgrade;
+        proxy_redirect off;
+    }
+
+    client_max_body_size 10M;
+}
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+Nginx configured
+Configuring firewall...
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Rule added
+Rule added (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Firewall is active and enabled on system startup
+Firewall configured
+
+Testing deployment...
+✗ Application not responding - checking logs...
