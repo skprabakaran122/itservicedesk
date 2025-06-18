@@ -1,194 +1,133 @@
 #!/bin/bash
 
-echo "Completing IT Service Desk Deployment"
-echo "====================================="
+echo "Complete Ubuntu Deployment Diagnostic and Fix"
+echo "============================================="
 
-# Get server IP
-SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}' || echo "localhost")
-echo "Server IP: $SERVER_IP"
+cat << 'EOF'
+# Run on Ubuntu server 98.81.235.7:
 
-# Database setup
-echo "Setting up database..."
-sudo -u postgres psql << EOF
-DROP DATABASE IF EXISTS servicedesk;
-DROP USER IF EXISTS servicedesk;
-CREATE USER servicedesk WITH PASSWORD 'servicedesk123';
-CREATE DATABASE servicedesk OWNER servicedesk;
-GRANT ALL PRIVILEGES ON DATABASE servicedesk TO servicedesk;
-\q
-EOF
+cd /var/www/itservicedesk
 
-# Application setup
-echo "Setting up application..."
+# Stop everything and check logs first
+pm2 delete all 2>/dev/null || true
+sudo fuser -k 5000/tcp 2>/dev/null || true
 
-# Create environment file
-cat > .env << EOF
-DATABASE_URL=postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk
-NODE_ENV=production
-PORT=3000
-EOF
+echo "=== CHECKING PREVIOUS LOGS ==="
+pm2 logs --lines 15 2>/dev/null || echo "No previous logs"
 
-# Install dependencies and build
-npm install --production
-npm run build
-npm run db:push
+echo ""
+echo "=== CHECKING BUILD OUTPUT ==="
+ls -la dist/
+file dist/index.js
 
-# Create PM2 ecosystem file
-cat > ecosystem.config.js << EOF
+echo ""
+echo "=== TESTING NODE DIRECTLY ==="
+# Test if the built file can run at all
+timeout 15s node dist/index.js 2>&1 | head -10 &
+sleep 5
+ps aux | grep "node dist/index.js" | grep -v grep || echo "Node process not running"
+
+# Kill any test processes
+sudo pkill -f "node dist/index.js" 2>/dev/null || true
+
+echo ""
+echo "=== REBUILDING WITH VERBOSE OUTPUT ==="
+npx esbuild server/index.ts \
+  --platform=node \
+  --packages=external \
+  --bundle \
+  --format=esm \
+  --outdir=dist \
+  --external:vite \
+  --external:@vitejs/plugin-react \
+  --log-level=info
+
+echo ""
+echo "=== CREATING MINIMAL PM2 CONFIG ==="
+cat > minimal.config.cjs << 'MINIMAL_EOF'
 module.exports = {
   apps: [{
     name: 'servicedesk',
-    script: 'npm',
-    args: 'start',
-    cwd: process.cwd(),
+    script: 'dist/index.js',
     instances: 1,
     autorestart: true,
-    watch: false,
-    max_memory_restart: '1G',
     env: {
       NODE_ENV: 'production',
-      PORT: 3000,
+      PORT: 5000,
       DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk'
     },
-    error_file: './logs/error.log',
-    out_file: './logs/out.log',
-    log_file: './logs/combined.log',
-    time: true
+    error_file: './pm2-error.log',
+    out_file: './pm2-out.log',
+    log_file: './pm2.log'
   }]
 };
-EOF
+MINIMAL_EOF
 
-# Create logs directory
-mkdir -p logs
+echo ""
+echo "=== STARTING WITH MINIMAL CONFIG ==="
+pm2 start minimal.config.cjs
 
-# Start application with PM2
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup
-
-echo "Application started"
-
-# SSL Certificate setup
-echo "Setting up SSL certificate..."
-sudo mkdir -p /etc/nginx/ssl
-
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/nginx/ssl/servicedesk.key \
-    -out /etc/nginx/ssl/servicedesk.crt \
-    -subj "/C=US/ST=State/L=City/O=Calpion/OU=IT/CN=$SERVER_IP"
-
-echo "SSL certificate created"
-
-# Nginx configuration
-echo "Configuring Nginx..."
-
-sudo tee /etc/nginx/sites-available/servicedesk << EOF
-# Redirect HTTP to HTTPS
-server {
-    listen 80;
-    server_name $SERVER_IP;
-    return 301 https://\$server_name\$request_uri;
-}
-
-# HTTPS server
-server {
-    listen 443 ssl http2;
-    server_name $SERVER_IP;
-
-    # SSL Configuration
-    ssl_certificate /etc/nginx/ssl/servicedesk.crt;
-    ssl_certificate_key /etc/nginx/ssl/servicedesk.key;
+echo ""
+echo "=== MONITORING STARTUP ==="
+for i in {1..20}; do
+    echo "Check $i: $(date)"
     
-    # SSL Security Settings
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
-    ssl_prefer_server_ciphers off;
-    ssl_session_timeout 10m;
-    ssl_session_cache shared:SSL:10m;
+    # Check PM2 status
+    pm2 list | grep servicedesk || echo "PM2 process not found"
     
-    # Security Headers
-    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    # Check logs for errors
+    if [ -f pm2-error.log ]; then
+        echo "Error log:"
+        tail -5 pm2-error.log 2>/dev/null || echo "No errors in log"
+    fi
+    
+    if [ -f pm2-out.log ]; then
+        echo "Output log:"
+        tail -5 pm2-out.log 2>/dev/null || echo "No output in log"
+    fi
+    
+    # Check port binding
+    if ss -tlnp | grep -q ":5000"; then
+        echo "✅ SUCCESS: Port 5000 is bound!"
+        break
+    else
+        echo "Port 5000 not bound yet..."
+    fi
+    
+    sleep 3
+done
 
-    # Application Proxy
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_cache_bypass \$http_upgrade;
-        proxy_redirect off;
-    }
+echo ""
+echo "=== FINAL STATUS ==="
+pm2 status
+echo ""
+echo "Port status:"
+ss -tlnp | grep :5000 || echo "Port 5000 not bound"
+echo ""
+echo "Process check:"
+ps aux | grep servicedesk | grep -v grep || echo "No servicedesk process"
 
-    client_max_body_size 10M;
-}
+echo ""
+echo "=== TESTING APPLICATION ==="
+if ss -tlnp | grep -q ":5000"; then
+    echo "Testing API response..."
+    curl -s http://localhost:5000/api/auth/me | head -5
+    
+    echo ""
+    echo "Testing authentication..."
+    curl -X POST http://localhost:5000/api/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"username":"test.user","password":"password123"}' \
+      -s | head -10
+      
+    echo ""
+    echo "Testing external HTTPS..."
+    curl -k -s https://98.81.235.7/api/auth/me | head -5
+else
+    echo "Cannot test - port 5000 not available"
+    echo "Check logs:"
+    cat pm2-error.log 2>/dev/null || echo "No error log"
+    cat pm2-out.log 2>/dev/null || echo "No output log"
+fi
+
 EOF
-
-# Enable site
-sudo ln -sf /etc/nginx/sites-available/servicedesk /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl restart nginx
-
-echo "Nginx configured"
-
-# Firewall setup
-echo "Configuring firewall..."
-sudo ufw allow ssh
-sudo ufw allow 'Nginx Full'
-sudo ufw allow 443/tcp
-sudo ufw allow 80/tcp
-sudo ufw --force enable
-
-echo "Firewall configured"
-
-# Verification
-echo ""
-echo "Testing deployment..."
-sleep 5
-
-if curl -f http://localhost:3000 > /dev/null 2>&1; then
-    echo "✓ Application running on port 3000"
-else
-    echo "✗ Application not responding - checking logs..."
-    pm2 logs servicedesk --lines 10
-fi
-
-if curl -k -f https://localhost > /dev/null 2>&1; then
-    echo "✓ HTTPS working"
-else
-    echo "✗ HTTPS not working - checking Nginx..."
-    sudo nginx -t
-fi
-
-if sudo nginx -t > /dev/null 2>&1; then
-    echo "✓ Nginx configuration valid"
-else
-    echo "✗ Nginx configuration error"
-fi
-
-echo ""
-echo "🎉 DEPLOYMENT COMPLETE!"
-echo "======================================"
-echo "Your IT Service Desk is now available at:"
-echo "https://$SERVER_IP"
-echo ""
-echo "Default login:"
-echo "Username: john.doe"
-echo "Password: password123"
-echo ""
-echo "Management commands:"
-echo "pm2 status                    # Check application status"
-echo "pm2 logs servicedesk         # View application logs"
-echo "pm2 restart servicedesk      # Restart application"
-echo "sudo systemctl status nginx  # Check web server"
-echo ""
-echo "Note: Browser will show security warning for self-signed certificate"
-echo "Click 'Advanced' then 'Proceed' to access the application"

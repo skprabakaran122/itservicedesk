@@ -1,71 +1,66 @@
 #!/bin/bash
 
-echo "Checking Deployment Status"
-echo "=========================="
+echo "Check Ubuntu Server Deployment Issues"
+echo "==================================="
 
-# Check if services are running
-echo "Service Status:"
-echo "---------------"
-echo "Node.js: $(command -v node && node --version || echo 'Not installed')"
-echo "npm: $(command -v npm && npm --version || echo 'Not installed')"
-echo "PM2: $(command -v pm2 && pm2 --version || echo 'Not installed')"
-echo "PostgreSQL: $(systemctl is-active postgresql || echo 'Not running')"
-echo "Nginx: $(systemctl is-active nginx || echo 'Not running')"
+cat << 'EOF'
+# Comprehensive diagnosis for Ubuntu server:
 
+cd /var/www/itservicedesk
+
+# Check PM2 process details
+echo "=== PM2 STATUS ==="
+pm2 status
+pm2 info servicedesk 2>/dev/null || echo "No servicedesk process info"
+
+# Check detailed PM2 logs
 echo ""
-echo "Running Processes:"
-echo "------------------"
-ps aux | grep -E "(node|nginx|postgres)" | grep -v grep || echo "No relevant processes found"
+echo "=== PM2 LOGS ==="
+pm2 logs servicedesk --lines 20 2>/dev/null || echo "No servicedesk logs"
 
+# Check if the built file exists and is valid
 echo ""
-echo "Port Status:"
-echo "------------"
-sudo netstat -tlnp | grep -E ":(80|443|3000|5432)" || echo "No services on expected ports"
+echo "=== BUILD VERIFICATION ==="
+ls -la dist/
+file dist/index.js 2>/dev/null || echo "dist/index.js not found"
 
+# Check node process manually
 echo ""
-echo "PM2 Status:"
-echo "-----------"
-if command -v pm2 >/dev/null 2>&1; then
-    pm2 list
-else
-    echo "PM2 not installed"
-fi
+echo "=== MANUAL NODE TEST ==="
+echo "Testing node execution directly..."
+cd /var/www/itservicedesk
+NODE_ENV=production PORT=5000 node dist/index.js &
+NODE_PID=$!
+sleep 10
 
-echo ""
-echo "Recent Logs:"
-echo "------------"
-if [ -f deployment-*.log ]; then
-    echo "Found deployment log:"
-    ls -la deployment-*.log
-    echo ""
-    echo "Last 20 lines:"
-    tail -20 deployment-*.log
-elif [ -d logs ]; then
-    echo "Application logs:"
-    ls -la logs/
-    if [ -f logs/combined.log ]; then
-        tail -10 logs/combined.log
-    fi
-else
-    echo "No logs found"
-fi
+# Check if port is bound
+echo "Port check after manual start:"
+ss -tlnp | grep :5000 || echo "Port 5000 not bound"
 
-echo ""
-echo "Nginx Status:"
-echo "-------------"
-if [ -f /etc/nginx/sites-enabled/servicedesk ]; then
-    echo "✓ Nginx site configured"
-    sudo nginx -t
-else
-    echo "✗ Nginx not configured"
-fi
+# Kill manual test
+kill $NODE_PID 2>/dev/null || true
 
+# Check database connectivity
 echo ""
-echo "SSL Certificate:"
-echo "----------------"
-if [ -f /etc/nginx/ssl/servicedesk.crt ]; then
-    echo "✓ SSL certificate exists"
-    openssl x509 -in /etc/nginx/ssl/servicedesk.crt -noout -dates
-else
-    echo "✗ No SSL certificate"
-fi
+echo "=== DATABASE TEST ==="
+sudo -u postgres psql -d servicedesk -c "SELECT 1;" 2>/dev/null || echo "Database connection failed"
+
+# Check for conflicting processes
+echo ""
+echo "=== PROCESS CHECK ==="
+ps aux | grep -E "(node|pm2)" | grep -v grep
+
+# Check system resources
+echo ""
+echo "=== SYSTEM RESOURCES ==="
+free -h
+df -h /var/www/itservicedesk
+
+# Check if there are any permission issues
+echo ""
+echo "=== PERMISSIONS ==="
+ls -la /var/www/itservicedesk/
+whoami
+id
+
+EOF
