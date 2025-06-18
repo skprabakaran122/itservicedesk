@@ -106,6 +106,22 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 18, 2025 - Authentication Debugging and Fix ✓ IN PROGRESS
+- **Ubuntu Server Status**: Production server running successfully on port 5000
+  - PM2 process manager operational with database connectivity established
+  - All schedulers and background services initialized correctly
+  - Server responding to requests but authentication route failing
+- **Authentication Issue Identified**: Dynamic bcrypt import causing production build errors
+  - Development server authentication working perfectly (returns user data)
+  - Production server returning "Login failed" with HTTP 500 error
+  - Root cause: Dynamic require('bcrypt') call inside authentication route
+  - Database connectivity and user lookup confirmed working
+- **Fix Applied**: Created simplified production server with detailed logging
+  - Moved bcrypt import to top-level with proper error handling
+  - Added comprehensive authentication logging for debugging
+  - Created clean authentication route without complex dependencies
+  - Deploying simplified server to isolate and resolve authentication logic
+
 ### June 18, 2025 - Complete Production Deployment Success ✓ COMPLETED
 - **Vite Import Issue Resolution**: Created production-safe server architecture
   - Built separate server/production.ts file eliminating all vite dependencies 
