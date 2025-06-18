@@ -12,18 +12,23 @@ DB_USER="servicedesk"
 DB_PASS="servicedesk123"
 APP_PORT="3000"
 
+# 1. System Updates and Dependencies
+echo "1. Installing system dependencies..."
+sudo apt update -y
+
+# Install curl first if missing
+sudo apt install -y curl wget
+
 # Get server IP or domain
 if [ -z "$1" ]; then
-    SERVER_IP=$(curl -s ifconfig.me || echo "localhost")
+    SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || echo "localhost")
 else
     SERVER_IP="$1"
 fi
 
 echo "Deploying to: $SERVER_IP"
 
-# 1. System Updates and Dependencies
-echo "1. Installing system dependencies..."
-sudo apt update -y
+# Install Node.js repository and packages
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs postgresql postgresql-contrib nginx
 
