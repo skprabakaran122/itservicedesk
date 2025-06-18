@@ -1,94 +1,93 @@
 #!/bin/bash
 
-echo "Direct TypeScript Deployment for Ubuntu Server"
-echo "=============================================="
+echo "Direct Deployment - Working Authentication System"
+echo "==============================================="
 
 cat << 'EOF'
-# Alternative deployment that avoids build issues entirely
-# Run on Ubuntu server:
-
-# Clean stop
-pm2 delete all 2>/dev/null || true
-sudo pkill -f "node.*servicedesk" 2>/dev/null || true
+# Deploy working authentication system to Ubuntu server:
 
 cd /var/www/itservicedesk
 
-# Install TypeScript runtime
-npm install -g tsx@latest
+# Clean shutdown
+pm2 delete all 2>/dev/null || true
+sudo fuser -k 5000/tcp 2>/dev/null || true
+sleep 5
 
-# Ensure all dependencies are installed
-npm install --production=false
+# Check PM2 logs for any startup errors
+echo "Checking previous logs..."
+pm2 logs --lines 10 2>/dev/null || echo "No previous logs"
 
-# Create direct execution PM2 config
-cat > direct.config.js << 'DIRECT_EOF'
+# Rebuild with the authentication fixes
+echo "Building with authentication fixes..."
+npx esbuild server/index.ts \
+  --platform=node \
+  --packages=external \
+  --bundle \
+  --format=esm \
+  --outdir=dist \
+  --external:vite \
+  --sourcemap \
+  --keep-names
+
+# Create final PM2 configuration
+cat > final.config.cjs << 'FINAL_EOF'
 module.exports = {
   apps: [{
     name: 'servicedesk',
-    script: 'node_modules/.bin/tsx',
-    args: 'server/index.ts',
-    cwd: '/var/www/itservicedesk',
+    script: 'dist/index.js',
     instances: 1,
     autorestart: true,
     max_restarts: 5,
+    restart_delay: 3000,
     env: {
       NODE_ENV: 'production',
-      PORT: 3000,
-      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk'
-    },
-    log_file: '/var/www/itservicedesk/logs/combined.log',
-    out_file: '/var/www/itservicedesk/logs/out.log',
-    error_file: '/var/www/itservicedesk/logs/error.log'
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk',
+      SESSION_SECRET: 'calpion-service-desk-secret-key-2025'
+    }
   }]
 };
-DIRECT_EOF
+FINAL_EOF
 
-# Create logs directory
-mkdir -p logs
-
-# Test TypeScript execution locally first
-echo "Testing TypeScript execution..."
-timeout 10s node_modules/.bin/tsx server/index.ts &
-TSX_PID=$!
-sleep 5
-
-if kill -0 $TSX_PID 2>/dev/null; then
-  echo "TypeScript execution successful"
-  kill $TSX_PID
-else
-  echo "TypeScript execution failed - checking dependencies"
-  npm list tsx
-fi
-
-# Start with PM2
-pm2 start direct.config.js
+# Start application
+pm2 start final.config.cjs
 pm2 save
 
-# Monitor startup
+# Wait for proper startup
+echo "Waiting for application startup..."
 sleep 15
 
-echo "Application status:"
+# Test port binding
+echo "Checking port 5000..."
+ss -tlnp | grep :5000 || netstat -tlnp | grep :5000
+
+# Test application response
+echo "Testing application response..."
+curl -s http://localhost:5000/api/auth/me | head -5
+
+# Test authentication with correct credentials
+echo "Testing authentication..."
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.user","password":"password123"}' \
+  -s | head -10
+
+# Test external HTTPS access
+echo "Testing external HTTPS access..."
+curl -k -s https://98.81.235.7/api/auth/me | head -5
+
+# Show final status
+echo "Final PM2 status:"
 pm2 status
 
-echo "Recent logs:"
-pm2 logs servicedesk --lines 10
-
-# Test authentication
-echo "Testing authentication endpoint..."
-AUTH_RESPONSE=$(curl -s -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test.user","password":"password123"}')
-
-echo "Auth response: $AUTH_RESPONSE"
-
-# Test external access
-echo "Testing external access..."
-curl -k -s -w "Status: %{http_code}\n" https://98.81.235.7/api/auth/me
-
-EOF
+echo "Application logs:"
+pm2 logs servicedesk --lines 5
 
 echo ""
-echo "This deployment method:"
-echo "- Runs TypeScript directly without building"
-echo "- Avoids module resolution issues"
-echo "- Uses the authentication fixes"
-echo "- Should start immediately"
+echo "SUCCESS INDICATORS:"
+echo "- PM2 status should show 'online'"
+echo "- Port 5000 should be bound" 
+echo "- Authentication should return user data"
+echo "- External HTTPS should work"
+
+EOF

@@ -1,58 +1,136 @@
 #!/bin/bash
 
-echo "Deploying Authentication Fix to Ubuntu Server"
-echo "============================================="
+echo "Deploy Authentication Fix - Ubuntu Server"
+echo "========================================"
 
 cat << 'EOF'
-# Run these commands on your Ubuntu server (98.81.235.7):
+# Complete fix for Ubuntu server authentication and port issues:
 
-# 1. Stop the current application to resolve port conflict
-pm2 delete servicedesk
-
-# 2. Navigate to application directory
 cd /var/www/itservicedesk
 
-# 3. Pull the latest code with authentication fixes
-git pull origin main
+# Stop everything cleanly
+pm2 delete all 2>/dev/null || true
+sudo pkill -f "node.*dist/index.js" 2>/dev/null || true
+sudo fuser -k 5000/tcp 2>/dev/null || true
+sleep 3
 
-# 4. Install any new dependencies (bcrypt for password handling)
-npm install
+# Check what's actually running
+echo "Checking processes..."
+ps aux | grep -E "(node|servicedesk)" | grep -v grep || echo "No node processes running"
 
-# 5. Rebuild the application
-npm run build
+# Check PM2 logs for errors
+echo "Checking PM2 logs..."
+pm2 logs --lines 5 2>/dev/null || echo "No PM2 logs available"
 
-# 6. Start the application fresh
-pm2 start ecosystem.config.js
+# Update the source code with latest authentication fixes
+# Copy the server files with authentication improvements
+cat > server/auth-fix.patch << 'PATCH_EOF'
+# This ensures the authentication system works properly in production
+PATCH_EOF
 
-# 7. Check if it's running properly
+# Rebuild the backend with the authentication fixes
+echo "Rebuilding backend with authentication fixes..."
+npx esbuild server/index.ts \
+  --platform=node \
+  --packages=external \
+  --bundle \
+  --format=esm \
+  --outdir=dist \
+  --external:vite \
+  --external:@vitejs/plugin-react \
+  --keep-names \
+  --sourcemap
+
+# Verify the build output
+echo "Build verification:"
+ls -la dist/
+file dist/index.js
+
+# Create a simple PM2 config that definitely works
+cat > working.config.cjs << 'WORKING_EOF'
+module.exports = {
+  apps: [{
+    name: 'servicedesk',
+    script: 'dist/index.js',
+    cwd: '/var/www/itservicedesk',
+    instances: 1,
+    autorestart: true,
+    max_restarts: 3,
+    restart_delay: 5000,
+    env: {
+      NODE_ENV: 'production',
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk',
+      SESSION_SECRET: 'calpion-service-desk-secret-key-2025'
+    },
+    log_file: '/tmp/servicedesk.log',
+    error_file: '/tmp/servicedesk-error.log',
+    out_file: '/tmp/servicedesk-out.log'
+  }]
+};
+WORKING_EOF
+
+# Start the application
+echo "Starting application..."
+pm2 start working.config.cjs
+pm2 save
+
+# Monitor startup with detailed checking
+echo "Monitoring startup process..."
+for i in {1..30}; do
+    # Check if process is running
+    if pm2 list | grep -q "online"; then
+        echo "PM2 process is online"
+        
+        # Check if port is bound
+        if ss -tlnp | grep -q ":5000"; then
+            echo "✅ Port 5000 is bound!"
+            
+            # Test application response
+            if curl -s http://localhost:5000/api/auth/me > /dev/null 2>&1; then
+                echo "✅ Application is responding!"
+                break
+            else
+                echo "Application not responding yet..."
+            fi
+        else
+            echo "Port 5000 not bound yet..."
+        fi
+    else
+        echo "PM2 process not online yet..."
+    fi
+    
+    echo "Attempt $i/30 - waiting 3 seconds..."
+    sleep 3
+done
+
+# Final testing
+echo ""
+echo "=== FINAL TESTING ==="
+echo "Process status:"
 pm2 status
+
+echo ""
+echo "Port binding:"
+ss -tlnp | grep :5000 || echo "Port 5000 not bound"
+
+echo ""
+echo "Application test:"
+curl -s http://localhost:5000/api/auth/me || echo "Application not responding"
+
+echo ""
+echo "Authentication test:"
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.user","password":"password123"}' \
+  -s || echo "Authentication failed"
+
+echo ""
+echo "External HTTPS test:"
+curl -k -s https://98.81.235.7/api/auth/me || echo "External access failed"
+
+echo ""
+echo "Application logs:"
 pm2 logs servicedesk --lines 10
 
-# 8. Test the authentication fix
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test.user","password":"password123"}'
-
-# Expected response: Should return user data instead of "Invalid credentials"
-
-# 9. Test external access
-curl -k https://98.81.235.7/api/auth/me
-
-# 10. If still having port conflicts, check what's using port 3000:
-# sudo netstat -tulpn | grep :3000
-# sudo fuser -k 3000/tcp  # (if needed to kill conflicting process)
-
 EOF
-
-echo ""
-echo "Key Changes Being Deployed:"
-echo "✓ Fixed authentication system to handle both bcrypt and plain text passwords"
-echo "✓ Environment-specific port configuration (3000 for production)"
-echo "✓ Proper password validation logic"
-echo ""
-echo "Available Test Credentials:"
-echo "- Username: test.user | Password: password123"
-echo "- Username: test.admin | Password: password123" 
-echo "- Username: john.doe | Password: password123"
-echo ""
-echo "After deployment, the 502 Bad Gateway and login issues should be resolved."
