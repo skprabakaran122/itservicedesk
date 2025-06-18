@@ -1,0 +1,167 @@
+vite v5.4.14 building for production...
+transforming (3) src/main.tsxBrowserslist: browsers data (caniuse-lite) is 8 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+transforming (4) src/App.tsx[vite:css] @import must precede all other statements (besides @charset or empty @layer)
+4  |
+5  |  /* Force Tailwind styles to load */
+6  |  @import url('https://cdn.tailwindcss.com/3.4.0');
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7  |
+8  |  :root {
+✓ 2173 modules transformed.
+../dist/public/index.html                                        0.63 kB │ gzip:   0.38 kB
+../dist/public/assets/index-BC726MWo.css                        92.92 kB │ gzip:  14.83 kB
+../dist/public/assets/anonymous-ticket-search-new-CfeZwUO2.js    7.61 kB │ gzip:   2.28 kB
+../dist/public/assets/anonymous-ticket-form-Bk0Y8MTP.js         11.22 kB │ gzip:   3.63 kB
+../dist/public/assets/calpion-rpa-project-form-BsYKNKa_.js      15.84 kB │ gzip:   3.27 kB
+../dist/public/assets/index-BV0spMTm.js                        661.21 kB │ gzip: 185.88 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2m 42s
+
+  dist/index.js  152.3kb
+
+⚡ Done in 292ms
+Checking build output...
+✓ Backend build successful
+✓ Frontend build successful
+Testing application startup...
+[1] 117414
+✓ Application starts successfully
+Creating working PM2 configuration...
+module.exports = {
+  apps: [{
+    name: 'servicedesk',
+    script: './dist/index.js',
+    cwd: '/var/www/itservicedesk',
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000,
+      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk'
+    },
+    error_file: '/var/www/itservicedesk/logs/error.log',
+    out_file: '/var/www/itservicedesk/logs/output.log',
+    log_file: '/var/www/itservicedesk/logs/combined.log',
+    time: true
+  }]
+};
+Starting application with PM2...
+[PM2][ERROR] File working.config.js malformated
+ReferenceError: module is not defined
+    at file:///var/www/itservicedesk/working.config.js:1:1
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:387:35)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:323:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1371:24)
+    at Module._compile (node:internal/modules/cjs/loader:1511:5)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1572:16)
+    at Module.load (node:internal/modules/cjs/loader:1275:32)
+    at Module._load (node:internal/modules/cjs/loader:1096:12)
+    at Module.require (node:internal/modules/cjs/loader:1298:19)
+    at require (node:internal/modules/helpers:182:18)
+[PM2] Saving current process list...
+[PM2][WARN] PM2 is not managing any process, skipping save...
+[PM2][WARN] To force saving use: pm2 save --force
+Waiting for application to start...
+[Email Config] Failed to load from database: ErrorEvent {
+  [Symbol(kTarget)]: WebSocket {
+    _events: [Object: null prototype] {
+      error: [Function],
+      message: [Function],
+      close: [Function],
+      open: [Function]
+    },
+    _eventsCount: 4,
+    _maxListeners: undefined,
+    _binaryType: 'arraybuffer',
+    _closeCode: 1006,
+    _closeFrameReceived: false,
+    _closeFrameSent: false,
+    _closeMessage: <Buffer >,
+    _closeTimer: null,
+    _errorEmitted: true,
+    _extensions: {},
+    _paused: false,
+    _protocol: '',
+    _readyState: 3,
+    _receiver: null,
+    _sender: null,
+    _socket: null,
+    _bufferedAmount: 0,
+    _isServer: false,
+    _redirects: 0,
+    _autoPong: true,
+    _url: 'wss://localhost/v2',
+    _req: null,
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false
+  },
+  [Symbol(kType)]: 'error',
+  [Symbol(kError)]: Error: self-signed certificate
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1677:34)
+      at TLSSocket.emit (node:events:524:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1076:8)
+      at ssl.onhandshakedone (node:_tls_wrap:862:12) {
+    code: 'DEPTH_ZERO_SELF_SIGNED_CERT'
+  },
+  [Symbol(kMessage)]: 'self-signed certificate'
+}
+[Email] SENDGRID_API_KEY not configured. Email notifications disabled.
+[Email] Please set SENDGRID_API_KEY environment variable to enable email notifications.
+Error initializing data: ErrorEvent {
+  [Symbol(kTarget)]: WebSocket {
+    _events: [Object: null prototype] {
+      error: [Function],
+      message: [Function],
+      close: [Function],
+      open: [Function]
+    },
+    _eventsCount: 4,
+    _maxListeners: undefined,
+    _binaryType: 'arraybuffer',
+    _closeCode: 1006,
+    _closeFrameReceived: false,
+    _closeFrameSent: false,
+    _closeMessage: <Buffer >,
+    _closeTimer: null,
+    _errorEmitted: true,
+    _extensions: {},
+    _paused: false,
+    _protocol: '',
+    _readyState: 3,
+    _receiver: null,
+    _sender: null,
+    _socket: null,
+    _bufferedAmount: 0,
+    _isServer: false,
+    _redirects: 0,
+    _autoPong: true,
+    _url: 'wss://localhost/v2',
+    _req: null,
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false
+  },
+  [Symbol(kType)]: 'error',
+  [Symbol(kError)]: Error: self-signed certificate
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1677:34)
+      at TLSSocket.emit (node:events:524:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1076:8)
+      at ssl.onhandshakedone (node:_tls_wrap:862:12) {
+    code: 'DEPTH_ZERO_SELF_SIGNED_CERT'
+  },
+  [Symbol(kMessage)]: 'self-signed certificate'
+}
+7:51:25 AM [express] Warning: Failed to warm up database connection
+7:51:26 AM [express] [SLA] Next SLA refresh scheduled for 2025-07-01T00:00:00.000Z
+7:51:26 AM [express] HTTP server running on port 3000 (host: 0.0.0.0)
+7:51:26 AM [express] [SSL] HTTPS temporarily disabled for verification - can be re-enabled later
+7:51:26 AM [express] [Network] Server bound to all interfaces on port 3000
+7:51:26 AM [express] [AUTO-CLOSE] Error during auto-close process: [object Object]
+7:51:26 AM [express] [OVERDUE] Error during overdue check process: [object Object]
