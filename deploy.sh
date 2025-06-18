@@ -16,8 +16,8 @@ APP_PORT="3000"
 echo "1. Installing system dependencies..."
 sudo apt update -y
 
-# Install curl first if missing
-sudo apt install -y curl wget
+# Install basic tools first
+sudo apt install -y curl wget gnupg software-properties-common
 
 # Get server IP or domain
 if [ -z "$1" ]; then
@@ -28,9 +28,19 @@ fi
 
 echo "Deploying to: $SERVER_IP"
 
-# Install Node.js repository and packages
+# Remove old Node.js if exists
+sudo apt remove -y nodejs npm || true
+
+# Install Node.js 20 from official repository
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs postgresql postgresql-contrib nginx
+sudo apt install -y nodejs
+
+# Verify Node.js installation
+echo "Node.js version: $(node --version)"
+echo "npm version: $(npm --version)"
+
+# Install other packages
+sudo apt install -y postgresql postgresql-contrib nginx
 
 # Install PM2 globally
 sudo npm install -g pm2
