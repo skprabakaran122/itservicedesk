@@ -1,0 +1,86 @@
+ubuntu@ip-172-31-85-178:/var/www/itservicedesk$ #!/bin/bash
+
+# Production authentication fix - handle existing database schema
+cd /var/www/itservicedesk
+
+echo "Analyzing existing database schema..."
+
+# Check current database structure
+sudo -u postgres psql servicedesk -c "\d users" > /tmp/users_schema.txt 2>&1
+sudo -u postgres psql servicedesk -c "SELECT username, role FROM users;" > /tmp/current_users.txt 2>&1
+
+echo "Current users in database:"
+cat /tmp/current_users.txt
+
+# Modify the production server to handle the existing schema
+cat > server/production-fixed.cjs << 'EOF'
+const express = require('express');
+const path = require('path');
+const { Pool } = require('pg');
+const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
+const bcrypt = require('bcrypt');
+const multer = require('multer');
+const fs = require('fs');
+
+const app = express();
+const PORT = parseInt(process.env.PORT || '5000', 10);
+
+// Database connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/servicedesk'
+});
+
+// Test database connection
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('Database connection failed:', err);
+  } else {
+    console.log('Database connected successfully');
+    release();
+  }
+});
+
+// Session configuration
+echo "Access: https://$SERVER_IP">/dev/null || echo "your-server-ip")\ostgres@localhost:5432/servicedesk'}`);
+Analyzing existing database schema...
+Current users in database:
+ username |    role
+----------+------------
+ admin    | admin
+ support  | technician
+ manager  | manager
+ user     | user
+(4 rows)
+
+UPDATE 4
+ username |    role    |  password
+----------+------------+-------------
+ admin    | admin      | password123
+ support  | technician | password123
+ manager  | manager    | password123
+ user     | user       | password123
+(4 rows)
+
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [itservicedesk](ids: [ 0 ])
+[PM2] [itservicedesk](0) ✓
+┌────┬──────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name             │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ itservicedesk    │ default     │ 1.0.0   │ fork    │ 175509   │ 0s     │ 1    │ online    │ 0%       │ 19.0mb   │ ubuntu   │ disabled │
+└────┴──────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Testing with existing users...
+FAILED: admin - {"message":"Internal server error","error":"SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string"}
+FAILED: support - {"message":"Internal server error","error":"SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string"}
+FAILED: manager - {"message":"Internal server error","error":"SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string"}
+FAILED: user - {"message":"Internal server error","error":"SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string"}
+
+Authentication fixed. Use these credentials:
+- admin / password123 (admin role)
+- support / password123 (technician role)
+- manager / password123 (manager role)
+- user / password123 (user role)
+
+Access: https://98.81.235.7
+ubuntu@ip-172-31-85-178:/var/www/itservicedesk$
