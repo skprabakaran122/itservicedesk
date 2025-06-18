@@ -482,8 +482,8 @@ This is an automated notification from Calpion Change Management System.
 
     const baseUrl = this.getBaseUrl();
 
-    const approveUrl = `${baseUrl}/api/tickets/${ticket.id}/email-approve/${approvalToken}`;
-    const rejectUrl = `${baseUrl}/api/tickets/${ticket.id}/email-reject/${approvalToken}`;
+    const approveUrl = `${baseUrl}/approval/tickets/${ticket.id}/approve/${approvalToken}`;
+    const rejectUrl = `${baseUrl}/approval/tickets/${ticket.id}/reject/${approvalToken}`;
 
     const priorityColor = this.getPriorityColor(ticket.priority);
     const responseTime = this.getResponseTime(ticket.priority);
@@ -710,8 +710,8 @@ This is an automated notification from Calpion IT Service Desk.
 
     const baseUrl = this.getBaseUrl();
 
-    const approveUrl = `${baseUrl}/api/changes/${change.id}/email-approve/${approvalToken}`;
-    const rejectUrl = `${baseUrl}/api/changes/${change.id}/email-reject/${approvalToken}`;
+    const approveUrl = `${baseUrl}/approval/changes/${change.id}/approve/${approvalToken}`;
+    const rejectUrl = `${baseUrl}/approval/changes/${change.id}/reject/${approvalToken}`;
 
     const priorityColor = this.getPriorityColor(change.priority);
     const riskColor = change.riskLevel === 'high' ? '#ef4444' : change.riskLevel === 'medium' ? '#f59e0b' : '#10b981';

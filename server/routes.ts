@@ -572,8 +572,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Email-based approval endpoints (no login required)
-  app.get("/api/tickets/:id/email-approve/:token", async (req, res) => {
+  // Email-based approval endpoints (no login required) - separate path to avoid frontend conflicts
+  app.get("/approval/tickets/:id/approve/:token", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const token = req.params.token;
@@ -658,7 +658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/tickets/:id/email-reject/:token", async (req, res) => {
+  app.get("/approval/tickets/:id/reject/:token", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const token = req.params.token;
@@ -842,7 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Email-based change approval endpoints (no login required)
-  app.get("/api/changes/:id/email-approve/:token", async (req, res) => {
+  app.get("/approval/changes/:id/approve/:token", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const token = req.params.token;
@@ -926,7 +926,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/changes/:id/email-reject/:token", async (req, res) => {
+  app.get("/approval/changes/:id/reject/:token", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const token = req.params.token;
