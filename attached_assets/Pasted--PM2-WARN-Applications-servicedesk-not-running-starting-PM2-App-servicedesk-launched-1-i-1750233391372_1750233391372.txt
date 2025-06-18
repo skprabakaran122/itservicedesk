@@ -1,0 +1,66 @@
+[PM2][WARN] Applications servicedesk not running, starting...
+[PM2] App [servicedesk] launched (1 instances)
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ cluster │ 117509   │ 0s     │ 0    │ online    │ 0%       │ 39.6mb   │ ubuntu   │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /home/ubuntu/.pm2/dump.pm2
+Application Status:
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ cluster │ 117638   │ 0s     │ 10   │ online    │ 0%       │ 46.3mb   │ ubuntu   │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+
+Testing application...
+Testing auth endpoint...
+Moved Permanently. Redirecting to https://localhost:3000/api/auth/meTesting products endpoint...
+Products endpoint response: 301
+Testing HTTPS...
+Testing HTTPS connection...
+HTTP/2 200
+server: nginx/1.18.0 (Ubuntu)
+date: Wed, 18 Jun 2025 07:56:19 GMT
+content-type: text/html; charset=UTF-8
+content-length: 625
+x-powered-by: Express
+strict-transport-security: max-age=31536000; includeSubDomains
+x-content-type-options: nosniff
+x-frame-options: DENY
+x-xss-protection: 1; mode=block
+referrer-policy: strict-origin-when-cross-origin
+accept-ranges: bytes
+cache-control: public, max-age=0
+last-modified: Wed, 18 Jun 2025 07:51:07 GMT
+etag: W/"271-197820530f3"
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+x-frame-options: SAMEORIGIN
+x-xss-protection: 1; mode=block
+x-content-type-options: nosniff
+referrer-policy: no-referrer-when-downgrade
+
+
+🎉 DEPLOYMENT COMPLETE!
+======================================
+Your IT Service Desk is running at:
+https://98.81.235.7
+
+Access Instructions:
+1. Open https://98.81.235.7 in your browser
+2. Accept the security warning for self-signed certificate
+3. Login with: john.doe / password123
+
+Features Available:
+- Enhanced Calpion branding and logo
+- Comprehensive dashboard with animated UI
+- Ticket management system
+- Change request workflows
+- User management
+- SLA tracking and metrics
+
+Management Commands:
+sudo -u ubuntu pm2 status
+sudo -u ubuntu pm2 logs servicedesk
+sudo -u ubuntu pm2 restart servicedesk
