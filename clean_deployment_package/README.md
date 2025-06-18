@@ -25,10 +25,16 @@ If you have existing installations to remove:
 # Then run either simple_deploy.sh or git_deploy.sh
 ```
 
-### Quick Fix for Non-Responsive Application
+### Fixes for Application Issues
+
 If deployment completes but application doesn't respond:
 ```bash
 ./immediate_fix.sh
+```
+
+If immediate fix doesn't work, try the PM2 environment fix:
+```bash
+./pm2_env_fix.sh
 ```
 
 ## What Gets Installed
