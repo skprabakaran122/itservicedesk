@@ -1,51 +1,62 @@
 #!/bin/bash
 
-echo "Simple Fix for IT Service Desk"
-echo "=============================="
+echo "Simple Test and Fix - Ubuntu Server"
+echo "================================="
 
-# Get current directory (should be where the project is)
-PROJECT_DIR=$(pwd)
-echo "Working in: $PROJECT_DIR"
+cat << 'EOF'
+# Test current working state on Ubuntu server:
 
-# Stop any existing PM2 processes
-pm2 delete all 2>/dev/null || true
+cd /var/www/itservicedesk
 
-# Create simple PM2 config that works
-cat > simple.config.js << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'servicedesk',
-    script: 'server/index.ts',
-    interpreter: 'node',
-    interpreter_args: '--loader tsx',
-    cwd: process.cwd(),
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000,
-      DATABASE_URL: 'postgresql://servicedesk:servicedesk123@localhost:5432/servicedesk'
-    }
-  }]
-};
-EOF
+# Test if application is responding
+echo "Testing application on port 5000..."
+curl -s http://localhost:5000/api/auth/me | head -5
 
-# Install tsx globally if not present
-npm install -g tsx 2>/dev/null || true
+echo ""
+echo "Testing authentication..."
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.user","password":"password123"}' \
+  -s | head -5
 
-# Start the application
-pm2 start simple.config.js
+echo ""
+echo "Testing external HTTPS..."
+curl -k -s https://98.81.235.7/api/auth/me | head -5
 
-sleep 5
+echo ""
+echo "Check PM2 logs for any errors..."
+pm2 logs servicedesk --lines 5
 
-# Check if running
-if curl -f http://localhost:3000 > /dev/null 2>&1; then
-    echo "✓ Application running on port 3000"
-    echo "Your IT Service Desk is available at: https://98.81.235.7"
-else
-    echo "Checking status..."
-    pm2 status
-    echo ""
-    pm2 logs servicedesk --lines 10
+# If authentication still fails, rebuild with the latest code
+if ! curl -s http://localhost:5000/api/auth/login -X POST -H "Content-Type: application/json" -d '{"username":"test.user","password":"password123"}' | grep -q "user"; then
+    echo "Authentication issue detected. Rebuilding with latest fixes..."
+    
+    # Sync the latest code changes
+    git pull 2>/dev/null || echo "No git sync available"
+    
+    # Rebuild backend with the authentication fixes
+    npx esbuild server/index.ts \
+      --platform=node \
+      --packages=external \
+      --bundle \
+      --format=esm \
+      --outdir=dist \
+      --external:vite
+    
+    # Restart PM2
+    pm2 restart servicedesk
+    
+    # Wait and test again
+    sleep 10
+    echo "Testing after rebuild..."
+    curl -X POST http://localhost:5000/api/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"username":"test.user","password":"password123"}' \
+      -s | head -5
 fi
+
+echo ""
+echo "Final status:"
+pm2 status
+
+EOF
