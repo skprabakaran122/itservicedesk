@@ -1,0 +1,66 @@
+Creating clean build from scratch...
+
+added 89 packages, and audited 90 packages in 5s
+
+14 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+DROP DATABASE
+CREATE DATABASE
+You are now connected to database "servicedesk" as user "postgres".
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 4
+INSERT 0 5
+INSERT 0 3
+INSERT 0 2
+Starting Calpion IT Service Desk...
+[1] 179410
+Calpion IT Service Desk running on port 5000
+Database connection failed: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at /var/www/itservicedesk/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Testing application...
+✅ Application started successfully
+Login attempt: admin
+Login error: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at /var/www/itservicedesk/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /var/www/itservicedesk/server.js:52:20
+⚠️ Authentication may need checking
+nginx: [warn] conflicting server name "98.81.235.7" on 0.0.0.0:80, ignored
+nginx: [warn] conflicting server name "98.81.235.7" on 0.0.0.0:443, ignored
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+🎉 CALPION IT SERVICE DESK DEPLOYED SUCCESSFULLY
+==============================================
+
+✅ Clean build from scratch completed
+✅ Database created with sample data
+✅ Application running on port 5000
+✅ Nginx proxy configured
+
+🌐 Access your application:
+   http://98.81.235.7
+
+🔐 Login credentials:
+   admin / password123 (Administrator)
+   support / password123 (Technician)
+   manager / password123 (Manager)
+   user / password123 (End User)
+
+📊 Features available:
+   • Dashboard with statistics
+   • Ticket management
+   • Change request tracking
+   • Product catalog
+   • User management
+
+🔧 Application PID: 179410
+   To stop: kill 179410
+
+EOF: command not found
