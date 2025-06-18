@@ -1,0 +1,116 @@
+vite v5.4.14 building for production...
+transforming (4) src/App.tsxBrowserslist: browsers data (caniuse-lite) is 8 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 2174 modules transformed.
+../dist/public/index.html                                        0.63 kB │ gzip:   0.39 kB
+../dist/public/assets/image_1749619432130-DAoAvPdR.png          62.92 kB
+../dist/public/assets/index-BC726MWo.css                        92.92 kB │ gzip:  14.83 kB
+../dist/public/assets/anonymous-ticket-search-new-Bb3Im45e.js    7.61 kB │ gzip:   2.28 kB
+../dist/public/assets/anonymous-ticket-form-BD5Cl0kk.js         11.22 kB │ gzip:   3.63 kB
+../dist/public/assets/calpion-rpa-project-form-sgHN5q6K.js      15.84 kB │ gzip:   3.27 kB
+../dist/public/assets/index-D4PHRL5S.js                        660.97 kB │ gzip: 185.79 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2m 50s
+
+  dist/index.js  152.4kb
+
+⚡ Done in 276ms
+9. Configuring web server...
+server {
+    listen 80;
+    server_name 98.81.235.7;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    client_max_body_size 10M;
+}
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+10. Starting application...
+
+                        -------------
+
+__/\\\\\\\\\\\\\____/\\\\____________/\\\\____/\\\\\\\\\_____
+ _\/\\\/////////\\\_\/\\\\\\________/\\\\\\__/\\\///////\\\___
+  _\/\\\_______\/\\\_\/\\\//\\\____/\\\//\\\_\///______\//\\\__
+   _\/\\\\\\\\\\\\\/__\/\\\\///\\\/\\\/_\/\\\___________/\\\/___
+    _\/\\\/////////____\/\\\__\///\\\/___\/\\\________/\\\//_____
+     _\/\\\_____________\/\\\____\///_____\/\\\_____/\\\//________
+      _\/\\\_____________\/\\\_____________\/\\\___/\\\/___________
+       _\/\\\_____________\/\\\_____________\/\\\__/\\\\\\\\\\\\\\\_
+        _\///______________\///______________\///__\///////////////__
+
+
+                          Runtime Edition
+
+        PM2 is a Production Process Manager for Node.js applications
+                     with a built-in Load Balancer.
+
+                Start and Daemonize any application:
+                $ pm2 start app.js
+
+                Load Balance 4 instances of api.js:
+                $ pm2 start api.js -i 4
+
+                Monitor in production:
+                $ pm2 monitor
+
+                Make pm2 auto-boot at server restart:
+                $ pm2 startup
+
+                To go further checkout:
+                http://pm2.io/
+
+
+                        -------------
+
+[PM2] Spawning PM2 daemon with pm2_home=/home/ubuntu/.pm2
+[PM2] PM2 Successfully daemonized
+[PM2][WARN] Applications servicedesk not running, starting...
+[PM2] App [servicedesk] launched (1 instances)
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ N/A     │ cluster │ 87433    │ 1s     │ 0    │ online    │ 0%       │ 40.5mb   │ ubuntu   │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /home/ubuntu/.pm2/dump.pm2
+11. Configuring firewall...
+Backing up 'user.rules' to '/etc/ufw/user.rules.20250618_044448'
+Backing up 'before.rules' to '/etc/ufw/before.rules.20250618_044448'
+Backing up 'after.rules' to '/etc/ufw/after.rules.20250618_044448'
+Backing up 'user6.rules' to '/etc/ufw/user6.rules.20250618_044448'
+Backing up 'before6.rules' to '/etc/ufw/before6.rules.20250618_044448'
+Backing up 'after6.rules' to '/etc/ufw/after6.rules.20250618_044448'
+
+Default incoming policy changed to 'deny'
+(be sure to update your rules accordingly)
+Default outgoing policy changed to 'allow'
+(be sure to update your rules accordingly)
+Rules updated
+Rules updated (v6)
+Rules updated
+Rules updated (v6)
+Rules updated
+Rules updated (v6)
+Firewall is active and enabled on system startup
+12. Verifying installation...
+❌ Application not responding. Checking logs...
+[TAILING] Tailing last 10 lines for [servicedesk] process (change the value with --lines option)
+/var/log/servicedesk/out-0.log last 10 lines:
+/var/log/servicedesk/error-0.log last 10 lines:

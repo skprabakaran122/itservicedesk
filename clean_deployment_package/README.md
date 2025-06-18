@@ -25,6 +25,12 @@ If you have existing installations to remove:
 # Then run either simple_deploy.sh or git_deploy.sh
 ```
 
+### Quick Fix for Non-Responsive Application
+If deployment completes but application doesn't respond:
+```bash
+./immediate_fix.sh
+```
+
 ## What Gets Installed
 
 - **Node.js 20** with npm package manager
