@@ -52,6 +52,16 @@ For complete debugging and startup:
 ./ultimate_deployment_fix.sh
 ```
 
+**Database connection fix (for WebSocket errors):**
+```bash
+./database_connection_fix.sh
+```
+
+**PostgreSQL import fix (for ES modules errors):**
+```bash
+./pg_import_fix.sh
+```
+
 ## What Gets Installed
 
 - **Node.js 20** with npm package manager

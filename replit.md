@@ -140,6 +140,8 @@ This is a comprehensive IT Service Desk application built with modern web techno
   - ES modules import order causing dotenv to load after database module
   - ES modules vs CommonJS compatibility issues with PM2 process management
   - Silent process failures requiring comprehensive debugging and alternative startup methods
+  - Database connection issues when cloud Neon configuration conflicts with local PostgreSQL setup
+  - WebSocket connection errors requiring conversion from Neon serverless to standard PostgreSQL drivers
 - **Clean Deployment Strategy**: Complete package with multiple deployment options
   - Git-based deployment with repository cloning and version control
   - Local file deployment for offline installation scenarios
