@@ -266,9 +266,9 @@ function startOverdueChangeScheduler() {
     }
 
     // Start HTTP server (HTTPS temporarily disabled for verification)
-    // Use environment-specific port configuration
-    const httpPort = isDevelopment ? 5000 : parseInt(process.env.PORT || "3000", 10);
-    log(`[DEBUG] Environment: ${isDevelopment ? 'development' : 'production'}, using port ${httpPort}`);
+    // Use port 5000 consistently across all environments
+    const httpPort = parseInt(process.env.PORT || "5000", 10);
+    log(`[DEBUG] Using port ${httpPort} for all environments`);
     
     server.listen(httpPort, () => {
       log(`HTTP server running on port ${httpPort} (host: 0.0.0.0)`);
