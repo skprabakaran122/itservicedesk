@@ -1,99 +1,74 @@
 #!/bin/bash
 
-echo "Fixing User Authentication - Creating Valid User"
-echo "=============================================="
+echo "Fix User Creation and Authentication - Ubuntu Server"
+echo "=================================================="
+
+cat << 'EOF'
+# Complete authentication fix for Ubuntu server:
 
 cd /var/www/itservicedesk
 
-# Stop the application to avoid conflicts
-sudo -u ubuntu pm2 stop servicedesk
+# Check PM2 logs for specific errors
+echo "Current PM2 logs:"
+pm2 logs servicedesk --lines 5
 
-# Set PostgreSQL password
-export PGPASSWORD=servicedesk123
+# Install bcrypt dependency
+npm install bcrypt
 
+# Reset test users with plain text passwords
+echo ""
+echo "Resetting test users with plain text passwords:"
+sudo -u postgres psql -d servicedesk << 'SQL_EOF'
+UPDATE users SET password = 'password123' WHERE username IN ('test.user', 'test.admin', 'john.doe');
+INSERT INTO users (username, email, password, role, name) 
+VALUES ('test.simple', 'test.simple@company.com', 'password123', 'user', 'Test Simple User')
+ON CONFLICT (username) DO UPDATE SET password = 'password123';
+SQL_EOF
+
+# Verify users in database
+echo ""
 echo "Current users in database:"
-psql -h localhost -U servicedesk -d servicedesk -c "SELECT id, username, email, role FROM users;"
+sudo -u postgres psql -d servicedesk -c "SELECT username, email, password, role FROM users WHERE username LIKE 'test.%';"
 
+# Rebuild and restart
 echo ""
-echo "Dropping existing john.doe user and recreating with correct password..."
+echo "Rebuilding production server:"
+npx esbuild server/production.ts \
+  --platform=node \
+  --packages=external \
+  --bundle \
+  --format=esm \
+  --outfile=dist/production.js \
+  --keep-names
 
-# Remove existing user
-psql -h localhost -U servicedesk -d servicedesk -c "DELETE FROM users WHERE username = 'john.doe';"
+pm2 restart servicedesk
+sleep 8
 
-# Create user with correct bcrypt hash for 'password123'
-# This is the bcrypt hash for 'password123' with salt rounds 10
-psql -h localhost -U servicedesk -d servicedesk -c "
-INSERT INTO users (username, email, password, role, first_name, last_name, department, phone, is_active, created_at, updated_at) 
-VALUES (
-  'john.doe', 
-  'john.doe@calpion.com', 
-  '\$2b\$10\$e0MYzXyjpJS7Pd2ALDLNPeaP5Bz4pQH1JOq9lEJP4s.2LdJSJ4n4q',
-  'admin',
-  'John',
-  'Doe', 
-  'IT', 
-  '555-0123',
-  true,
-  NOW(),
-  NOW()
-);"
-
-# Also create a test user with a simpler password 'test123'
-psql -h localhost -U servicedesk -d servicedesk -c "
-INSERT INTO users (username, email, password, role, first_name, last_name, department, phone, is_active, created_at, updated_at) 
-VALUES (
-  'testuser', 
-  'test@calpion.com', 
-  '\$2b\$10\$nOUIs5kJ7naTuTFkBy1veuK0kSCbYAX/g.DXDikAsua/KFQO5OW6O',
-  'user',
-  'Test',
-  'User', 
-  'Support', 
-  '555-0124',
-  true,
-  NOW(),
-  NOW()
-);"
-
+# Test authentication with simple user
 echo ""
-echo "Updated users in database:"
-psql -h localhost -U servicedesk -d servicedesk -c "SELECT id, username, email, role, first_name, last_name FROM users;"
-
-# Restart the application
-sudo -u ubuntu pm2 start servicedesk
-
-sleep 5
-
-echo ""
-echo "Testing login with updated credentials..."
-
-# Test with john.doe / password123
-echo "Testing john.doe login..."
-curl -s -X POST http://localhost:3000/api/auth/login \
+echo "Testing simple user authentication:"
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"john.doe","password":"password123"}' \
-  -w "Response Code: %{http_code}\n"
+  -d '{"username":"test.simple","password":"password123"}' \
+  -s | head -5
 
 echo ""
-echo "Testing testuser login..."
-curl -s -X POST http://localhost:3000/api/auth/login \
+echo "Testing original test.user:"
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"test123"}' \
-  -w "Response Code: %{http_code}\n"
+  -d '{"username":"test.user","password":"password123"}' \
+  -s | head -5
+
+echo ""
+echo "Final verification - External HTTPS:"
+curl -k https://98.81.235.7/api/auth/login \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.simple","password":"password123"}' \
+  -s | head -5
 
 echo ""
 echo "Application status:"
-sudo -u ubuntu pm2 status
+pm2 status
 
-echo ""
-echo "Updated login credentials:"
-echo "========================================="
-echo "Administrator Account:"
-echo "Username: john.doe"
-echo "Password: password123"
-echo ""
-echo "Test User Account:"
-echo "Username: testuser" 
-echo "Password: test123"
-echo ""
-echo "Access your IT Service Desk at: https://98.81.235.7"
+EOF

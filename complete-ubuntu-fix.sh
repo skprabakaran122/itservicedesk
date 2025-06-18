@@ -1,50 +1,86 @@
 #!/bin/bash
 
-echo "Complete Ubuntu Server Fix - Port 5000 Working"
-echo "=============================================="
+echo "Complete Ubuntu Authentication Fix"
+echo "================================="
 
 cat << 'EOF'
-# Final commands for Ubuntu server - authentication already working:
+# Complete fix for Ubuntu server authentication:
 
 cd /var/www/itservicedesk
 
-# Fix the build process by using local vite
-echo "Fixing build process..."
-./node_modules/.bin/vite build
-./node_modules/.bin/esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+# Install bcrypt dependency
+npm install bcrypt
 
-# Restart with fresh build
-pm2 restart servicedesk
-
-# Test the working system
-echo "Testing authentication system..."
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test.user","password":"password123"}'
-
-echo ""
-echo "Testing external HTTPS access..."
-curl -k -X POST https://98.81.235.7/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test.user","password":"password123"}'
-
-echo ""
-echo "Application status:"
-pm2 status
-echo ""
-echo "Recent logs:"
+# Check current authentication errors
+echo "PM2 logs:"
 pm2 logs servicedesk --lines 5
 
-EOF
+# Reset all users to plain text passwords for compatibility
+echo ""
+echo "Resetting user passwords to plain text:"
+sudo -u postgres psql -d servicedesk -c "
+UPDATE users SET password = 'password123' WHERE username IN ('test.user', 'test.admin', 'john.doe');
+DELETE FROM users WHERE username = 'test.simple';
+INSERT INTO users (username, email, password, role, name, created_at) 
+VALUES ('test.simple', 'test.simple@company.com', 'password123', 'user', 'Test Simple User', NOW());
+"
+
+# Verify user data
+echo ""
+echo "Current test users:"
+sudo -u postgres psql -d servicedesk -c "SELECT username, password, role FROM users WHERE username LIKE 'test.%' OR username = 'john.doe';"
+
+# Rebuild production server
+echo ""
+echo "Rebuilding production server:"
+npx esbuild server/production.ts \
+  --platform=node \
+  --packages=external \
+  --bundle \
+  --format=esm \
+  --outfile=dist/production.js \
+  --keep-names
+
+# Restart application
+pm2 restart servicedesk
+sleep 10
+
+# Test all authentication scenarios
+echo ""
+echo "Testing test.simple user:"
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.simple","password":"password123"}' \
+  -w "\nStatus: %{http_code}\n"
 
 echo ""
-echo "Success! Your IT Service Desk is now running:"
-echo "- Port 5000 configured everywhere"
-echo "- Authentication system working"
-echo "- Nginx proxy configured for HTTPS"
-echo "- Available at: https://98.81.235.7"
+echo "Testing test.user:"
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.user","password":"password123"}' \
+  -w "\nStatus: %{http_code}\n"
+
 echo ""
-echo "Login credentials:"
-echo "- test.user / password123"
-echo "- test.admin / password123"
-echo "- john.doe / password123"
+echo "Testing test.admin:"
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.admin","password":"password123"}' \
+  -w "\nStatus: %{http_code}\n"
+
+echo ""
+echo "Testing external HTTPS:"
+curl -k https://98.81.235.7/api/auth/login \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test.simple","password":"password123"}' \
+  -w "\nStatus: %{http_code}\n"
+
+echo ""
+echo "Final PM2 status:"
+pm2 status
+
+echo ""
+echo "Recent logs:"
+pm2 logs servicedesk --lines 3
+
+EOF
