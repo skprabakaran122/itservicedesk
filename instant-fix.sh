@@ -20,38 +20,15 @@ NODE_ENV=production
 PORT=5000
 EOF
 
-# Update PM2 config with explicit paths and environment
-cat > ecosystem.config.js << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'itservicedesk',
-    script: '/var/www/itservicedesk/dist/production.cjs',
-    cwd: '/var/www/itservicedesk',
-    instances: 1,
-    exec_mode: 'fork',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 5000,
-      DATABASE_URL: 'postgresql://ubuntu:password@localhost:5432/servicedesk'
-    },
-    env_file: '/var/www/itservicedesk/.env',
-    error_file: '/var/www/itservicedesk/logs/err.log',
-    out_file: '/var/www/itservicedesk/logs/out.log',
-    log_file: '/var/www/itservicedesk/logs/combined.log',
-    time: true,
-    max_memory_restart: '1G',
-    restart_delay: 2000,
-    watch: false
-  }]
-};
-EOF
+# Use the existing .cjs config file
+echo "Using ecosystem.config.cjs..."
 
 # Start PM2 with explicit environment
 export DATABASE_URL="postgresql://ubuntu:password@localhost:5432/servicedesk"
 export NODE_ENV="production"
 export PORT="5000"
 
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 pm2 save
 
 echo "Waiting for application to start..."
