@@ -1,0 +1,68 @@
+Testing deployment...
+✗ Application failed to start
+[TAILING] Tailing last 20 lines for [all] processes (change the value with --lines option)
+/home/ubuntu/.pm2/pm2.log last 20 lines:
+PM2        | 2025-06-18T17:16:26: PM2 error: Error caught while calling pidusage
+PM2        | 2025-06-18T17:16:26: PM2 error: TypeError: One of the pids provided is invalid
+PM2        | 2025-06-18T17:16:56: PM2 error: Error caught while calling pidusage
+PM2        | 2025-06-18T17:16:56: PM2 error: TypeError: One of the pids provided is invalid
+PM2        | 2025-06-18T17:17:26: PM2 error: Error caught while calling pidusage
+PM2        | 2025-06-18T17:17:26: PM2 error: TypeError: One of the pids provided is invalid
+PM2        | 2025-06-18T17:17:56: PM2 error: Error caught while calling pidusage
+PM2        | 2025-06-18T17:17:56: PM2 error: TypeError: One of the pids provided is invalid
+PM2        | 2025-06-18T17:18:26: PM2 error: Error caught while calling pidusage
+PM2        | 2025-06-18T17:18:26: PM2 error: TypeError: One of the pids provided is invalid
+PM2        | 2025-06-18T17:18:56: PM2 error: Error caught while calling pidusage
+PM2        | 2025-06-18T17:18:56: PM2 error: TypeError: One of the pids provided is invalid
+PM2        | 2025-06-18T17:19:10: PM2 error: Error caught while calling pidusage
+PM2        | 2025-06-18T17:19:10: PM2 error: TypeError: One of the pids provided is invalid
+PM2        | 2025-06-18T17:19:10: PM2 error: Error caught while calling pidusage
+PM2        | 2025-06-18T17:19:10: PM2 error: TypeError: One of the pids provided is invalid
+PM2        | 2025-06-18T17:19:10: PM2 log: Stopping app:servicedesk id:0
+PM2        | 2025-06-18T17:19:10: PM2 error: app=servicedesk id=0 does not have a pid
+PM2        | 2025-06-18T17:19:10: PM2 log: App [servicedesk:0] starting in -fork mode-
+PM2        | 2025-06-18T17:19:10: PM2 log: App [servicedesk:0] online
+
+/home/ubuntu/.pm2/logs/servicedesk-out.log last 20 lines:
+0|serviced | 4:29:02 PM [express] HTTP server running on port 5000 (host: 0.0.0.0)
+0|serviced | 4:29:02 PM [express] [SSL] HTTPS temporarily disabled for verification - can be re-enabled later
+0|serviced | 4:29:02 PM [express] [Network] Server bound to all interfaces on port 5000
+0|serviced | [Email] Using API key: SG.4U3wqPM...
+0|serviced | [Email] SendGrid configured successfully
+0|serviced | [Email] From address: no-reply@calpion.com
+0|serviced | [Email] API key format check: Valid
+0|serviced | [Email] API key length: 69
+0|serviced | [Auth] bcrypt not available, using plain text password comparison
+0|serviced | 4:30:16 PM [express] Database connection warmed up
+0|serviced | 4:30:16 PM [express] [DEBUG] Using port 5000 for all environments
+0|serviced | 4:30:16 PM [express] [SLA] Next SLA refresh scheduled for 2025-07-01T00:00:00.000Z
+0|serviced | 4:30:16 PM [express] HTTP server running on port 5000 (host: 0.0.0.0)
+0|serviced | 4:30:16 PM [express] [SSL] HTTPS temporarily disabled for verification - can be re-enabled later
+0|serviced | 4:30:16 PM [express] [Network] Server bound to all interfaces on port 5000
+0|serviced | [Email] Using API key: SG.4U3wqPM...
+0|serviced | [Email] SendGrid configured successfully
+0|serviced | [Email] From address: no-reply@calpion.com
+0|serviced | [Email] API key format check: Valid
+0|serviced | [Email] API key length: 69
+
+/home/ubuntu/.pm2/logs/servicedesk-error.log last 20 lines:
+0|serviced |     at Module._resolveFilename (node:internal/modules/cjs/loader:1212:15)
+0|serviced |     at Module._load (node:internal/modules/cjs/loader:1043:27)
+0|serviced |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+0|serviced |     at Module._compile (node:internal/modules/cjs/loader:1529:14)
+0|serviced |     at Module._extensions..js (node:internal/modules/cjs/loader:1613:10)
+0|serviced |     at Module.load (node:internal/modules/cjs/loader:1275:32)
+0|serviced |     at Module._load (node:internal/modules/cjs/loader:1096:12)
+0|serviced |     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+0|serviced |     at node:internal/main/run_main_module:28:49 {
+0|serviced |   code: 'MODULE_NOT_FOUND',
+0|serviced |   requireStack: []
+0|serviced | }
+0|serviced | 2025-06-18T17:19:12: Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|serviced | 2025-06-18T17:19:12:     at server/db.ts (file:///var/www/itservicedesk/dist/index.js:280:13)
+0|serviced | 2025-06-18T17:19:12:     at __init (file:///var/www/itservicedesk/dist/index.js:10:56)
+0|serviced | 2025-06-18T17:19:12:     at server/storage.ts (file:///var/www/itservicedesk/dist/index.js:1195:5)
+0|serviced | 2025-06-18T17:19:12:     at __init (file:///var/www/itservicedesk/dist/index.js:10:56)
+0|serviced | 2025-06-18T17:19:12:     at file:///var/www/itservicedesk/dist/index.js:1939:1
+0|serviced | 2025-06-18T17:19:12:     at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+0|serviced | 2025-06-18T17:19:12:     at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)

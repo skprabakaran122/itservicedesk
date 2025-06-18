@@ -151,17 +151,31 @@ sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw --force enable
 
+# Setup environment variables
+echo "Setting up environment variables..."
+if [ -z "$DATABASE_URL" ]; then
+    echo "DATABASE_URL not found, setting default PostgreSQL connection..."
+    export DATABASE_URL="postgresql://ubuntu:password@localhost:5432/servicedesk"
+    echo "export DATABASE_URL=\"postgresql://ubuntu:password@localhost:5432/servicedesk\"" >> ~/.bashrc
+    echo "export DATABASE_URL=\"postgresql://ubuntu:password@localhost:5432/servicedesk\"" >> /home/ubuntu/.bashrc
+fi
+
 # Setup database schema
 echo "Setting up database schema..."
-if [ -n "$DATABASE_URL" ]; then
-    psql $DATABASE_URL -c "CREATE TABLE IF NOT EXISTS user_sessions (sid varchar NOT NULL COLLATE \"default\", sess json NOT NULL, expire timestamp(6) NOT NULL) WITH (OIDS=FALSE);" 2>/dev/null || true
-    psql $DATABASE_URL -c "CREATE INDEX IF NOT EXISTS \"IDX_session_expire\" ON \"user_sessions\" (\"expire\");" 2>/dev/null || true
-    echo "Database schema verified"
-fi
+psql $DATABASE_URL -c "CREATE TABLE IF NOT EXISTS user_sessions (sid varchar NOT NULL COLLATE \"default\", sess json NOT NULL, expire timestamp(6) NOT NULL) WITH (OIDS=FALSE);" 2>/dev/null || true
+psql $DATABASE_URL -c "CREATE INDEX IF NOT EXISTS \"IDX_session_expire\" ON \"user_sessions\" (\"expire\");" 2>/dev/null || true
+echo "Database schema verified"
+
+# Clean PM2 completely
+echo "Cleaning PM2 processes..."
+pm2 kill 2>/dev/null || true
+pm2 delete all 2>/dev/null || true
+pm2 flush 2>/dev/null || true
 
 # Start application with PM2
 echo "Starting application with PM2..."
-pm2 delete $APP_NAME 2>/dev/null || true
+cd $APP_DIR
+export DATABASE_URL="postgresql://ubuntu:password@localhost:5432/servicedesk"
 pm2 start ecosystem.config.js
 pm2 save
 pm2 startup ubuntu -u ubuntu --hp /home/ubuntu | tail -1 | sudo bash
