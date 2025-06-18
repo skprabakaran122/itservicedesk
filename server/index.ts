@@ -266,7 +266,9 @@ function startOverdueChangeScheduler() {
     }
 
     // Start HTTP server (HTTPS temporarily disabled for verification)
-    const httpPort = parseInt(process.env.PORT || "5000", 10);
+    // Force port 5000 for Replit workflow compatibility
+    const httpPort = 5000;
+    log(`[DEBUG] Forcing port ${httpPort} for workflow compatibility`);
     
     server.listen(httpPort, () => {
       log(`HTTP server running on port ${httpPort} (host: 0.0.0.0)`);
