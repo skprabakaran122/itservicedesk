@@ -138,7 +138,8 @@ This is a comprehensive IT Service Desk application built with modern web techno
   - Application startup and port binding problems
   - Environment variable loading issue (DATABASE_URL not accessible to Node.js)
   - ES modules import order causing dotenv to load after database module
-  - Fixed with direct dotenv loading in server/db.ts and module preloading
+  - ES modules vs CommonJS compatibility issues with PM2 process management
+  - Silent process failures requiring comprehensive debugging and alternative startup methods
 - **Clean Deployment Strategy**: Complete package with multiple deployment options
   - Git-based deployment with repository cloning and version control
   - Local file deployment for offline installation scenarios

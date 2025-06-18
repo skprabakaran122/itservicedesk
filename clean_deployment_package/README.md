@@ -42,6 +42,16 @@ For ES modules environment issues:
 ./final_pm2_fix.sh
 ```
 
+For complete debugging and startup:
+```bash
+./debug_and_start.sh
+```
+
+**Ultimate comprehensive fix (recommended):**
+```bash
+./ultimate_deployment_fix.sh
+```
+
 ## What Gets Installed
 
 - **Node.js 20** with npm package manager
