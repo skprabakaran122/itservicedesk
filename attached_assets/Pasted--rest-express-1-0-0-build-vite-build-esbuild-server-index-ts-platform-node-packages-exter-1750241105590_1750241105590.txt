@@ -1,0 +1,40 @@
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+sh: 1: vite: not found
+total 1628
+drwxrwxr-x  3 ubuntu ubuntu   4096 Jun 18 09:46 .
+drwxr-xr-x 11 ubuntu ubuntu   4096 Jun 18 10:02 ..
+-rw-rw-r--  1 ubuntu ubuntu 158153 Jun 18 08:59 index.js
+-rw-rw-r--  1 ubuntu ubuntu 262655 Jun 18 08:59 index.js.map
+-rw-rw-r--  1 ubuntu ubuntu 153637 Jun 18 09:46 production-auth-fixed.js
+-rw-rw-r--  1 ubuntu ubuntu 253003 Jun 18 09:46 production-auth-fixed.js.map
+-rw-rw-r--  1 ubuntu ubuntu 153505 Jun 18 09:44 production-fixed.js
+-rw-rw-r--  1 ubuntu ubuntu 252756 Jun 18 09:44 production-fixed.js.map
+-rw-rw-r--  1 ubuntu ubuntu 153499 Jun 18 09:36 production.js
+-rw-rw-r--  1 ubuntu ubuntu 252756 Jun 18 09:36 production.js.map
+drwxrwxr-x  3 ubuntu ubuntu   4096 Jun 18 08:32 public
+dist/production-fixed.js
+dist/production-auth-fixed.js
+dist/public/assets/anonymous-ticket-form-CkzURLgO.js
+dist/public/assets/anonymous-ticket-search-new-DKn_Zxxd.js
+dist/public/assets/index-Cf-nQCTa.css
+dist/public/assets/index-Bd_55WME.js
+dist/public/assets/calpion-rpa-project-form-CSW085j7.js
+dist/public/index.html
+dist/production.js
+dist/index.js
+[PM2] Applying action deleteProcessId on app [servicedesk](ids: [ 0 ])
+[PM2] [servicedesk](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2][WARN] Applications servicedesk not running, starting...
+[PM2] App [servicedesk] launched (1 instances)
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ cluster │ 121221   │ 0s     │ 0    │ online    │ 0%       │ 39.4mb   │ ubuntu   │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /home/ubuntu/.pm2/dump.pm2
