@@ -16,23 +16,23 @@ function Router({ currentUser, onLogout }: { currentUser: any; onLogout: () => v
       <Route path="/public-ticket" component={PublicTicketPage} />
       <Route path="/admin">
         {currentUser ? (
-          <Dashboard currentUser={currentUser} onLogout={onLogout} initialTab="admin" />
+          <Dashboard currentUser={currentUser} onLogout={handleLogout} initialTab="admin" />
         ) : (
-          <Login onLoginSuccess={(user) => window.location.reload()} />
+          <Login onLoginSuccess={handleLogin} />
         )}
       </Route>
       <Route path="/dashboard">
         {currentUser ? (
-          <Dashboard currentUser={currentUser} onLogout={onLogout} />
+          <Dashboard currentUser={currentUser} onLogout={handleLogout} />
         ) : (
-          <Login onLoginSuccess={(user) => window.location.reload()} />
+          <Login onLoginSuccess={handleLogin} />
         )}
       </Route>
       <Route path="/">
         {currentUser ? (
-          <Dashboard currentUser={currentUser} onLogout={onLogout} />
+          <Dashboard currentUser={currentUser} onLogout={handleLogout} />
         ) : (
-          <Login onLoginSuccess={(user) => window.location.reload()} />
+          <Login onLoginSuccess={handleLogin} />
         )}
       </Route>
       <Route component={NotFound} />
