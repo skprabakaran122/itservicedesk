@@ -106,15 +106,56 @@ pm2 startup
 
 echo "Application started with PM2"
 
-# 5. Nginx Configuration
-echo "5. Configuring web server..."
+# 5. SSL Certificate Setup
+echo "5. Creating self-signed SSL certificate..."
 
-# Create Nginx site configuration
+# Create SSL directory
+sudo mkdir -p /etc/nginx/ssl
+
+# Generate self-signed certificate
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/nginx/ssl/servicedesk.key \
+    -out /etc/nginx/ssl/servicedesk.crt \
+    -subj "/C=US/ST=State/L=City/O=Calpion/OU=IT/CN=$SERVER_IP"
+
+echo "SSL certificate created"
+
+# 6. Nginx Configuration
+echo "6. Configuring web server with HTTPS..."
+
+# Create Nginx site configuration with SSL
 sudo tee /etc/nginx/sites-available/$DB_NAME << EOF
+# Redirect HTTP to HTTPS
 server {
     listen 80;
     server_name $SERVER_IP;
+    return 301 https://\$server_name\$request_uri;
+}
 
+# HTTPS server
+server {
+    listen 443 ssl http2;
+    server_name $SERVER_IP;
+
+    # SSL Configuration
+    ssl_certificate /etc/nginx/ssl/servicedesk.crt;
+    ssl_certificate_key /etc/nginx/ssl/servicedesk.key;
+    
+    # SSL Security Settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_timeout 10m;
+    ssl_session_cache shared:SSL:10m;
+    
+    # Security Headers
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # Application Proxy
     location / {
         proxy_pass http://localhost:$APP_PORT;
         proxy_http_version 1.1;
@@ -123,16 +164,12 @@ server {
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Forwarded-Proto https;
         proxy_cache_bypass \$http_upgrade;
+        proxy_redirect off;
     }
 
     client_max_body_size 10M;
-
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header X-Content-Type-Options "nosniff" always;
 }
 EOF
 
@@ -143,16 +180,18 @@ sudo systemctl restart nginx
 
 echo "Nginx configured successfully"
 
-# 6. Firewall Setup
-echo "6. Configuring firewall..."
+# 7. Firewall Setup
+echo "7. Configuring firewall..."
 sudo ufw allow ssh
 sudo ufw allow 'Nginx Full'
+sudo ufw allow 443/tcp
+sudo ufw allow 80/tcp
 sudo ufw --force enable
 
 echo "Firewall configured successfully"
 
-# 7. Final Verification
-echo "7. Verifying deployment..."
+# 8. Final Verification
+echo "8. Verifying deployment..."
 
 # Wait for application to start
 sleep 10
@@ -164,6 +203,14 @@ else
     echo "❌ Application not responding - checking logs..."
     pm2 logs $DB_NAME --lines 20
     exit 1
+fi
+
+# Test HTTPS
+if curl -k -f https://localhost > /dev/null 2>&1; then
+    echo "✅ HTTPS is working with self-signed certificate"
+else
+    echo "❌ HTTPS not responding - checking Nginx..."
+    sudo nginx -t
 fi
 
 # Test database
@@ -185,15 +232,25 @@ fi
 echo ""
 echo "🎉 DEPLOYMENT COMPLETE!"
 echo "=========================================="
-echo "Application URL: http://$SERVER_IP"
-echo "Database: PostgreSQL on localhost:5432"
-echo "Process Manager: PM2"
-echo "Web Server: Nginx"
+echo "Application URLs:"
+echo "- HTTPS (Secure): https://$SERVER_IP"
+echo "- HTTP (Redirects): http://$SERVER_IP"
+echo ""
+echo "Services:"
+echo "- Database: PostgreSQL on localhost:5432"
+echo "- Process Manager: PM2"
+echo "- Web Server: Nginx with SSL"
+echo "- SSL Certificate: Self-signed (365 days)"
 echo ""
 echo "Management Commands:"
 echo "- Check status: pm2 status"
 echo "- View logs: pm2 logs $DB_NAME"
 echo "- Restart app: pm2 restart $DB_NAME"
 echo "- Update code: git pull && npm run build && pm2 restart $DB_NAME"
+echo "- Check SSL: openssl x509 -in /etc/nginx/ssl/servicedesk.crt -text -noout"
 echo ""
-echo "Your IT Service Desk is now operational!"
+echo "Security Note:"
+echo "Using self-signed certificate - browsers will show security warning"
+echo "For production, replace with proper SSL certificate from CA"
+echo ""
+echo "Your IT Service Desk is now operational with HTTPS!"
