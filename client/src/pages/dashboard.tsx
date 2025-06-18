@@ -15,7 +15,8 @@ import { SLADashboard } from "../components/sla-dashboard";
 import { UserManagement } from "../components/user-management";
 import ITChatbot from "../components/it-chatbot";
 import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users, Target } from "lucide-react";
-import calpionLogo from "@assets/image_1749619432130.png";
+// Using placeholder for Calpion logo - can be replaced with actual logo file
+const calpionLogo = "/calpion-logo.png";
 
 interface DashboardProps {
   currentUser: any;

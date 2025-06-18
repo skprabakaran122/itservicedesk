@@ -11,39 +11,56 @@ build/
 # Environment variables
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.production
+.env.development
 
 # Logs
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+pm2.log
 
 # Runtime data
-pids
+pids/
 *.pid
 *.seed
 *.pid.lock
 
 # Coverage directory used by tools like istanbul
 coverage/
-*.lcov
 
 # nyc test coverage
 .nyc_output
 
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
 # Dependency directories
+node_modules/
 jspm_packages/
+
+# TypeScript v1 declaration files
+typings/
 
 # Optional npm cache directory
 .npm
 
 # Optional eslint cache
 .eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -54,7 +71,11 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache (https://parceljs.org/)
+# dotenv environment variables file
+.env
+.env.test
+
+# parcel-bundler cache
 .cache
 .parcel-cache
 
@@ -79,32 +100,39 @@ jspm_packages/
 # TernJS port file
 .tern-port
 
-# macOS
-.DS_Store
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
 
-# Windows
+# Uploads directory
+uploads/
+
+# SSL certificates
+ssl/
+
+# System files
+.DS_Store
 Thumbs.db
 
-# IDE
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# Database
-*.sqlite
+# Temporary files
+*.tmp
+*.temp
+
+# PM2 files
+ecosystem.config.js
+
+# Database files
 *.db
-
-# Uploads
-uploads/
-temp/
-
-# SSL certificates
-*.pem
-*.key
-*.crt
+*.sqlite
 
 # Backup files
 *.backup
 *.bak
+
+# Service files
+*.service

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Home, Menu, User } from "lucide-react";
-import calpionLogo from "@assets/image_1749619432130.png";
+const calpionLogo = "/calpion-logo.png";
 
 export default function Header() {
   return (
