@@ -62,6 +62,15 @@ For complete debugging and startup:
 ./pg_import_fix.sh
 ```
 
+## Complete Solution (All-in-One)
+
+**Complete deployment solution (recommended for final setup):**
+```bash
+./complete_deployment_solution.sh
+```
+
+This script handles all known issues in sequence and provides comprehensive deployment completion.
+
 ## What Gets Installed
 
 - **Node.js 20** with npm package manager
