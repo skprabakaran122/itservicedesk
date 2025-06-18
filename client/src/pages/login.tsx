@@ -107,15 +107,15 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="flex items-center justify-center mb-6">
-            <div className="h-16 w-16 bg-primary rounded-lg flex items-center justify-center">
+          <div className="flex items-center justify-center mb-8">
+            <div className="h-24 w-24 bg-primary rounded-xl flex items-center justify-center shadow-lg">
               <img 
                 src={calpionLogo} 
                 alt="Calpion Logo" 
-                className="h-12 w-auto object-contain"
+                className="h-20 w-auto object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement!.innerHTML = '<span class="text-white font-bold text-xl">C</span>';
+                  e.currentTarget.parentElement!.innerHTML = '<span class="text-white font-bold text-3xl">C</span>';
                 }}
               />
             </div>
