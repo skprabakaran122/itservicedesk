@@ -17,10 +17,12 @@ echo "📦 Installing system dependencies..."
 sudo apt update
 sudo apt install -y nginx nodejs npm postgresql-client curl
 
-# Install PM2 globally
+# Install PM2 globally and ensure proper permissions
 if ! command -v pm2 &> /dev/null; then
     echo "📦 Installing PM2..."
     sudo npm install -g pm2
+    # Fix PM2 permissions for ubuntu user
+    sudo chown -R ubuntu:ubuntu ~/.pm2 2>/dev/null || true
 fi
 
 # Create application directory
@@ -139,19 +141,31 @@ sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw --force enable
 
+# Ensure database schema exists
+echo "🗄️ Setting up database..."
+if [ -n "$DATABASE_URL" ]; then
+    # Create session table if it doesn't exist
+    psql $DATABASE_URL -c "CREATE TABLE IF NOT EXISTS user_sessions (sid varchar NOT NULL COLLATE \"default\", sess json NOT NULL, expire timestamp(6) NOT NULL) WITH (OIDS=FALSE);" 2>/dev/null || true
+    psql $DATABASE_URL -c "CREATE INDEX IF NOT EXISTS \"IDX_session_expire\" ON \"user_sessions\" (\"expire\");" 2>/dev/null || true
+    echo "✅ Database schema verified"
+fi
+
 # Start/restart services
 echo "🔄 Starting services..."
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 
-# Stop any existing PM2 processes
+# Stop any existing PM2 processes and clear old logs
 pm2 delete $APP_NAME 2>/dev/null || true
+pm2 flush $APP_NAME 2>/dev/null || true
 
 # Start application with PM2
 echo "🚀 Starting application with PM2..."
 pm2 start ecosystem.config.js
 pm2 save
-pm2 startup
+
+# Setup PM2 startup script (run as ubuntu user, not root)
+sudo -u ubuntu pm2 startup | tail -1 | sudo bash 2>/dev/null || true
 
 # Wait for application to start
 sleep 10

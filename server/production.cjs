@@ -10,24 +10,37 @@ const fs = require('fs');
 const app = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);
 
-// Database connection
+// Database connection with error handling
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL || 'postgresql://ubuntu:password@localhost:5432/servicedesk'
 });
 
-// Session configuration
+// Test database connection on startup
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('Database connection failed:', err);
+    // Continue with fallback functionality
+  } else {
+    console.log('Database connected successfully');
+    release();
+  }
+});
+
+// Session configuration with fallback
 app.use(session({
   store: new pgSession({
     pool: pool,
-    tableName: 'user_sessions'
+    tableName: 'user_sessions',
+    createTableIfMissing: true
   }),
-  secret: process.env.SESSION_SECRET || 'calpion-it-servicedesk-secret',
+  secret: process.env.SESSION_SECRET || 'calpion-it-servicedesk-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
+    secure: process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax'
   }
 }));
 
