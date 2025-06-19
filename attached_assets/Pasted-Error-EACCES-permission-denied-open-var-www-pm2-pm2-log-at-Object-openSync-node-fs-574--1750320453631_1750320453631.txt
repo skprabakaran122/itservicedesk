@@ -1,0 +1,100 @@
+Error: EACCES: permission denied, open '/var/www/.pm2/pm2.log'
+    at Object.openSync (node:fs:574:18)
+    at Client.launchDaemon (/usr/lib/node_modules/pm2/lib/Client.js:228:12)
+    at /usr/lib/node_modules/pm2/lib/Client.js:104:10
+    at /usr/lib/node_modules/pm2/lib/Client.js:318:14
+    at process.processTicksAndRejections (node:internal/process/task_queues:77:11) {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/var/www/.pm2/pm2.log'
+}
+
+Node.js v20.19.2
+Testing application...
+node:fs:574
+  return binding.open(
+                 ^
+
+Error: EACCES: permission denied, open '/var/www/.pm2/pm2.log'
+    at Object.openSync (node:fs:574:18)
+    at Client.launchDaemon (/usr/lib/node_modules/pm2/lib/Client.js:228:12)
+    at /usr/lib/node_modules/pm2/lib/Client.js:104:10
+    at /usr/lib/node_modules/pm2/lib/Client.js:318:14
+    at processTicksAndRejections (node:internal/process/task_queues:77:11)
+    at runNextTicks (node:internal/process/task_queues:64:3)
+    at listOnTimeout (node:internal/timers:545:9)
+    at process.processTimers (node:internal/timers:519:7) {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/var/www/.pm2/pm2.log'
+}
+
+Node.js v20.19.2
+Application starting up...
+ubuntu@ip-172-31-85-178:/var/www/itservicedesk$ sudo vi test1.sh
+ubuntu@ip-172-31-85-178:/var/www/itservicedesk$ sudo chmod 777 test1.sh
+ubuntu@ip-172-31-85-178:/var/www/itservicedesk$ sudo ./test1.sh
+node:fs:574
+  return binding.open(
+                 ^
+
+Error: EACCES: permission denied, open '/var/www/.pm2/pm2.log'
+    at Object.openSync (node:fs:574:18)
+    at Client.launchDaemon (/usr/lib/node_modules/pm2/lib/Client.js:228:12)
+    at /usr/lib/node_modules/pm2/lib/Client.js:104:10
+    at /usr/lib/node_modules/pm2/lib/Client.js:318:14
+    at processTicksAndRejections (node:internal/process/task_queues:77:11)
+    at runNextTicks (node:internal/process/task_queues:64:3)
+    at listOnTimeout (node:internal/timers:545:9)
+    at process.processTimers (node:internal/timers:519:7) {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/var/www/.pm2/pm2.log'
+}
+
+Node.js v20.19.2
+node:fs:574
+  return binding.open(
+                 ^
+
+Error: EACCES: permission denied, open '/var/www/.pm2/pm2.log'
+    at Object.openSync (node:fs:574:18)
+    at Client.launchDaemon (/usr/lib/node_modules/pm2/lib/Client.js:228:12)
+    at /usr/lib/node_modules/pm2/lib/Client.js:104:10
+    at /usr/lib/node_modules/pm2/lib/Client.js:318:14
+    at processTicksAndRejections (node:internal/process/task_queues:77:11)
+    at runNextTicks (node:internal/process/task_queues:64:3)
+    at listOnTimeout (node:internal/timers:545:9)
+    at process.processTimers (node:internal/timers:519:7) {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/var/www/.pm2/pm2.log'
+}
+
+Node.js v20.19.2
+Testing application...
+node:fs:574
+  return binding.open(
+                 ^
+
+Error: EACCES: permission denied, open '/var/www/.pm2/pm2.log'
+    at Object.openSync (node:fs:574:18)
+    at Client.launchDaemon (/usr/lib/node_modules/pm2/lib/Client.js:228:12)
+    at /usr/lib/node_modules/pm2/lib/Client.js:104:10
+    at /usr/lib/node_modules/pm2/lib/Client.js:318:14
+    at processTicksAndRejections (node:internal/process/task_queues:77:11)
+    at runNextTicks (node:internal/process/task_queues:64:3)
+    at listOnTimeout (node:internal/timers:545:9)
+    at process.processTimers (node:internal/timers:519:7) {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/var/www/.pm2/pm2.log'
+}
+
+Node.js v20.19.2
+Application starting up...
