@@ -1,0 +1,83 @@
+✓ PostgreSQL authentication configured
+Testing application...
+[Auth] bcrypt not available, using plain text password comparison
+[Email Config] Failed to load from database: error: relation "settings" does not exist
+    at /var/www/itservicedesk/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///var/www/itservicedesk/node_modules/drizzle-orm/node-postgres/session.js:83:22
+    at async DatabaseStorage.getSetting (file:///var/www/itservicedesk/dist/index.js:1805:27)
+    at async loadEmailConfig (file:///var/www/itservicedesk/dist/index.js:322:27)
+    at async getEmailConfig (file:///var/www/itservicedesk/dist/index.js:351:3)
+    at async EmailService.initialize (file:///var/www/itservicedesk/dist/index.js:439:24) {
+  length: 107,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '77',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1381',
+  routine: 'parserOpenTable'
+}
+[Email] Using API key: SG.e1g2sll...
+[Email] SendGrid configured successfully
+[Email] From address: no-reply@calpion.com
+[Email] API key format check: Valid
+[Email] API key length: 69
+Error initializing data: error: relation "users" does not exist
+    at /var/www/itservicedesk/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///var/www/itservicedesk/node_modules/drizzle-orm/node-postgres/session.js:83:22
+    at async DatabaseStorage.getUsers (file:///var/www/itservicedesk/dist/index.js:1399:16)
+    at async DatabaseStorage.initializeData (file:///var/www/itservicedesk/dist/index.js:1251:33)
+    at async file:///var/www/itservicedesk/dist/index.js:3600:5 {
+  length: 105,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '102',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1381',
+  routine: 'parserOpenTable'
+}
+7:13:11 AM [express] Warning: Failed to warm up database connection: error: relation "products" does not exist
+7:13:11 AM [express] [DEBUG] Using port 5000 for all environments
+7:13:11 AM [express] [SLA] Next SLA refresh scheduled for 2025-07-01T00:00:00.000Z
+7:13:12 AM [express] HTTP server running on port 5000 (host: 0.0.0.0)
+7:13:12 AM [express] [SSL] HTTPS temporarily disabled for verification - can be re-enabled later
+7:13:12 AM [express] [Network] Server bound to all interfaces on port 5000
+7:13:12 AM [express] [AUTO-CLOSE] Error during auto-close process: error: relation "tickets" does not exist
+7:13:12 AM [express] [OVERDUE] Error during overdue check process: error: relation "changes" does not exist
+✓ Application working
+[PM2] Applying action restartProcessId on app [servicedesk](ids: [ 0 ])
+[PM2] [servicedesk](0) ✓
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ fork    │ 252839   │ 0s     │ 0    │ online    │ 0%       │ 19.1mb   │ root     │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ fork    │ 252839   │ 8s     │ 0    │ online    │ 0%       │ 102.4mb  │ root     │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Moved Permanently. Redirecting to https://localhost:5000/api/health
+✓ Ubuntu PostgreSQL configured for trust authentication
+✓ IT Service Desk operational at http://98.81.235.7
