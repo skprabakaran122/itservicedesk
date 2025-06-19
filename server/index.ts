@@ -106,13 +106,13 @@ function createSelfSignedCert() {
 
 const app = express();
 
-// Force HTTPS in production
-app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'production' && !req.secure && req.get('x-forwarded-proto') !== 'https') {
-    return res.redirect(301, `https://${req.get('host')}${req.url}`);
-  }
-  next();
-});
+// HTTPS redirect disabled for HTTP-only deployment
+// app.use((req, res, next) => {
+//   if (process.env.NODE_ENV === 'production' && !req.secure && req.get('x-forwarded-proto') !== 'https') {
+//     return res.redirect(301, `https://${req.get('host')}${req.url}`);
+//   }
+//   next();
+// });
 
 // Security headers for HTTPS
 app.use((req, res, next) => {
