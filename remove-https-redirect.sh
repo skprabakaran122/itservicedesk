@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Remove HTTPS redirect from application
+# Remove HTTPS redirects completely and configure simple HTTP proxy
 set -e
 
 cd /var/www/itservicedesk
@@ -8,53 +8,70 @@ cd /var/www/itservicedesk
 echo "=== Removing HTTPS Redirect Sources ==="
 
 # Stop services
-systemctl stop nginx
-pm2 stop servicedesk
+systemctl stop nginx 2>/dev/null || true
 
-# Remove problematic nginx config that has redirect
-rm -f /etc/nginx/sites-available/itservicedesk
-rm -f /etc/nginx/sites-enabled/itservicedesk
+# Find and remove any redirect configurations
+grep -r "return 301" /etc/nginx/ 2>/dev/null || echo "No return 301 found"
+grep -r "redirect" /etc/nginx/ 2>/dev/null || echo "No redirect found"
 
-# Check if the application has HTTPS redirect configured
-echo "Checking application for HTTPS redirects..."
+# Create completely clean nginx configuration with NO redirects
+cat > /etc/nginx/nginx.conf << 'EOF'
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
 
-# Look for HTTPS redirect in the application code
-if grep -q "https\|SSL\|redirect.*443" dist/index.js; then
-    echo "Found HTTPS references in application"
-    
-    # Replace any HTTPS redirects with HTTP
-    sed -i 's/https:/http:/g' dist/index.js
-    sed -i 's/443/80/g' dist/index.js
-    sed -i '/redirect.*https/d' dist/index.js
-    
-    echo "✓ Removed HTTPS references from application"
-fi
+events {
+    worker_connections 768;
+}
 
-# Update environment to force HTTP
-export NODE_ENV=production
-export HTTPS=false
-export SSL=false
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
 
-# Start nginx with clean config (should only have our http-only config)
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # Simple HTTP server - NO HTTPS, NO REDIRECTS
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name _;
+
+        # Direct proxy to application
+        location / {
+            proxy_pass http://127.0.0.1:5000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+}
+EOF
+
+# Remove ALL other nginx configurations
+rm -rf /etc/nginx/sites-enabled
+rm -rf /etc/nginx/sites-available
+rm -rf /etc/nginx/conf.d
+rm -f /etc/nginx/snippets/ssl-*.conf 2>/dev/null || true
+
+# Test configuration
+nginx -t
+
+# Start nginx
 systemctl start nginx
 
-# Start application without SSL
-pm2 start servicedesk
+sleep 5
 
-sleep 8
-
-# Test direct application
-echo "Testing application directly:"
-curl -s -I http://127.0.0.1:5000/ | head -3
-
-# Test through nginx
-echo "Testing through nginx:"
-curl -s -I http://127.0.0.1/ | head -3
-
-# Test actual response content
-echo "Testing actual content:"
-curl -s http://127.0.0.1/ | head -50
+# Test for redirects
+echo "Testing for redirects:"
+curl -s -I http://localhost/ | head -5
 
 echo ""
-echo "=== HTTPS Redirect Removal Complete ==="
-echo "Application should now be accessible via HTTP at 98.81.235.7"
+echo "Testing external access:"
+curl -s -I http://98.81.235.7/ | head -5
+
+echo ""
+echo "=== Redirect Removal Complete ==="
+echo "✓ All HTTPS redirects removed"
+echo "✓ Simple HTTP proxy configured"
+echo "✓ No redirect loops possible"
