@@ -1,0 +1,44 @@
+~/workspace$ git add . 
+~/workspace$ git push
+Enumerating objects: 133, done.
+Counting objects: 100% (133/133), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (127/127), done.
+Writing objects: 100% (127/127), 68.05 KiB | 7.56 MiB/s, done.
+Total 127 (delta 80), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (80/80), completed with 5 local objects.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:      (?) This repository does not have Secret Scanning enabled, but is eligible. Enable Secret Scanning to view and manage detected secrets.
+remote:      Visit the repository settings page, https://github.com/skprabakaran122/itservicedesk/settings/security_analysis
+remote:     
+remote:     
+remote:       —— SendGrid API Key ——————————————————————————————————
+remote:        locations:
+remote:          - commit: e606369446ca9ddc9fb5ff6af5170e22e15629ae
+remote:            path: deploy-fresh-from-git.sh:128
+remote:          - commit: 872dd3d802e577926bb93f86b54613695be734c8
+remote:            path: deploy-fresh-from-git.sh:144
+remote:          - commit: 1fd0721e69d97716f9915b5d3bcb067bad3d5ad1
+remote:            path: deploy-fresh-from-git.sh:151
+remote:          - commit: 1952637273d703f1a0514873aa744242b45f8ae2
+remote:            path: deploy-fresh-from-git.sh:151
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/skprabakaran122/itservicedesk/security/secret-scanning/unblock-secret/2yiXjYqOVjMfJiTtxuJBqvjxsN1
+remote:     
+remote: 
+remote: 
+To https://github.com/skprabakaran122/itservicedesk
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/skprabakaran122/itservicedesk'
