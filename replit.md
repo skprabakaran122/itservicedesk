@@ -121,7 +121,7 @@ The application follows a full-stack TypeScript architecture with:
   - PostgreSQL database configured with servicedesk user and database
   - Nginx reverse proxy configured on port 80 with proper headers
   - UFW firewall enabled with SSH and HTTP access
-  - Production server accessible at http://172.31.85.178
+  - Production server accessible at http://98.81.235.7
   - Authentication system working with test accounts: test.admin, test.user, john.doe
   - Clean deployment achieved using systemd instead of PM2 to eliminate permission issues
 
