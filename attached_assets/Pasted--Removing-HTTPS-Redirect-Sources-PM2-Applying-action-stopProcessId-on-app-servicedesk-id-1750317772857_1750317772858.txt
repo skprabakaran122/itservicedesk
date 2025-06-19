@@ -1,0 +1,31 @@
+=== Removing HTTPS Redirect Sources ===
+[PM2] Applying action stopProcessId on app [servicedesk](ids: [ 0 ])
+[PM2] [servicedesk](0) ✓
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ fork    │ 0        │ 0      │ 0    │ stopped   │ 0%       │ 0b       │ root     │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Checking application for HTTPS redirects...
+Found HTTPS references in application
+✓ Removed HTTPS references from application
+[PM2] Applying action restartProcessId on app [servicedesk](ids: [ 0 ])
+[PM2] [servicedesk](0) ✓
+[PM2] Process successfully started
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ fork    │ 254330   │ 0s     │ 0    │ online    │ 0%       │ 18.5mb   │ root     │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Testing application directly:
+HTTP/1.1 301 Moved Permanently
+X-Powered-By: Express
+Location: http://127.0.0.1:5000/
+Testing through nginx:
+HTTP/1.1 301 Moved Permanently
+Server: nginx/1.18.0 (Ubuntu)
+Date: Thu, 19 Jun 2025 07:22:46 GMT
+Testing actual content:
+Moved Permanently. Redirecting to http://127.0.0.1/
+=== HTTPS Redirect Removal Complete ===
+Application should now be accessible via HTTP at 98.81.235.7
