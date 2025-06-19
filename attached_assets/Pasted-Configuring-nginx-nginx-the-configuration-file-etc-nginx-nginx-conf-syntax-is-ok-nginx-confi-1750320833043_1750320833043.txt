@@ -1,0 +1,58 @@
+Configuring nginx...
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+Synchronizing state of nginx.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable nginx
+Configuring firewall...
+Backing up 'user.rules' to '/etc/ufw/user.rules.20250619_081312'
+Backing up 'before.rules' to '/etc/ufw/before.rules.20250619_081312'
+Backing up 'after.rules' to '/etc/ufw/after.rules.20250619_081312'
+Backing up 'user6.rules' to '/etc/ufw/user6.rules.20250619_081312'
+Backing up 'before6.rules' to '/etc/ufw/before6.rules.20250619_081312'
+Backing up 'after6.rules' to '/etc/ufw/after6.rules.20250619_081312'
+
+Rules updated
+Rules updated (v6)
+Rules updated
+Rules updated (v6)
+Firewall is active and enabled on system startup
+Starting IT Service Desk service...
+Waiting for service to start...
+Service Status:
+● itservicedesk.service - IT Service Desk Application
+     Loaded: loaded (/etc/systemd/system/itservicedesk.service; enabled; vendor preset: enabled)
+     Active: active (running) since Thu 2025-06-19 08:11:23 UTC; 2min 5s ago
+   Main PID: 262686 (node)
+      Tasks: 7 (limit: 1129)
+     Memory: 13.1M
+        CPU: 220ms
+     CGroup: /system.slice/itservicedesk.service
+             └─262686 /usr/bin/node server-production.cjs
+
+Jun 19 08:11:23 ip-172-31-85-178 systemd[1]: Started IT Service Desk Application.
+Jun 19 08:11:23 ip-172-31-85-178 node[262686]: Serving static files from: /var/www/itservicedesk/client
+Jun 19 08:11:23 ip-172-31-85-178 node[262686]: Production server running on port 3000
+Jun 19 08:11:23 ip-172-31-85-178 node[262686]: Serving static files from: /var/www/itservicedesk/client
+Jun 19 08:11:23 ip-172-31-85-178 node[262686]: Environment: production
+Jun 19 08:11:23 ip-172-31-85-178 node[262686]: Application ready at http://localhost:3000
+
+Testing application...
+✓ Application is running successfully
+
+=== Installation Complete ===
+✓ Database configured and running
+✓ Application service started
+✓ Nginx proxy configured
+✓ Firewall configured
+
+Access your IT Service Desk at: http://172.31.85.178
+
+Login Credentials:
+  Admin: test.admin / password123
+  User:  test.user / password123
+  Agent: john.doe / password123
+
+Management Commands:
+  View status: sudo systemctl status itservicedesk
+  View logs:   sudo journalctl -u itservicedesk -f
+  Restart:     sudo systemctl restart itservicedesk
