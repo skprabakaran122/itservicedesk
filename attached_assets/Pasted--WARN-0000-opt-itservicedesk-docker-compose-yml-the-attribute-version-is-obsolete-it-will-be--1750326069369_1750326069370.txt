@@ -1,0 +1,78 @@
+
+WARN[0000] /opt/itservicedesk/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+[+] Running 21/21
+ ✔ database Pulled                                                                                                                                      8.1s
+   ✔ fe07684b16b8 Pull complete                                                                                                                         1.6s
+   ✔ dc0894634161 Pull complete                                                                                                                         1.7s
+   ✔ b2c2e77c01f8 Pull complete                                                                                                                         2.2s
+   ✔ 566700a5ef5b Pull complete                                                                                                                         2.2s
+   ✔ 6a8b2516865a Pull complete                                                                                                                         2.3s
+   ✔ 9808eed8d51a Pull complete                                                                                                                         7.4s
+   ✔ c6f99ba99948 Pull complete                                                                                                                         7.4s
+   ✔ 0e3293a8957f Pull complete                                                                                                                         7.4s
+   ✔ d259b0545f3a Pull complete                                                                                                                         7.5s
+   ✔ bef088cae706 Pull complete                                                                                                                         7.5s
+   ✔ 4dff379ecd5a Pull complete                                                                                                                         7.5s
+ ✔ nginx Pulled                                                                                                                                         3.8s
+   ✔ f18232174bc9 Pull complete                                                                                                                         0.7s
+   ✔ 61ca4f733c80 Pull complete                                                                                                                         1.5s
+   ✔ b464cfdf2a63 Pull complete                                                                                                                         1.6s
+   ✔ d7e507024086 Pull complete                                                                                                                         1.7s
+   ✔ 81bd8ed7ec67 Pull complete                                                                                                                         1.8s
+   ✔ 197eb75867ef Pull complete                                                                                                                         1.9s
+   ✔ 34a64644b756 Pull complete                                                                                                                         2.0s
+   ✔ 39c2ddfd6010 Pull complete                                                                                                                         3.3s
+Compose can now delegate builds to bake for better performance.
+ To do so, set COMPOSE_BAKE=true.
+[+] Building 6.1s (9/12)                                                                                                                      docker:default
+ => [app internal] load build definition from Dockerfile                                                                                                0.1s
+ => => transferring dockerfile: 681B                                                                                                                    0.0s
+ => [app internal] load metadata for docker.io/library/node:20-alpine                                                                                   0.4s
+ => [app internal] load .dockerignore                                                                                                                   0.0s
+ => => transferring context: 167B                                                                                                                       0.0s
+ => [app 1/8] FROM docker.io/library/node:20-alpine@sha256:d3507a213936fe4ef54760a186e113db5188472d9efdf491686bd94580a1c1e8                             3.1s
+ => => resolve docker.io/library/node:20-alpine@sha256:d3507a213936fe4ef54760a186e113db5188472d9efdf491686bd94580a1c1e8                                 0.0s
+ => => sha256:d3507a213936fe4ef54760a186e113db5188472d9efdf491686bd94580a1c1e8 7.67kB / 7.67kB                                                          0.0s
+ => => sha256:dd75a9e8995e7f9d83f64af16d07c1edbc97139b08246ed8cb7f5ea1d28c726d 1.72kB / 1.72kB                                                          0.0s
+ => => sha256:367a28bb5439cb0fdb1c99a3ab6275e84f1ec7eb8c61d8e895808bd2bdf00b54 6.21kB / 6.21kB                                                          0.0s
+ => => sha256:50e3d90b63789c43aa015219149b428346dc8958a44c58c5da65f0b8f0af0e28 42.95MB / 42.95MB                                                        0.5s
+ => => sha256:de1f569a869623328ab2534cb764ccb6d2142d6e1b557b1580357d5176b863a5 1.26MB / 1.26MB                                                          0.1s
+ => => sha256:a35ae40f249e2d6c90ea87a5676595b3b022a62efa9c2cc60c803de19e468134 445B / 445B                                                              0.1s
+ => => extracting sha256:50e3d90b63789c43aa015219149b428346dc8958a44c58c5da65f0b8f0af0e28                                                               2.2s
+ => => extracting sha256:de1f569a869623328ab2534cb764ccb6d2142d6e1b557b1580357d5176b863a5                                                               0.1s
+ => => extracting sha256:a35ae40f249e2d6c90ea87a5676595b3b022a62efa9c2cc60c803de19e468134                                                               0.0s
+ => [app internal] load build context                                                                                                                   0.0s
+ => => transferring context: 12.20kB                                                                                                                    0.0s
+ => [app 2/8] WORKDIR /app                                                                                                                              0.1s
+ => [app 3/8] RUN apk add --no-cache wget                                                                                                               1.1s
+ => [app 4/8] COPY package*.json ./                                                                                                                     0.1s
+ => ERROR [app 5/8] RUN npm ci --production                                                                                                             1.1s
+------
+ > [app 5/8] RUN npm ci --production:
+0.425 npm warn config production Use `--omit=dev` instead.
+1.010 npm error code EUSAGE
+1.011 npm error
+1.011 npm error The `npm ci` command can only install with an existing package-lock.json or
+1.011 npm error npm-shrinkwrap.json with lockfileVersion >= 1. Run an install with npm@5 or
+1.011 npm error later to generate a package-lock.json file, then try again.
+1.011 npm error
+1.011 npm error Clean install a project
+1.011 npm error
+1.011 npm error Usage:
+1.011 npm error npm ci
+1.011 npm error
+1.011 npm error Options:
+1.011 npm error [--install-strategy <hoisted|nested|shallow|linked>] [--legacy-bundling]
+1.011 npm error [--global-style] [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+1.011 npm error [--include <prod|dev|optional|peer> [--include <prod|dev|optional|peer> ...]]
+1.011 npm error [--strict-peer-deps] [--foreground-scripts] [--ignore-scripts] [--no-audit]
+1.011 npm error [--no-bin-links] [--no-fund] [--dry-run]
+1.011 npm error [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+1.011 npm error [-ws|--workspaces] [--include-workspace-root] [--install-links]
+1.011 npm error
+1.011 npm error aliases: clean-install, ic, install-clean, isntall-clean
+1.011 npm error
+1.011 npm error Run "npm help ci" for more info
+1.016 npm error A complete log of this run can be found in: /root/.npm/_logs/2025-06-19T09_40_50_843Z-debug-0.log
+------
+failed to solve: process "/bin/sh -c npm ci --production" did not complete successfully: exit code: 1
