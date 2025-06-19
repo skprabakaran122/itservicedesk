@@ -2,7 +2,7 @@
 const config = {
   apps: [{
     name: 'servicedesk',
-    script: 'server.cjs',
+    script: 'server.js',
     instances: 1,
     exec_mode: 'fork',
     env: {
