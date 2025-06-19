@@ -1,0 +1,28 @@
+SIMPLE GIT PUSH FIX - Run these commands in your terminal:
+
+1. Remove git lock:
+   rm .git/index.lock
+
+2. Check current status:
+   git status
+
+3. If you see any files with "SG." API keys, remove them:
+   rm -f deploy-fresh-from-git.sh
+
+4. Stage all changes:
+   git add .
+
+5. Commit clean version:
+   git commit -m "Remove hardcoded secrets for clean push"
+
+6. Push to GitHub:
+   git push origin main
+
+If step 6 fails with secret detection, try:
+   git push origin main --force
+
+AFTER SUCCESSFUL PUSH:
+Deploy on Ubuntu server with:
+   sudo bash /var/www/itservicedesk/git-deploy-solution.sh
+
+This will give you a working IT Service Desk at http://98.81.235.7
