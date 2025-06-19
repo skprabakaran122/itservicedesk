@@ -135,4 +135,5 @@ ecosystem.config.js
 *.bak
 
 # Service files
-*.service
+*.service*.env
+**/deploy-fresh-*
