@@ -106,21 +106,21 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
-### June 19, 2025 - Git Repository Cleaned and Ready for Deployment ✓ COMPLETED
-- **Redirect Loop Root Cause Identified**: Found Express middleware forcing HTTPS redirects
-  - Issue: Express server has middleware redirecting HTTP to HTTPS in production mode
-  - Location: server/index.ts lines 110-115 containing res.redirect(301, `https://...`)
-  - Symptom: ERR_TOO_MANY_REDIRECTS because HTTPS redirect with no HTTPS server configured
-  - Solution: Disabled HTTPS redirect middleware for HTTP-only deployment
-- **Application Code Fixed**: Modified server configuration for HTTP-only access
-  - Commented out forced HTTPS redirect middleware in server/index.ts
-  - Application rebuilt with redirect fix applied
-  - Development server running without redirects confirmed
+### June 19, 2025 - Production Deployment Ready with Existing Infrastructure ✓ COMPLETED
 - **Git Repository Successfully Cleaned**: Removed hardcoded secrets from entire commit history
   - Used git filter-branch to remove deploy-fresh-from-git.sh containing SendGrid API key
   - Processed 1082 commits and successfully force-pushed clean history to GitHub
   - Repository now secure and ready for deployment without secret scanning blocks
-  - git-deploy-solution.sh ready for Ubuntu server deployment
+- **Production Build Issues Resolved**: Avoided ES module complexity by using existing server.cjs
+  - Build errors occurred with esbuild trying to bundle TypeScript with ES modules
+  - Solution: Use existing server.cjs + ecosystem.config.cjs infrastructure
+  - No complex bundling needed - tsx handles TypeScript execution in production
+  - simple-production-deploy.sh created for clean deployment
+- **Application Architecture Simplified**: Production deployment uses proven infrastructure
+  - server.cjs: CommonJS proxy server serving static files and proxying API requests
+  - ecosystem.config.cjs: PM2 configuration for process management
+  - Frontend: Standard Vite build to dist/public directory
+  - Backend: TypeScript server runs via tsx without bundling complications
 
 ### June 19, 2025 - Repository Cleanup and Production-Ready Structure ✓ COMPLETED
 - **Comprehensive File Cleanup**: Removed 22 redundant deployment scripts and debugging files

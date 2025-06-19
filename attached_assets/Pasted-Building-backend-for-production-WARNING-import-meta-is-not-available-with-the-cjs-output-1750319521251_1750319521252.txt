@@ -1,0 +1,49 @@
+Building backend for production...
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    server/vite.ts:71:32:
+      71 │   const distPath = path.resolve(import.meta.dirname, "public");
+         ╵                                 ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+✘ [ERROR] Top-level await is currently not supported with the "cjs" output format
+
+    vite.config.ts:13:10:
+      13 │           await import("@replit/vite-plugin-cartographer").then((m) =>
+         ╵           ~~~~~
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    vite.config.ts:21:24:
+      21 │       "@": path.resolve(import.meta.dirname, "client", "src"),
+         ╵                         ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+✘ [ERROR] Could not resolve "@babel/preset-typescript/package.json"
+
+    node_modules/@babel/core/lib/config/files/module-types.js:151:40:
+      151 │             const packageJson = require("@babel/preset-typescript/package.json");
+          ╵                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@babel/preset-typescript/package.json" as external to exclude it from the
+  bundle, which will remove this error and leave the unresolved path in the bundle. You can also
+  surround this "require" call with a try/catch block to handle this failure at run-time instead of
+  bundle-time.
+
+✘ [ERROR] Could not resolve "../pkg"
+
+    node_modules/lightningcss/node/index.js:17:27:
+      17 │   module.exports = require(`../pkg`);
+         ╵                            ~~~~~~~~
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    vite.config.ts:22:30:
+      22 │       "@shared": path.resolve(import.meta.dirname, "shared"),
+         ╵                               ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+3 of 8 warnings and all 3 errors shown (disable the message limit with --log-limit=0)
