@@ -1,0 +1,53 @@
+=== Fixing 502 Error ===
+1. Checking service status...
+● itservicedesk.service - Calpion IT Service Desk
+     Loaded: loaded (/etc/systemd/system/itservicedesk.service; enabled; vendor preset: enabled)
+     Active: active (running) since Thu 2025-06-19 08:51:22 UTC; 1min 19s ago
+   Main PID: 266063 (node)
+      Tasks: 11 (limit: 1129)
+     Memory: 10.3M
+        CPU: 215ms
+     CGroup: /system.slice/itservicedesk.service
+             └─266063 /usr/bin/node server.js
+
+Jun 19 08:51:22 ip-172-31-85-178 systemd[1]: Started Calpion IT Service Desk.
+Jun 19 08:51:23 ip-172-31-85-178 node[266063]: Starting Calpion IT Service Desk...
+Jun 19 08:51:23 ip-172-31-85-178 node[266063]: Calpion IT Service Desk running on port 3000
+Jun 19 08:51:23 ip-172-31-85-178 node[266063]: Access: http://localhost:3000
+2. Checking if port 3000 is listening...
+tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      266063/node
+3. Checking server logs...
+Jun 19 08:40:13 ip-172-31-85-178 node[264552]: ✓ Serving built React app from dist/public/
+Jun 19 08:40:13 ip-172-31-85-178 node[264552]: IT Service Desk running on port 5000
+Jun 19 08:40:13 ip-172-31-85-178 node[264552]: Serving from: dist/public
+Jun 19 08:48:32 ip-172-31-85-178 systemd[1]: Stopping IT Service Desk Application...
+Jun 19 08:48:32 ip-172-31-85-178 systemd[1]: itservicedesk.service: Deactivated successfully.
+Jun 19 08:48:32 ip-172-31-85-178 systemd[1]: Stopped IT Service Desk Application.
+Jun 19 08:51:22 ip-172-31-85-178 systemd[1]: Started Calpion IT Service Desk.
+Jun 19 08:51:23 ip-172-31-85-178 node[266063]: Starting Calpion IT Service Desk...
+Jun 19 08:51:23 ip-172-31-85-178 node[266063]: Calpion IT Service Desk running on port 3000
+Jun 19 08:51:23 ip-172-31-85-178 node[266063]: Access: http://localhost:3000
+4. Testing server directly...
+Starting Calpion IT Service Desk...
+node:events:502
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+    at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+    at listenInCluster (node:net:1965:12)
+    at doListen (node:net:2139:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1944:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 3000
+}
+
+Node.js v20.19.2
+Server works directly
+./fix13.sh: line 26: kill: (266176) - No such process

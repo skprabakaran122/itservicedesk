@@ -7,7 +7,7 @@ const config = {
     exec_mode: 'fork',
     env: {
       NODE_ENV: 'development',
-      PORT: 5000
+      PORT: 3000
     },
     watch: ['server.js'],
     ignore_watch: ['node_modules', 'logs', 'dist', 'client'],

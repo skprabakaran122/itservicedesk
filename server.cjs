@@ -3,7 +3,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
@@ -29,14 +29,14 @@ app.get('/health', (req, res) => {
 console.log('Starting TypeScript server...');
 const serverProcess = spawn('node', ['--loader', 'tsx/esm', 'server/index.ts'], {
   stdio: 'inherit',
-  env: { ...process.env, NODE_ENV: 'production', PORT: '5001' }
+  env: { ...process.env, NODE_ENV: 'production', PORT: '3001' }
 });
 
 // Proxy API requests to the TypeScript server
 app.use('/api', (req, res) => {
   const proxyReq = require('http').request({
     hostname: 'localhost',
-    port: 5001,
+    port: 3001,
     path: req.url,
     method: req.method,
     headers: req.headers

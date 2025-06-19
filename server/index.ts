@@ -289,14 +289,13 @@ function startOverdueChangeScheduler() {
       serveStatic(app);
     }
 
-    // Start HTTP server (HTTPS temporarily disabled for verification)
-    // Use port 5000 consistently across all environments
-    const httpPort = parseInt(process.env.PORT || "5000", 10);
+    // Start HTTP server - use consistent port 3000 for production deployment
+    const httpPort = parseInt(process.env.PORT || "3000", 10);
     log(`[DEBUG] Using port ${httpPort} for all environments`);
     
-    server.listen(httpPort, () => {
+    server.listen(httpPort, "0.0.0.0", () => {
       log(`HTTP server running on port ${httpPort} (host: 0.0.0.0)`);
-      log(`[SSL] HTTPS temporarily disabled for verification - can be re-enabled later`);
+      log(`Access: http://localhost:${httpPort}`);
       
       // Log Replit-specific access URLs for debugging
       if (process.env.REPLIT_DEV_DOMAIN) {
