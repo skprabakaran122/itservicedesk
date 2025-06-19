@@ -1,0 +1,80 @@
+Stopping all services...
+[PM2] Applying action deleteProcessId on app [all](ids: [ 0 ])
+[PM2] [servicedesk](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2][WARN] No process found
+[PM2] [v] All Applications Stopped
+[PM2] [v] PM2 Daemon Stopped
+Checking build artifacts...
+total 168
+drwxr-xr-x 3 www-data www-data   4096 Jun 19 06:42 .
+drwxr-xr-x 9 www-data www-data   4096 Jun 19 06:42 ..
+-rwxr-xr-x 1 www-data www-data 158908 Jun 19 06:42 index.js
+drwxr-xr-x 3 www-data www-data   4096 Jun 19 06:42 public
+Creating working production server...
+Testing server directly...
+file:///var/www/itservicedesk/server-production.js:1
+const express = require('express');
+                ^
+
+ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/var/www/itservicedesk/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///var/www/itservicedesk/server-production.js:1:17
+    at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v20.19.2
+✗ Server not responding
+Creating PM2 configuration...
+Starting application with PM2...
+[PM2] Spawning PM2 daemon with pm2_home=/root/.pm2
+[PM2] PM2 Successfully daemonized
+[PM2][WARN] Applications servicedesk not running, starting...
+[PM2] App [servicedesk] launched (1 instances)
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ fork    │ 248072   │ 0s     │ 0    │ online    │ 0%       │ 34.5mb   │ root     │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Checking PM2 status...
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ fork    │ 248072   │ 10s    │ 0    │ online    │ 0%       │ 48.1mb   │ root     │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Testing application...
+Health check:
+Health check failed
+
+Testing root endpoint:
+Root endpoint failed
+Checking nginx configuration...
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+Restarting nginx...
+Testing through nginx...
+HTTP/1.1 301 Moved Permanently
+Server: nginx/1.18.0 (Ubuntu)
+Date: Thu, 19 Jun 2025 06:44:05 GMT
+Content-Type: text/html
+Content-Length: 178
+Connection: keep-alive
+Location: https://98.81.235.7/
+
+
+=== Fix Complete ===
+✓ Simplified production server created
+✓ PM2 process started
+✓ Nginx restarted
+
+Check status:
+  pm2 status
+  pm2 logs servicedesk
+  curl http://localhost/api/health
+
+If still 502, check:
+  netstat -tlnp | grep :5000
+  tail -f /var/log/nginx/error.log
