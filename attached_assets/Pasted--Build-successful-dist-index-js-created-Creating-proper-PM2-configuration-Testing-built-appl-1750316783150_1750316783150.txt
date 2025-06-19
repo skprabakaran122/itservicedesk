@@ -1,0 +1,42 @@
+✓ Build successful - dist/index.js created
+Creating proper PM2 configuration...
+Testing built application...
+[Auth] bcrypt not available, using plain text password comparison
+[Email Config] Failed to load from database: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at /var/www/itservicedesk/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///var/www/itservicedesk/node_modules/drizzle-orm/node-postgres/session.js:83:22
+    at async DatabaseStorage.getSetting (file:///var/www/itservicedesk/dist/index.js:1805:27)
+    at async loadEmailConfig (file:///var/www/itservicedesk/dist/index.js:322:27)
+    at async getEmailConfig (file:///var/www/itservicedesk/dist/index.js:351:3)
+    at async EmailService.initialize (file:///var/www/itservicedesk/dist/index.js:439:24)
+[Email] Using API key: SG.e1g2sll...
+[Email] SendGrid configured successfully
+[Email] From address: no-reply@calpion.com
+[Email] API key format check: Valid
+[Email] API key length: 69
+Error initializing data: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at /var/www/itservicedesk/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///var/www/itservicedesk/node_modules/drizzle-orm/node-postgres/session.js:83:22
+    at async DatabaseStorage.getUsers (file:///var/www/itservicedesk/dist/index.js:1399:16)
+    at async DatabaseStorage.initializeData (file:///var/www/itservicedesk/dist/index.js:1251:33)
+    at async file:///var/www/itservicedesk/dist/index.js:3600:5
+7:06:06 AM [express] Warning: Failed to warm up database connection: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+7:06:06 AM [express] [DEBUG] Using port 5000 for all environments
+7:06:06 AM [express] [SLA] Next SLA refresh scheduled for 2025-07-01T00:00:00.000Z
+7:06:06 AM [express] HTTP server running on port 5000 (host: 0.0.0.0)
+7:06:06 AM [express] [SSL] HTTPS temporarily disabled for verification - can be re-enabled later
+7:06:06 AM [express] [Network] Server bound to all interfaces on port 5000
+7:06:06 AM [express] [AUTO-CLOSE] Error during auto-close process: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+7:06:06 AM [express] [OVERDUE] Error during overdue check process: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+✓ Built application working correctly
+Starting with PM2...
+[PM2][WARN] Applications servicedesk not running, starting...
+[PM2] App [servicedesk] launched (1 instances)
+┌────┬────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name           │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ servicedesk    │ default     │ 1.0.0   │ fork    │ 251710   │ 0s     │ 0    │ online    │ 0%       │ 17.9mb   │ root     │ disabled │
+└────┴────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+
