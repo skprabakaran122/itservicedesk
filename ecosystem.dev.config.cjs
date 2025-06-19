@@ -1,4 +1,5 @@
-module.exports = {
+// PM2 Development Configuration - CommonJS format
+const config = {
   apps: [{
     name: 'servicedesk-dev',
     script: 'server.js',
@@ -6,8 +7,7 @@ module.exports = {
     exec_mode: 'fork',
     env: {
       NODE_ENV: 'development',
-      PORT: 5000,
-      DATABASE_URL: process.env.DATABASE_URL
+      PORT: 5000
     },
     watch: ['server.js'],
     ignore_watch: ['node_modules', 'logs', 'dist', 'client'],
@@ -23,3 +23,5 @@ module.exports = {
     listen_timeout: 5000
   }]
 };
+
+module.exports = config;

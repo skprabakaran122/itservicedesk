@@ -17,7 +17,7 @@ case "$1" in
     pm2 delete servicedesk-dev 2>/dev/null || true
     
     # Start with CommonJS configuration
-    pm2 start ecosystem.dev.config.js
+    pm2 start ecosystem.dev.config.cjs
     
     if [ $? -eq 0 ]; then
       echo "✅ Development server started successfully"
@@ -33,7 +33,7 @@ case "$1" in
     
   "stop")
     echo "Stopping development server..."
-    pm2 delete servicedesk-dev 2>/dev/null || echo "No PM2 process found"
+    pm2 delete ecosystem.dev.config.cjs 2>/dev/null || echo "No PM2 process found"
     
     # Stop direct node process if exists
     if [ -f .dev-server.pid ]; then
@@ -102,7 +102,7 @@ case "$1" in
     
     # Test CommonJS module loading
     echo "Testing CommonJS configuration..."
-    node -e "const config = require('./ecosystem.dev.config.js'); console.log('✅ CommonJS config loads correctly');" 2>/dev/null || echo "❌ CommonJS config error"
+    node -e "const config = require('./ecosystem.dev.config.cjs'); console.log('✅ CommonJS config loads correctly');" 2>/dev/null || echo "❌ CommonJS config error"
     ;;
     
   *)
