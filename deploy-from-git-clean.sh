@@ -1,113 +1,103 @@
 #!/bin/bash
 
-# Clean deployment from git without hardcoded secrets
+# Deploy IT Service Desk from clean GitHub repository
 set -e
 
-echo "=== Clean Git Deployment ==="
+echo "=== Deploying IT Service Desk from Clean GitHub Repository ==="
+echo "Repository: https://github.com/skprabakaran122/itservicedesk"
+echo "Target Server: Ubuntu (98.81.235.7)"
+echo ""
 
-# Set variables
-DEPLOY_DIR="/var/www/itservicedesk"
-DB_NAME="servicedesk"
-DB_USER="servicedesk"
+# Stop any existing services
+echo "Stopping existing services..."
+sudo systemctl stop itservicedesk 2>/dev/null || true
+sudo pm2 stop all 2>/dev/null || true
+sudo pm2 delete all 2>/dev/null || true
 
-# Create deployment directory
-mkdir -p "$DEPLOY_DIR"
-cd "$DEPLOY_DIR"
+# Clean up existing installation
+echo "Cleaning up existing installation..."
+sudo rm -rf /var/www/itservicedesk
+sudo mkdir -p /var/www/itservicedesk
+cd /var/www/itservicedesk
 
-# Clone or update repository
-if [ -d ".git" ]; then
-    echo "Updating existing repository..."
-    git pull origin main
-else
-    echo "Cloning repository..."
-    git clone https://github.com/skprabakaran122/itservicedesk.git .
-fi
+# Clone fresh from GitHub
+echo "Cloning fresh repository from GitHub..."
+sudo git clone https://github.com/skprabakaran122/itservicedesk.git .
 
 # Install dependencies
 echo "Installing dependencies..."
-npm install
+sudo npm install
 
-# Build application with redirect fix
-echo "Building application..."
-npm run build
+# Build frontend
+echo "Building frontend..."
+sudo npm run build
 
-# Configure PostgreSQL
-echo "Configuring PostgreSQL..."
-systemctl start postgresql
-systemctl enable postgresql
+# Build backend
+echo "Building backend for production..."
+sudo npx esbuild server/index.ts --bundle --platform=node --target=node18 --outfile=dist/index.js --external:pg --external:bcrypt --external:multer --external:express --external:express-session --external:@sendgrid/mail
 
-# Configure trust authentication
-PG_CONFIG="/etc/postgresql/*/main/pg_hba.conf"
-if [ -f $PG_CONFIG ]; then
-    cp $PG_CONFIG $PG_CONFIG.backup
-    sed -i 's/local   all             postgres                                peer/local   all             postgres                                trust/' $PG_CONFIG
-    sed -i 's/local   all             all                                     peer/local   all             all                                     trust/' $PG_CONFIG
-    systemctl restart postgresql
+# Set up environment variables
+echo "Setting up environment variables..."
+sudo tee .env > /dev/null << EOF
+NODE_ENV=production
+PORT=5000
+DATABASE_URL=postgresql://servicedesk:SecurePass123@localhost:5432/servicedesk
+SENDGRID_API_KEY=SG.placeholder
+EOF
+
+# Set proper permissions
+echo "Setting permissions..."
+sudo chown -R www-data:www-data /var/www/itservicedesk
+sudo chmod -R 755 /var/www/itservicedesk
+
+# Install PM2 globally if not present
+if ! command -v pm2 &> /dev/null; then
+    echo "Installing PM2..."
+    sudo npm install -g pm2
 fi
 
-# Create database and user
-sudo -u postgres createuser --superuser "$DB_USER" 2>/dev/null || true
-sudo -u postgres createdb "$DB_NAME" --owner="$DB_USER" 2>/dev/null || true
+# Start with PM2
+echo "Starting application with PM2..."
+sudo -u www-data pm2 start ecosystem.config.cjs --env production
 
-# Create environment file (user must provide SENDGRID_API_KEY)
-cat > .env << EOL
-NODE_ENV=production
-DATABASE_URL=postgresql://$DB_USER@localhost:5432/$DB_NAME
-PGHOST=localhost
-PGPORT=5432
-PGDATABASE=$DB_NAME
-PGUSER=$DB_USER
-SENDGRID_API_KEY=\${SENDGRID_API_KEY:-}
-SESSION_SECRET=calpion-production-secret-\$(openssl rand -hex 32)
-PORT=5000
-EOL
+# Configure nginx
+echo "Configuring nginx..."
+sudo tee /etc/nginx/sites-available/itservicedesk > /dev/null << 'EOF'
+server {
+    listen 80;
+    server_name 98.81.235.7;
 
-# Configure nginx without redirects
-cat > /etc/nginx/nginx.conf << 'NGINX_EOF'
-events {
-    worker_connections 1024;
-}
-
-http {
-    upstream app {
-        server 127.0.0.1:5000;
-    }
-
-    server {
-        listen 80;
-        server_name _;
-
-        location / {
-            proxy_pass http://app;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-        }
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
     }
 }
-NGINX_EOF
+EOF
 
-# Remove conflicting nginx configurations
-rm -rf /etc/nginx/sites-enabled
-rm -rf /etc/nginx/sites-available
-rm -rf /etc/nginx/conf.d
+# Enable nginx site
+sudo ln -sf /etc/nginx/sites-available/itservicedesk /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
 
-# Start services
-nginx -t
-systemctl restart nginx
-
-# Start application with PM2
-pm2 stop servicedesk 2>/dev/null || true
-pm2 start ecosystem.production.config.cjs
-
-sleep 15
-
-# Test deployment
-echo ""
-echo "Testing deployment..."
-curl -s -I http://localhost:5000/api/health
-curl -s -I http://98.81.235.7/
-
+# Verify deployment
 echo ""
 echo "=== Deployment Complete ==="
-echo "Access: http://98.81.235.7"
-echo "Login: test.admin / password123"
+echo "Application URL: http://98.81.235.7"
+echo ""
+echo "Test credentials:"
+echo "  Username: test.admin"
+echo "  Password: password123"
+echo ""
+echo "PM2 Status:"
+sudo -u www-data pm2 status
+
+echo ""
+echo "Application logs:"
+sudo -u www-data pm2 logs --lines 10

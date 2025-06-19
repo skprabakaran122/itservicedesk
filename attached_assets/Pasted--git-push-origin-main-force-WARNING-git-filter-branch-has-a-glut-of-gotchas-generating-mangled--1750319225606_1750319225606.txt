@@ -1,0 +1,94 @@
+
+git push origin main --force
+WARNING: git-filter-branch has a glut of gotchas generating mangled history
+     rewrites.  Hit Ctrl-C before proceeding to abort, then use an
+     alternative filtering tool such as 'git filter-repo'
+     (https://github.com/newren/git-filter-repo/) instead.  See the
+     filter-branch manual page for more details; to squelch this warning,
+     set FILTER_BRANCH_SQUELCH_WARNING=1.
+Proceeding with filter-branch...
+
+Rewrite e606369446ca9ddc9fb5ff6af5170e22e15629ae (982/1082) (33 seconds passed, remaining 3 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 85c207fb9cea6b5670b5d88bdc100d8639ab8e62 (982/1082) (33 seconds passed, remaining 3 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 872dd3d802e577926bb93f86b54613695be734c8 (982/1082) (33 seconds passed, remaining 3 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 618415e9521f12fc86594073249fc0c1386c68e2 (982/1082) (33 seconds passed, remaining 3 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 1952637273d703f1a0514873aa744242b45f8ae2 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 02868b4212b5d4f4fcab99779b23ec6c47a58b46 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 1fd0721e69d97716f9915b5d3bcb067bad3d5ad1 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite f4656fc89cb2dc6106211038b971f575a7ddf492 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite c70320ef69942c9a186bcb2de099fdf63bdf77ad (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 61bdd91ee779dfc101486eb40176979d9b4c7a50 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite d7bed8c293fb71e4b674716af7fead0435872641 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite b0ba8efe5127f00263388283174caeb2eabd9118 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 68418d94ce01bde9f1c5bce3631de08cddad0e78 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 2cbce9c372f9d1f07bd3a36b7d8903e262938468 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite a9a181d5f46584c41587a13fcae1169f21eb16ed (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 0ca58858b7b5c4856b9421a82c830e50c4bc0713 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 43f7442855d79c2656f022e710b6998e133b9f65 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite da05756fe8e53d2fe35b046c3b2cb7d17d47eb78 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 7c0516051899909c89ef7d5633e248db493c4af5 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 0ed03b28118fb6952ad154f288bab0add23cde35 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 486f655d1a5dc8ac2229ca0e774dd1fb9a0d39ff (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite c777f61962918070656f762a5a1645840bd87dad (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 3f29773c576a3c2a3d95eab6c49aa9fc6c4771ea (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite d63c63695fe5918a33b4f7892401088abbe3aee3 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite a8528abff86ce14a9d1b238bd2de1b1b21bf4bea (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite fba7b86be0195368970e80b6ccea1f8b087afd78 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite fb682a2505cc461463ff2ddee1e1d18c543378db (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite d2b2e2a0771e207b019ff3673cf809df80140b58 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 1a522cbb6c374a81d43a9917004ec7cd44849cd8 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 85e866160bc1667225a0d29e516c83f193041b44 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite f48e1ffdd103e7cba547eabc3608c891c9cd78af (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 3e032ad7aff821dd79f6f0ba3f1b0f76c5349998 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 84ba93b360fc8085136a0ab59ddf1b3692f5132b (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 46ba0b9a8acc276745e3ada4e0b11d4f2757ad1b (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 68148207ab7f8dc5e99189555ff44a0132a18fa3 (1012/1082) (33 seconds passed, remaining 2 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 33f6ce866ef471132283fced8eb3c11f7ab3e976 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite a126b2d0979984841478a2086742d9635c1fd71a (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 30ca55379f3f2d39c57d4e8e561986c22cca906e (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 811254b2b6d31f3794f0dd04c35a7b036adf8e43 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 027bce0f71951a747ca059a67e87fe2950137388 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite f6a11d1001bd1e3e1d2463b314c5373127eb7324 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 7447ff84e935fdf84c618febbb298374832102c8 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 95d2d29836cbbeb79ae8032d667ba2b59c614da5 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 9e7b6cb866c6ade0a42bace681e2e97b60b70232 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 0e691168a0b099756c68d7660b5a2f3852534e52 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite e4323446a1a4aa0b2112aba66a8041d7170513bb (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 3d8df6b17b719f1c4480fdd352be538710ed88e7 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 736269ef1d4410e87853d0e5ab0f1f1453039a86 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 22e19227885d40f81dca6f422971abb70b8b2111 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite b116069ce94479ef6ce53da4dad147bd1fc601d5 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 9181303b05ae6dd9090dec55b643b6547f1f108f (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 4dac709f70b7430935bab7209d6648989af88a47 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 71c28d075bea2b72d0637e50fb077d5af7644695 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite af7bafad19615a827ce7118d2ac2c6b8c540454d (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 81d258aaea2dd2e1cb0feba8824d770a956ce85d (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 82988098a78a719365f79466451efd793ea594d7 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 35b2a08be1316c599690e4f575c05b7681d8e225 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 87af17a7de9acc021c4a2e066c646d57007c02b0 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 1065041c664b9de44037c043b2ac0883f3dab354 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite e497ba27edce0e5c70deaacffdfdb9e400f11b07 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite f2358d5868b7c2a1dd08b686aba64f9a6d937403 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite f26db6284c75f3ec04c58f6c25051049ff572f98 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite e4cf34cf9c7b2bda62bd0e5b9db5fb336cf78b8c (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 3a111bea507b7090749e8a42e756f1261de1dbcd (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite 1eeb9ce22438c6a97712ef4833478244894d3d75 (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite f2ae44535388681da01677377e863da1b3b79e2d (1043/1082) (34 seconds passed, remaining 1 predicted)    rm 'deploy-fresh-from-git.sh'
+Rewrite c1ff90e5e296a52592cbbf243fcafc079e47851b (1074/1082) (35 seconds passed, remaining 0 predicted)    
+Ref 'refs/heads/main' was rewritten
+Ref 'refs/heads/replit-agent' was rewritten
+WARNING: Ref 'refs/notes/commits' is unchanged
+Ref 'refs/remotes/orgin/main' was rewritten
+WARNING: Ref 'refs/remotes/orgin/main' is unchanged
+Ref 'refs/remotes/origin/main' was rewritten
+WARNING: Ref 'refs/remotes/origin/main' is unchanged
+Ref 'refs/replit/agent-ledger' was rewritten
+Enumerating objects: 3028, done.
+Counting objects: 100% (3028/3028), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (3001/3001), done.
+Writing objects: 100% (3028/3028), 2.68 MiB | 4.07 MiB/s, done.
+Total 3028 (delta 1945), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (1945/1945), done.
+To https://github.com/skprabakaran122/itservicedesk
+ + 55d688b...e27e36b main -> main (forced update)
