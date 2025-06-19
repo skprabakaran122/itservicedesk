@@ -143,6 +143,7 @@ export const products = pgTable("products", {
   category: varchar("category", { length: 50 }).notNull(),
   description: text("description"),
   isActive: varchar("is_active", { length: 10 }).notNull().default("true"),
+  owner: varchar("owner", { length: 100 }), // Ubuntu production compatibility
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

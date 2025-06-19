@@ -2,28 +2,38 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Development environment configuration for Ubuntu compatibility
+// Ubuntu-compatible database configuration
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 let pool: Pool;
 
-if (isDevelopment) {
-  // Local PostgreSQL configuration matching Ubuntu production
+if (isDevelopment && process.env.DATABASE_URL) {
+  // Development with DATABASE_URL (Replit environment)
+  pool = new Pool({ 
+    connectionString: process.env.DATABASE_URL,
+    // Configure for Ubuntu-style authentication patterns
+    ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+  });
+} else if (isDevelopment) {
+  // Local Ubuntu PostgreSQL configuration
   pool = new Pool({
     host: 'localhost',
     database: 'servicedesk',
     user: 'postgres',
-    // No password for trust authentication like production
     port: 5432
   });
 } else {
-  // Production configuration
+  // Production Ubuntu configuration
   if (!process.env.DATABASE_URL) {
-    throw new Error(
-      "DATABASE_URL must be set. Did you forget to provision a database?",
-    );
+    pool = new Pool({
+      host: 'localhost',
+      database: 'servicedesk',
+      user: 'postgres',
+      port: 5432
+    });
+  } else {
+    pool = new Pool({ connectionString: process.env.DATABASE_URL });
   }
-  pool = new Pool({ connectionString: process.env.DATABASE_URL });
 }
 
 export { pool };
