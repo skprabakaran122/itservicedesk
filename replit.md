@@ -106,6 +106,23 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 19, 2025 - Repository Cleanup and Production-Ready Structure ✓ COMPLETED
+- **Comprehensive File Cleanup**: Removed 22 redundant deployment scripts and debugging files
+  - Eliminated all temporary fix scripts: bypass-postgres-auth.sh, debug-blank-screen.sh, fix-auth-and-database.sh, etc.
+  - Removed accumulated debugging artifacts: sample email templates, service files, config duplicates
+  - Cleaned up development logs and test files from troubleshooting sessions
+  - Streamlined project to essential production files only
+- **Essential File Structure**: Maintained only production-critical deployment components
+  - Core deployment scripts: deploy-ubuntu-compatible.sh, clean-build.sh, deploy-production-pm2.sh
+  - Development tools: dev-pm2.sh, init-dev-environment.sh, fix-email-sendgrid.sh
+  - Configuration files: ecosystem.config.cjs, ecosystem.dev.config.cjs, server.js
+  - Documentation: DEPLOYMENT.md comprehensive guide, updated README.md
+- **Production Documentation**: Created comprehensive deployment guide
+  - DEPLOYMENT.md with complete Ubuntu deployment instructions
+  - Updated README.md with production-focused content and Calpion branding
+  - Clear deployment commands and troubleshooting guidance
+  - System requirements and monitoring procedures documented
+
 ### June 18, 2025 - Production-Ready Deployment Created ✓ COMPLETED
 - **Repository Cleanup**: Removed 103+ redundant deployment scripts accumulated during troubleshooting
   - Eliminated all temporary fix scripts, debugging files, and duplicate configurations
