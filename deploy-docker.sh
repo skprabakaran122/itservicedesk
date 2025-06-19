@@ -35,8 +35,20 @@ sudo fuser -k 5432/tcp 2>/dev/null || true
 echo "4. Setting up environment..."
 export SENDGRID_API_KEY="${SENDGRID_API_KEY:-}"
 
-# Step 5: Build and start everything
-echo "5. Starting IT Service Desk with Docker..."
+# Step 5: Verify docker-compose.yml exists
+echo "5. Checking Docker configuration..."
+if [ ! -f "docker-compose.yml" ]; then
+    echo "Error: docker-compose.yml not found in current directory"
+    echo "Current directory: $(pwd)"
+    echo "Files present:"
+    ls -la
+    exit 1
+fi
+
+echo "Docker Compose file found ✓"
+
+# Step 6: Build and start everything
+echo "6. Starting IT Service Desk with Docker..."
 docker-compose down --remove-orphans 2>/dev/null || true
 docker-compose up --build -d
 
