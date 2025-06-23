@@ -18,6 +18,7 @@ import { Plus, Edit, Trash2, Settings, Package, Shield, Users, Mail } from "luci
 import { ApprovalRoutingManager } from "./approval-routing";
 import { UserManagement } from "./user-management";
 import { EmailSettings } from "./email-settings";
+import { GroupsManagement } from "./groups-management";
 
 interface AdminConsoleProps {
   currentUser: any;
@@ -176,6 +177,10 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
           <TabsTrigger value="users">
             <Users className="h-4 w-4 mr-2" />
             User Management
+          </TabsTrigger>
+          <TabsTrigger value="groups">
+            <Users className="h-4 w-4 mr-2" />
+            Support Groups
           </TabsTrigger>
           <TabsTrigger value="approval-routing">
             <Shield className="h-4 w-4 mr-2" />
@@ -362,6 +367,10 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
 
         <TabsContent value="users">
           <UserManagement currentUser={currentUser} />
+        </TabsContent>
+
+        <TabsContent value="groups">
+          <GroupsManagement currentUser={currentUser} />
         </TabsContent>
 
         <TabsContent value="approval-routing">
