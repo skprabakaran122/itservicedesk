@@ -293,6 +293,7 @@ export class DatabaseStorage implements IStorage {
     priority?: string;
     category?: string;
     assignedTo?: string;
+    assignedGroup?: string;
     searchQuery?: string;
   }): Promise<Ticket[]> {
     const conditions = [];
@@ -301,6 +302,7 @@ export class DatabaseStorage implements IStorage {
     if (filters.priority) conditions.push(eq(tickets.priority, filters.priority));
     if (filters.category) conditions.push(eq(tickets.category, filters.category));
     if (filters.assignedTo) conditions.push(eq(tickets.assignedTo, filters.assignedTo));
+    if (filters.assignedGroup) conditions.push(eq(tickets.assignedGroup, filters.assignedGroup));
 
     // Handle search query for text-based search
     if (filters.searchQuery) {
@@ -1095,7 +1097,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGroup(id: number): Promise<boolean> {
     const result = await db.delete(groups).where(eq(groups.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getActiveGroups(): Promise<Group[]> {

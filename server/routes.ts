@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { emailService } from "./email-sendgrid";
 import { getEmailConfig, updateEmailConfig, isEmailConfigured } from './email-config';
 import { z } from "zod";
-import { insertTicketSchema, insertChangeSchema, insertProductSchema, insertAttachmentSchema } from "@shared/schema";
+import { insertTicketSchema, insertChangeSchema, insertProductSchema, insertAttachmentSchema, insertGroupSchema } from "@shared/schema";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import multer from "multer";
@@ -1797,6 +1797,84 @@ ${projectData.additionalNotes || 'None'}
     } catch (error: any) {
       console.error('Email settings update error:', error);
       res.status(500).json({ message: error.message || "Failed to update email settings" });
+    }
+  });
+
+  // Groups management routes (Admin only)
+  app.get("/api/groups", async (req, res) => {
+    try {
+      const groups = await storage.getGroups();
+      res.json(groups);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch groups" });
+    }
+  });
+
+  app.get("/api/groups/active", async (req, res) => {
+    try {
+      const groups = await storage.getActiveGroups();
+      res.json(groups);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch active groups" });
+    }
+  });
+
+  app.post("/api/groups", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      const groupData = insertGroupSchema.parse(req.body);
+      const group = await storage.createGroup(groupData);
+      res.status(201).json(group);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid group data" });
+    }
+  });
+
+  app.patch("/api/groups/:id", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const group = await storage.updateGroup(id, updates);
+      
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+      
+      res.json(group);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update group" });
+    }
+  });
+
+  app.delete("/api/groups/:id", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteGroup(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+      
+      res.json({ message: "Group deleted successfully" });
+    } catch (error) {
+      res.status(400).json({ message: "Failed to delete group" });
     }
   });
 
