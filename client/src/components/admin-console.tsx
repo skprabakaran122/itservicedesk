@@ -175,6 +175,10 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
             <Package className="h-4 w-4 mr-2" />
             Products
           </TabsTrigger>
+          <TabsTrigger value="categories">
+            <Layers className="h-4 w-4 mr-2" />
+            Categories
+          </TabsTrigger>
           <TabsTrigger value="users">
             <Users className="h-4 w-4 mr-2" />
             User Management
@@ -368,6 +372,10 @@ export function AdminConsole({ currentUser }: AdminConsoleProps) {
 
         <TabsContent value="users">
           <UserManagement currentUser={currentUser} />
+        </TabsContent>
+
+        <TabsContent value="categories">
+          <CategoriesManagement />
         </TabsContent>
 
         <TabsContent value="groups">

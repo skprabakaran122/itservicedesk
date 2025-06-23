@@ -57,6 +57,7 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
       priority: "medium",
       category: "software",
       assignedTo: "",
+      assignedGroup: "",
       product: "",
     },
   });
