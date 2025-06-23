@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertTicketSchema, type Group } from "@shared/schema";
+import { insertTicketSchema, type Group, type Category } from "@shared/schema";
 import { ProductSelect } from "@/components/product-select";
 import { FileUpload } from "@/components/file-upload";
 
@@ -21,6 +21,7 @@ const formSchema = z.object({
   status: z.string().default("open"),
   priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
   category: z.enum(["software", "hardware", "network", "access", "other"]).default("software"),
+  subProduct: z.string().optional(),
   assignedTo: z.string().optional(),
   assignedGroup: z.string().min(1, "Assigned Group is required"),
   product: z.string().min(1, "Product is required"),
@@ -39,15 +40,6 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
   const [createdTicketId, setCreatedTicketId] = useState<number | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
 
-  // Fetch active groups for assignment
-  const { data: groups = [] } = useQuery({
-    queryKey: ["/api/groups/active"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/groups/active");
-      return response.json();
-    },
-  });
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,6 +48,7 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
       status: "open",
       priority: "medium",
       category: "software",
+      subProduct: "",
       assignedTo: "",
       assignedGroup: "",
       product: "",
