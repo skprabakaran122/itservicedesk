@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -52,6 +52,34 @@ const convertISTInputToUTC = (istInputValue: string): string => {
   return utcDate.toISOString();
 };
 
+// Get current IST time formatted for datetime-local input
+const getCurrentISTDateTime = (): string => {
+  const now = new Date();
+  const istNow = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+  
+  const year = istNow.getUTCFullYear();
+  const month = String(istNow.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(istNow.getUTCDate()).padStart(2, '0');
+  const hours = String(istNow.getUTCHours()).padStart(2, '0');
+  const minutes = String(istNow.getUTCMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+// Get IST time + 24 hours for Normal changes
+const getMinDateTimeForNormal = (): string => {
+  const now = new Date();
+  const istNowPlus24h = new Date(now.getTime() + (5.5 * 60 * 60 * 1000) + (24 * 60 * 60 * 1000));
+  
+  const year = istNowPlus24h.getUTCFullYear();
+  const month = String(istNowPlus24h.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(istNowPlus24h.getUTCDate()).padStart(2, '0');
+  const hours = String(istNowPlus24h.getUTCHours()).padStart(2, '0');
+  const minutes = String(istNowPlus24h.getUTCMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 const formSchema = insertChangeSchema.extend({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
@@ -70,6 +98,16 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [minDateTime, setMinDateTime] = useState<string>('');
+  const [startDateTime, setStartDateTime] = useState<string>('');
+  const [changeType, setChangeType] = useState<string>('normal');
+
+  // Set minimum datetime based on change type
+  useEffect(() => {
+    const currentISTTime = getCurrentISTDateTime();
+    const normalMinTime = getMinDateTimeForNormal();
+    setMinDateTime(changeType === 'normal' ? normalMinTime : currentISTTime);
+  }, [changeType]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -118,16 +156,48 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/attachments"] });
       onClose();
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to create change request. Please try again.",
+        description: error?.message || "Failed to create change request. Please try again.",
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
+    // Additional frontend validation
+    if (data.startDate && data.endDate) {
+      const startDate = new Date(data.startDate);
+      const endDate = new Date(data.endDate);
+      
+      if (endDate <= startDate) {
+        toast({
+          title: "Invalid Dates",
+          description: "End date must be after the start date.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Validate 24-hour advance notice for Normal changes
+    if (data.changeType === 'normal' && data.startDate) {
+      const startDate = new Date(data.startDate);
+      const now = new Date();
+      const timeDifference = startDate.getTime() - now.getTime();
+      const hoursDifference = timeDifference / (1000 * 60 * 60);
+
+      if (hoursDifference < 24) {
+        toast({
+          title: "Invalid Start Time",
+          description: "Normal changes require at least 24 hours advance notice. Please select a start time at least 24 hours from now.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     // Convert string dates back to proper format for backend
     const processedData = {
       ...data,
@@ -197,7 +267,10 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Change Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(value) => {
+                      field.onChange(value);
+                      setChangeType(value);
+                    }} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select change type" />
@@ -205,7 +278,7 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="standard">Standard (No Approval Required)</SelectItem>
-                        <SelectItem value="normal">Normal (Requires Approval)</SelectItem>
+                        <SelectItem value="normal">Normal (Requires Approval - 24h advance notice)</SelectItem>
                         <SelectItem value="emergency">Emergency (Expedited Approval)</SelectItem>
                       </SelectContent>
                     </Select>
@@ -313,17 +386,28 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Implementation Start Date (IST)</FormLabel>
+                    <FormLabel>
+                      Implementation Start Date (IST)
+                      {changeType === 'normal' && (
+                        <span className="text-sm text-amber-600 font-normal ml-2">
+                          (Minimum 24h advance notice)
+                        </span>
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="datetime-local"
+                        min={minDateTime}
                         {...field}
                         value={convertUTCToISTForInput(field.value || null)}
                         onChange={(e) => {
                           if (e.target.value) {
-                            field.onChange(convertISTInputToUTC(e.target.value));
+                            const utcValue = convertISTInputToUTC(e.target.value);
+                            field.onChange(utcValue);
+                            setStartDateTime(e.target.value);
                           } else {
                             field.onChange(null);
+                            setStartDateTime('');
                           }
                         }}
                       />
@@ -341,6 +425,7 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
                     <FormControl>
                       <Input
                         type="datetime-local"
+                        min={startDateTime || minDateTime}
                         {...field}
                         value={convertUTCToISTForInput(field.value || null)}
                         onChange={(e) => {

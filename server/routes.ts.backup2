@@ -13,16 +13,12 @@ import fs from "fs";
 import crypto from "crypto";
 
 // Import bcrypt safely with fallback
-let bcrypt = null;
-(async () => {
-  try {
-    const bcryptModule = await import('bcrypt');
-    bcrypt = bcryptModule.default || bcryptModule;
-    console.log('[Auth] bcrypt loaded successfully via import');
-  } catch (error) {
-    console.log('[Auth] bcrypt failed to load:', error.message);
-  }
-})();
+let bcrypt: any = null;
+try {
+  bcrypt = require('bcrypt');
+} catch (error) {
+  console.log('[Auth] bcrypt not available, using plain text password comparison');
+}
 
 const PgStore = connectPgSimple(session);
 const MemoryStoreSession = PgStore;
@@ -579,22 +575,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate secure approval token
       const approvalToken = generateApprovalToken();
-
-      // TEMP DEBUG - Remove this later
-      console.log("=== APPROVAL DEBUG START ===");
-      console.log("selectedManager:", selectedManager);
-      console.log("comments:", comments);
       
       // Update ticket to pending approval status with selected manager and token
-      const approvalComments = comments ? `Approval request sent to ${selectedManager.name} (${selectedManager.email}). Agent comments: ${comments}` : `Approval request sent to ${selectedManager.name} (${selectedManager.email})`;
-
-      console.log("approvalComments FINAL:", approvalComments);
-      console.log("=== APPROVAL DEBUG END ===");
+      const approvalComments = comments ? `Agent comments: ${comments}` : 'Ticket sent for management approval';
       const updatedTicket = await storage.updateTicketWithHistory(id, {
         approvalStatus: 'pending',
         approvedBy: selectedManager.name, // Store which manager should approve
-        approvalToken, // Store secure token for email approval
-        approverEmail: selectedManager.email // Store manager email for history
+        approvalToken // Store secure token for email approval
       }, currentUser.id, approvalComments);
 
       if (!updatedTicket) {
@@ -663,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         approvedAt: new Date(),
         status: 'open', // Open ticket when approved
         approvalToken: null // Clear token after use
-      }, ticket.requesterId, `Ticket approved via email by ${ticket.approvedBy}${ticket.approverEmail ? ` (${ticket.approverEmail})` : ""}`);
+      }, ticket.requesterId, `Ticket approved via email by ${ticket.approvedBy}`);
 
       res.send(`
         <html>
@@ -747,7 +734,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         approvalStatus: 'rejected',
         approvedAt: new Date(),
         approvalToken: null // Clear token after use
-      }, 0, `Ticket rejected via email by ${ticket.approvedBy}${ticket.approverEmail ? ` (${ticket.approverEmail})` : ""}`);
+      }, 0, `Ticket rejected via email by ${ticket.approvedBy}`);
 
       res.send(`
         <html>
@@ -1224,10 +1211,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/products", async (req, res) => {
     try {
       const allProducts = await storage.getProducts();
-      if (!req.session?.user) return res.json(allProducts);
+      if (!req.session?.user) return res.json([]);
       const user = req.session.user;
-      // Agents and admins can see all products to create tickets
-      return res.json(allProducts);
+      if (user.role === "admin") return res.json(allProducts);
+      if (user.assignedProducts?.length > 0) {
+        const userProducts = allProducts.filter(product => 
+          user.assignedProducts.some(assigned => 
+            assigned === product.name || product.name.toLowerCase().includes(assigned.toLowerCase().split(" ")[0])
+          )
+        );
+        return res.json(userProducts);
+      }
+      res.json([]);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch products" });
     }

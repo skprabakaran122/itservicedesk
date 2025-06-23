@@ -1,0 +1,41 @@
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -1208,9 +1208,31 @@
+   });
+ 
+   // Product routes
+   app.get("/api/products", async (req, res) => {
+     try {
+-      const products = await storage.getProducts();
+-      res.json(products);
++      // Get all products
++      const allProducts = await storage.getProducts();
++      
++      // If not authenticated, return empty array
++      if (!req.session?.user) {
++        return res.json([]);
++      }
++      
++      const user = req.session.user;
++      
++      // Admins see all products
++      if (user.role === 'admin') {
++        return res.json(allProducts);
++      }
++      
++      // Agents and other roles see only their assigned products
++      if (user.assignedProducts && user.assignedProducts.length > 0) {
++        const userProducts = allProducts.filter(product => 
++          user.assignedProducts.some(assigned => 
++            assigned === product.name || 
++            product.name.toLowerCase().includes(assigned.toLowerCase().split(' ')[0])
++          )
++        );
++        return res.json(userProducts);
++      }
++      
++      // Users with no assigned products see empty array
++      res.json([]);
+     } catch (error) {
+       res.status(500).json({ message: "Failed to fetch products" });
+     }

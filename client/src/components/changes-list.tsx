@@ -22,6 +22,31 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // ✅ NEW: Overdue detection function
+  const isChangeOverdue = (change: Change): boolean => {
+    return change.isOverdue === 'true' || change.isOverdue === true || change.status === 'overdue';
+  };
+
+  // ✅ NEW: Get overdue classes for styling
+  const getOverdueClasses = (change: Change): string => {
+    if (isChangeOverdue(change)) {
+      return "border-l-4 border-l-red-500 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950 dark:to-red-900";
+    }
+    return "";
+  };
+
+  // ✅ NEW: Overdue badge component
+  const OverdueBadge = ({ change }: { change: Change }) => {
+    if (!isChangeOverdue(change)) return null;
+    
+    return (
+      <Badge className="bg-red-600 text-white animate-pulse hover:bg-red-700">
+        <AlertTriangle className="h-3 w-3 mr-1" />
+        OVERDUE
+      </Badge>
+    );
+  };
+
   const getChangeTypeColor = (changeType: string) => {
     switch (changeType) {
       case 'standard': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
@@ -103,11 +128,22 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
   return (
     <div className="space-y-4">
       {sortedChanges.map((change) => (
-        <Card key={change.id} className="hover:shadow-md transition-shadow">
+        <Card 
+          key={change.id} 
+          className={`hover:shadow-md transition-all duration-200 ${getOverdueClasses(change)}`}
+        >
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+                <CardTitle className={`text-lg font-semibold ${
+                  isChangeOverdue(change) 
+                    ? 'text-red-900 dark:text-red-100' 
+                    : 'text-gray-900 dark:text-white'
+                }`}>
+                  {/* ✅ NEW: Overdue icon in title */}
+                  {isChangeOverdue(change) && (
+                    <AlertTriangle className="inline h-5 w-5 mr-2 text-red-600" />
+                  )}
                   CHG-{change.id} - {change.title}
                 </CardTitle>
                 <CardDescription className="mt-1">
@@ -118,6 +154,9 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                 </CardDescription>
               </div>
               <div className="flex flex-col items-end gap-2 ml-4">
+                {/* ✅ NEW: Overdue badge at the top */}
+                <OverdueBadge change={change} />
+                
                 <Badge className={getChangeTypeColor(change.changeType || 'normal')}>
                   <div className="flex items-center gap-1">
                     {getChangeTypeIcon(change.changeType || 'normal')}
@@ -127,7 +166,12 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                 <Badge className={getPriorityColor(change.priority)}>
                   {change.priority.toUpperCase()}
                 </Badge>
-                <Badge variant="secondary" className={getStatusColor(change.status)}>
+                <Badge 
+                  variant="secondary" 
+                  className={`${getStatusColor(change.status)} ${
+                    isChangeOverdue(change) ? 'bg-red-600 text-white' : ''
+                  }`}
+                >
                   {change.status.replace('-', ' ').toUpperCase()}
                 </Badge>
                 <Badge variant="outline" className={getRiskColor(change.riskLevel)}>
@@ -137,6 +181,22 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
             </div>
           </CardHeader>
           <CardContent>
+            {/* ✅ NEW: Overdue alert banner */}
+            {isChangeOverdue(change) && (
+              <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  <div>
+                    <h4 className="font-semibold text-red-800 dark:text-red-200">⚠️ OVERDUE ALERT</h4>
+                    <p className="text-sm text-red-700 dark:text-red-300">
+                      This change has passed its scheduled end time and requires immediate attention.
+                      {change.endDate && ` End time was: ${formatDateIST(change.endDate, 'MMM dd, yyyy HH:mm')}`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <User className="h-4 w-4" />
@@ -169,9 +229,17 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                 </div>
               )}
               {change.endDate && (
-                <div className="flex items-center gap-2 text-sm text-red-600">
+                <div className={`flex items-center gap-2 text-sm ${
+                  isChangeOverdue(change) ? 'text-red-700 dark:text-red-400 font-bold' : 'text-red-600'
+                }`}>
                   <Calendar className="h-4 w-4" />
                   <span>End: {formatDateIST(change.endDate, 'MMM dd, yyyy HH:mm')}</span>
+                  {/* ✅ NEW: Overdue indicator for end date */}
+                  {isChangeOverdue(change) && (
+                    <span className="ml-1 text-xs bg-red-600 text-white px-2 py-1 rounded">
+                      OVERDUE
+                    </span>
+                  )}
                 </div>
               )}
             </div>
