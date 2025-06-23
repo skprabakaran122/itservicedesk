@@ -22,7 +22,7 @@ const formSchema = z.object({
   priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
   category: z.enum(["software", "hardware", "network", "access", "other"]).default("software"),
   assignedTo: z.string().optional(),
-  assignedGroup: z.string().optional(),
+  assignedGroup: z.string().min(1, "Assigned Group is required"),
   product: z.string().min(1, "Product is required"),
   requesterDepartment: z.string().optional(),
   requesterBusinessUnit: z.string().optional(),
@@ -219,7 +219,7 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
                 name="assignedGroup"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assigned Group (Optional)</FormLabel>
+                    <FormLabel>Assigned Group *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>

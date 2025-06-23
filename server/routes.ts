@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { emailService } from "./email-sendgrid";
 import { getEmailConfig, updateEmailConfig, isEmailConfigured } from './email-config';
 import { z } from "zod";
-import { insertTicketSchema, insertChangeSchema, insertProductSchema, insertAttachmentSchema, insertGroupSchema } from "@shared/schema";
+import { insertTicketSchema, insertChangeSchema, insertProductSchema, insertAttachmentSchema, insertGroupSchema, insertCategorySchema } from "@shared/schema";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import multer from "multer";
@@ -1900,6 +1900,84 @@ ${projectData.additionalNotes || 'None'}
     } catch (error: any) {
       console.error('Email settings fetch error:', error);
       res.status(500).json({ message: error.message || "Failed to fetch email settings" });
+    }
+  });
+
+  // Categories management routes
+  app.get("/api/categories", async (req: Request, res: Response) => {
+    try {
+      const categories = await storage.getCategories();
+      res.json(categories);
+    } catch (error: any) {
+      console.error('Categories fetch error:', error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.get("/api/categories/active", async (req: Request, res: Response) => {
+    try {
+      const categories = await storage.getActiveCategories();
+      res.json(categories);
+    } catch (error: any) {
+      console.error('Active categories fetch error:', error);
+      res.status(500).json({ message: "Failed to fetch active categories" });
+    }
+  });
+
+  app.get("/api/categories/product/:productId", async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      const categories = await storage.getCategoriesByProduct(productId);
+      res.json(categories);
+    } catch (error: any) {
+      console.error('Categories by product fetch error:', error);
+      res.status(500).json({ message: "Failed to fetch categories for product" });
+    }
+  });
+
+  app.post("/api/categories", async (req: Request, res: Response) => {
+    try {
+      if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      const validatedData = insertCategorySchema.parse(req.body);
+      const category = await storage.createCategory(validatedData);
+      res.status(201).json(category);
+    } catch (error: any) {
+      console.error('Category creation error:', error);
+      res.status(500).json({ message: error.message || "Failed to create category" });
+    }
+  });
+
+  app.put("/api/categories/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      const id = parseInt(req.params.id);
+      const validatedData = insertCategorySchema.partial().parse(req.body);
+      const category = await storage.updateCategory(id, validatedData);
+      res.json(category);
+    } catch (error: any) {
+      console.error('Category update error:', error);
+      res.status(500).json({ message: error.message || "Failed to update category" });
+    }
+  });
+
+  app.delete("/api/categories/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      const id = parseInt(req.params.id);
+      await storage.deleteCategory(id);
+      res.json({ message: "Category deleted successfully" });
+    } catch (error: any) {
+      console.error('Category deletion error:', error);
+      res.status(500).json({ message: error.message || "Failed to delete category" });
     }
   });
 

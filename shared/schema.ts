@@ -264,6 +264,26 @@ export const insertGroupSchema = createInsertSchema(groups).omit({
 export type InsertGroup = z.infer<typeof insertGroupSchema>;
 export type Group = typeof groups.$inferSelect;
 
+// Categories as sub-products
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  productId: integer("product_id").references(() => products.id),
+  isActive: varchar("is_active", { length: 10 }).notNull().default('true'), // 'true' or 'false'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCategorySchema = createInsertSchema(categories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type Category = typeof categories.$inferSelect;
+
 export const sessions = pgTable(
   "sessions",
   {
