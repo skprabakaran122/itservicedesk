@@ -289,8 +289,8 @@ function startOverdueChangeScheduler() {
       serveStatic(app);
     }
 
-    // Start HTTP server - use consistent port 3000 for production deployment
-    const httpPort = parseInt(process.env.PORT || "3000", 10);
+    // Start HTTP server - use port 5000 for Replit environment
+    const httpPort = parseInt(process.env.PORT || "5000", 10);
     log(`[DEBUG] Using port ${httpPort} for all environments`);
     
     server.listen(httpPort, "0.0.0.0", () => {
