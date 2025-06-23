@@ -291,6 +291,18 @@ export function TicketDetailsModal({
                       <label className="text-sm font-medium text-gray-500">Category</label>
                       <p className="text-sm">{ticket.category}</p>
                     </div>
+                    {ticket.product && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Product</label>
+                        <p className="text-sm">{ticket.product}</p>
+                      </div>
+                    )}
+                    {ticket.subProduct && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Sub-Product</label>
+                        <p className="text-sm">{ticket.subProduct}</p>
+                      </div>
+                    )}
                     <div>
                       <label className="text-sm font-medium text-gray-500">Requester Details</label>
                       <div className="flex items-start gap-2">

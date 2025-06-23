@@ -10,6 +10,7 @@ export const tickets = pgTable("tickets", {
   priority: varchar("priority", { length: 20 }).notNull(), // low, medium, high, critical
   category: varchar("category", { length: 50 }).notNull(), // hardware, software, network, access, product
   product: varchar("product", { length: 100 }), // specific product name
+  subProduct: varchar("sub_product", { length: 100 }), // sub-product/category name
   assignedTo: text("assigned_to"),
   assignedGroup: varchar("assigned_group", { length: 100 }), // assigned support group
   requesterId: integer("requester_id"),

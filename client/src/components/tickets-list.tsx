@@ -316,7 +316,12 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
               {ticket.product && (
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Package className="h-4 w-4" />
-                  <span>{ticket.product}</span>
+                  <div>
+                    <div>{ticket.product}</div>
+                    {ticket.subProduct && (
+                      <div className="text-xs text-gray-500">Sub: {ticket.subProduct}</div>
+                    )}
+                  </div>
                 </div>
               )}
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">

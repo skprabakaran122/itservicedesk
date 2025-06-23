@@ -79,7 +79,14 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
 
   const createTicketMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
-      const response = await apiRequest("POST", "/api/tickets", data);
+      // Convert subProduct ID to category name
+      const selectedCategory = categories.find(cat => cat.id.toString() === data.subProduct);
+      const ticketData = {
+        ...data,
+        subProduct: selectedCategory ? selectedCategory.name : data.subProduct
+      };
+      
+      const response = await apiRequest("POST", "/api/tickets", ticketData);
       const ticket = await response.json();
       
       // Upload attachments if any
