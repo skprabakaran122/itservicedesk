@@ -106,6 +106,19 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 23, 2025 - Groups Management System Added ✓ COMPLETED
+- **Complete Groups Management Implementation**: Added comprehensive support groups functionality for ticket assignment
+  - Added `assignedGroup` field to tickets schema and `groups` table with member management
+  - Created full CRUD API endpoints for groups management with admin-only access controls
+  - Built Groups Management interface in admin console with create/edit/delete capabilities
+  - Added assigned group dropdown to ticket creation form populated with active groups
+  - Implemented member assignment system allowing users to be added to support groups
+- **Enhanced Ticket Management**: Improved ticket routing and assignment capabilities
+  - Dual assignment system supporting both individual (`assignedTo`) and group (`assignedGroup`) assignment
+  - Backend search functionality updated to filter tickets by assigned group
+  - Active/inactive group status management for flexible organization
+  - Complete integration between admin console groups management and ticket assignment workflow
+
 ### June 23, 2025 - Replit Migration Completed ✓ COMPLETED
 - **Successful Migration from Replit Agent to Standard Replit**: Migrated IT Service Desk application to standard Replit environment
   - Fixed missing tsx dependency for TypeScript execution

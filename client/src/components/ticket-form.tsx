@@ -214,6 +214,30 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="assignedGroup"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assigned Group (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select support group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {groups.map((group: Group) => (
+                          <SelectItem key={group.id} value={group.name}>
+                            {group.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <ProductSelect 
