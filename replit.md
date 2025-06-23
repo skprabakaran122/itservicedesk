@@ -106,7 +106,12 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
-### June 23, 2025 - Groups Management System Added ✓ COMPLETED
+### June 23, 2025 - Sub-Products and Groups Management System Added ✓ COMPLETED
+- **Sub-Product Implementation in Ticket Form**: Added dynamic category selection based on selected product
+  - Sub-product field dynamically loads categories when a product is selected
+  - Smart placeholder text guides users through the selection process
+  - Field validation ensures proper product-category relationship
+  - Complete organizational hierarchy: Product → Sub-Product (Category) → Ticket
 - **Complete Groups Management Implementation**: Added comprehensive support groups functionality for ticket assignment
   - Added `assignedGroup` field to tickets schema and `groups` table with member management
   - Created full CRUD API endpoints for groups management with admin-only access controls

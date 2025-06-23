@@ -55,6 +55,28 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
     },
   });
 
+  // Fetch active groups for assignment
+  const { data: groups = [] } = useQuery({
+    queryKey: ["/api/groups/active"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/groups/active");
+      return response.json();
+    },
+  });
+
+  const selectedProduct = form.watch("product");
+  
+  // Fetch categories for selected product
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["/api/categories/product", selectedProduct],
+    queryFn: async () => {
+      if (!selectedProduct) return [];
+      const response = await apiRequest("GET", `/api/categories/product/${selectedProduct}`);
+      return response.json();
+    },
+    enabled: !!selectedProduct,
+  });
+
   const createTicketMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
       const response = await apiRequest("POST", "/api/tickets", data);
@@ -240,6 +262,37 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
               label="Product"
               placeholder="Select affected product"
               required={true}
+            />
+
+            <FormField
+              control={form.control}
+              name="subProduct"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sub-Product (Category)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={!selectedProduct || categories.length === 0}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          !selectedProduct 
+                            ? "Select a product first" 
+                            : categories.length === 0 
+                            ? "No categories available" 
+                            : "Select sub-product"
+                        } />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories.map((category: Category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
             <div className="grid grid-cols-2 gap-4">
