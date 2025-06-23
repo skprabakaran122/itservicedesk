@@ -45,7 +45,7 @@ export function ProductSelect({
                 </SelectItem>
               ) : (
                 activeProducts.map((product) => (
-                  <SelectItem key={product.id} value={product.name}>
+                  <SelectItem key={product.id} value={product.id.toString()}>
                     {product.name}
                   </SelectItem>
                 ))

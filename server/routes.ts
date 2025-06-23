@@ -1926,7 +1926,23 @@ ${projectData.additionalNotes || 'None'}
 
   app.get("/api/categories/product/:productId", async (req: Request, res: Response) => {
     try {
-      const productId = parseInt(req.params.productId);
+      let productId: number;
+      const param = req.params.productId;
+      
+      // Check if the parameter is a number (product ID) or a string (product name)
+      if (isNaN(Number(param))) {
+        // It's a product name, find the product ID
+        const products = await storage.getProducts();
+        const product = products.find(p => p.name === decodeURIComponent(param));
+        if (!product) {
+          return res.status(404).json({ message: "Product not found" });
+        }
+        productId = product.id;
+      } else {
+        // It's already a numeric ID
+        productId = parseInt(param);
+      }
+      
       const categories = await storage.getCategoriesByProduct(productId);
       res.json(categories);
     } catch (error: any) {
