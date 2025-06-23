@@ -1,11 +1,11 @@
-# Multi-stage Docker build for IT Service Desk
+# Multi-stage build for IT Service Desk
 FROM node:20-alpine AS builder
+
 WORKDIR /app
 
-# Copy package files and tsconfig
+# Copy package files
 COPY package*.json ./
-COPY tsconfig.json ./
-RUN npm ci
+RUN npm ci --only=production
 
 # Copy source code
 COPY . .
@@ -15,35 +15,34 @@ RUN npm run build
 
 # Production stage
 FROM node:20-alpine AS production
+
 WORKDIR /app
 
-# Copy package files and tsconfig (important for tsx path resolution)
+# Install production dependencies
 COPY package*.json ./
-COPY tsconfig.json ./
-RUN npm ci --production && npm install -g tsx
+RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/shared ./shared
-COPY server-production.cjs ./
+COPY --from=builder /app/drizzle.config.ts ./
+COPY --from=builder /app/migrations ./migrations
 
-# Create non-root user and setup directories
-RUN apk add --no-cache curl && \
-    addgroup -g 1001 -S nodejs && \
-    adduser -S appuser -u 1001 && \
-    mkdir -p logs uploads && \
-    chown -R appuser:nodejs /app
+# Install tsx for running TypeScript
+RUN npm install -g tsx
 
-USER appuser
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodeuser -u 1001
+USER nodeuser
 
-# Expose port 5000
+# Expose port
 EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:5000/health || exit 1
 
-# Start application with tsx for TypeScript support
+# Start application
 CMD ["tsx", "server/index.ts"]
-COPY rds-ca-cert.pem /app/rds-ca-cert.pem

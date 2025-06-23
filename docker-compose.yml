@@ -1,42 +1,62 @@
-services:
-  # Remove the entire database section - using RDS now!
-  # database: <- DELETED - no longer needed
+version: '3.8'
 
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: servicedesk-db
+    environment:
+      POSTGRES_DB: servicedesk
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # IT Service Desk Application
   app:
     build: .
-    container_name: itservice_app
+    container_name: servicedesk-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:password123@postgres:5432/servicedesk
+      PORT: 5000
+      # Add your email configuration here
+      # SENDGRID_API_KEY: your_sendgrid_key_here
     ports:
       - "5000:5000"
-    environment:
-      - NODE_ENV=development
-      - PORT=5000
-      - HOST=0.0.0.0
-      # Updated DATABASE_URL to point to your RDS instance
-      - DATABASE_URL=postgresql://postgres:MyPosgresPwd122!@database-1.c7foedg7dnsf.us-east-1.rds.amazonaws.com:5432/itservicedesk?sslmode=require&sslrootcert=/app/rds-ca-cert.pem
-      - BASE_URL=https://98.81.235.7
-    # Remove depends_on database since we're using external RDS
+    volumes:
+      - ./uploads:/app/uploads
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
 
+  # Nginx Reverse Proxy (Optional)
   nginx:
     image: nginx:alpine
-    container_name: itservice_nginx
+    container_name: servicedesk-proxy
     depends_on:
-      app:
-        condition: service_healthy
+      - app
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx-itservicedesk.conf:/etc/nginx/conf.d/default.conf
-      - ./ssl:/etc/nginx/ssl
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
     restart: unless-stopped
 
-# Remove postgres_data volume since we're using RDS
-# volumes:
-#   postgres_data: <- DELETED - no longer needed
+volumes:
+  postgres_data:
