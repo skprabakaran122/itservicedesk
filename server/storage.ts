@@ -1,4 +1,4 @@
-import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, settings, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval, type Setting, type InsertSetting } from "@shared/schema";
+import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, settings, groups, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval, type Setting, type InsertSetting, type Group, type InsertGroup } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, desc, or, like, sql, not, isNull, lte, notInArray, inArray } from "drizzle-orm";
 
@@ -14,6 +14,7 @@ export interface IStorage {
     priority?: string;
     category?: string;
     assignedTo?: string;
+    assignedGroup?: string;
     searchQuery?: string;
   }): Promise<Ticket[]>;
   
@@ -113,6 +114,15 @@ export interface IStorage {
   getSetting(key: string): Promise<Setting | undefined>;
   setSetting(key: string, value: string, description?: string): Promise<Setting>;
   getSettings(): Promise<Setting[]>;
+  
+  // Groups methods
+  getGroups(): Promise<Group[]>;
+  getGroup(id: number): Promise<Group | undefined>;
+  getGroupByName(name: string): Promise<Group | undefined>;
+  createGroup(group: InsertGroup): Promise<Group>;
+  updateGroup(id: number, updates: Partial<InsertGroup>): Promise<Group | undefined>;
+  deleteGroup(id: number): Promise<boolean>;
+  getActiveGroups(): Promise<Group[]>;
 
 }
 
@@ -1053,6 +1063,45 @@ export class DatabaseStorage implements IStorage {
 
   async getSettings(): Promise<Setting[]> {
     return await db.select().from(settings).orderBy(settings.key);
+  }
+
+  // Groups methods implementation
+  async getGroups(): Promise<Group[]> {
+    return await db.select().from(groups).orderBy(groups.name);
+  }
+
+  async getGroup(id: number): Promise<Group | undefined> {
+    const [group] = await db.select().from(groups).where(eq(groups.id, id));
+    return group;
+  }
+
+  async getGroupByName(name: string): Promise<Group | undefined> {
+    const [group] = await db.select().from(groups).where(eq(groups.name, name));
+    return group;
+  }
+
+  async createGroup(group: InsertGroup): Promise<Group> {
+    const [created] = await db.insert(groups).values(group).returning();
+    return created;
+  }
+
+  async updateGroup(id: number, updates: Partial<InsertGroup>): Promise<Group | undefined> {
+    const [updated] = await db.update(groups)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(groups.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteGroup(id: number): Promise<boolean> {
+    const result = await db.delete(groups).where(eq(groups.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getActiveGroups(): Promise<Group[]> {
+    return await db.select().from(groups)
+      .where(eq(groups.isActive, 'true'))
+      .orderBy(groups.name);
   }
 }
 

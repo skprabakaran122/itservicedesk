@@ -11,6 +11,7 @@ export const tickets = pgTable("tickets", {
   category: varchar("category", { length: 50 }).notNull(), // hardware, software, network, access, product
   product: varchar("product", { length: 100 }), // specific product name
   assignedTo: text("assigned_to"),
+  assignedGroup: varchar("assigned_group", { length: 100 }), // assigned support group
   requesterId: integer("requester_id"),
   requesterEmail: text("requester_email"),
   requesterName: text("requester_name"),
@@ -242,6 +243,26 @@ export const insertAttachmentSchema = createInsertSchema(attachments).omit({
 export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
 export type Attachment = typeof attachments.$inferSelect;
 
+
+// Support Groups table
+export const groups = pgTable("groups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  isActive: varchar("is_active", { length: 10 }).notNull().default('true'), // 'true' or 'false'
+  members: text("members").array(), // Array of usernames who are members of this group
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertGroupSchema = createInsertSchema(groups).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertGroup = z.infer<typeof insertGroupSchema>;
+export type Group = typeof groups.$inferSelect;
 
 export const sessions = pgTable(
   "sessions",
