@@ -1,4 +1,4 @@
-import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, settings, groups, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval, type Setting, type InsertSetting, type Group, type InsertGroup } from "@shared/schema";
+import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, settings, groups, categories, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval, type Setting, type InsertSetting, type Group, type InsertGroup, type Category, type InsertCategory } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, desc, or, like, sql, not, isNull, lte, notInArray, inArray } from "drizzle-orm";
 
@@ -123,6 +123,14 @@ export interface IStorage {
   updateGroup(id: number, updates: Partial<InsertGroup>): Promise<Group | undefined>;
   deleteGroup(id: number): Promise<boolean>;
   getActiveGroups(): Promise<Group[]>;
+
+  // Categories methods
+  getCategories(): Promise<Category[]>;
+  getActiveCategories(): Promise<Category[]>;
+  getCategoriesByProduct(productId: number): Promise<Category[]>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
 
 }
 
@@ -1104,6 +1112,44 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(groups)
       .where(eq(groups.isActive, 'true'))
       .orderBy(groups.name);
+  }
+
+  // Categories methods implementation
+  async getCategories(): Promise<Category[]> {
+    return await db.select().from(categories)
+      .orderBy(categories.name);
+  }
+
+  async getActiveCategories(): Promise<Category[]> {
+    return await db.select().from(categories)
+      .where(eq(categories.isActive, 'true'))
+      .orderBy(categories.name);
+  }
+
+  async getCategoriesByProduct(productId: number): Promise<Category[]> {
+    return await db.select().from(categories)
+      .where(and(eq(categories.productId, productId), eq(categories.isActive, 'true')))
+      .orderBy(categories.name);
+  }
+
+  async createCategory(category: InsertCategory): Promise<Category> {
+    const [created] = await db.insert(categories)
+      .values({ ...category, createdAt: new Date(), updatedAt: new Date() })
+      .returning();
+    return created;
+  }
+
+  async updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined> {
+    const [updated] = await db.update(categories)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(categories.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCategory(id: number): Promise<boolean> {
+    const result = await db.delete(categories).where(eq(categories.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 }
 

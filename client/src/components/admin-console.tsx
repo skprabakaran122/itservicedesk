@@ -14,11 +14,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProductSchema, insertGroupSchema, type Product, type InsertProduct, type Group, type InsertGroup } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Settings, Package, Shield, Users, Mail } from "lucide-react";
+import { Plus, Edit, Trash2, Settings, Package, Shield, Users, Mail, Layers } from "lucide-react";
 import { ApprovalRoutingManager } from "./approval-routing";
 import { UserManagement } from "./user-management";
 import { EmailSettings } from "./email-settings";
 import { GroupsManagement } from "./groups-management";
+import { CategoriesManagement } from "./categories-management";
 
 interface AdminConsoleProps {
   currentUser: any;
