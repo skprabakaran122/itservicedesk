@@ -124,6 +124,22 @@ The application follows a full-stack TypeScript architecture with:
   - Active/inactive group status management for flexible organization
   - Complete integration between admin console groups management and ticket assignment workflow
 
+### June 23, 2025 - Product and Sub-Product Display in Ticket Console Fixed ✓ COMPLETED
+- **Database Schema Enhancement**: Added `subProduct` field to tickets table for proper sub-product storage
+  - Extended tickets schema with sub_product varchar column
+  - Applied database migration using drizzle push command
+  - Updated TypeScript types to include subProduct field in ticket interface
+- **Product ID to Name Conversion Fixed**: Resolved issue where product IDs were displaying instead of names
+  - ProductSelect component now returns product IDs for proper API compatibility
+  - Ticket form converts both product ID and sub-product ID to names before saving
+  - Added products query to ticket form for name resolution during submission
+  - Fixed existing ticket data to display correct product names instead of IDs
+- **Complete Ticket Viewing Enhancement**: Product and sub-product information now visible throughout system
+  - Added product and sub-product display to ticket details modal
+  - Enhanced tickets list to show sub-product information alongside products
+  - Sub-product appears as "Sub: [category name]" in compact ticket view
+  - Both fields properly displayed in ticket viewing console and detail views
+
 ### June 23, 2025 - Replit Migration Completed ✓ COMPLETED
 - **Successful Migration from Replit Agent to Standard Replit**: Migrated IT Service Desk application to standard Replit environment
   - Fixed missing tsx dependency for TypeScript execution

@@ -64,6 +64,15 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
     },
   });
 
+  // Fetch all products for name conversion
+  const { data: products = [] } = useQuery({
+    queryKey: ["/api/products"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/products");
+      return response.json();
+    },
+  });
+
   const selectedProduct = form.watch("product");
   
   // Fetch categories for selected product
@@ -79,10 +88,15 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
 
   const createTicketMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
+      // Convert product ID to product name
+      const selectedProduct = products.find(prod => prod.id.toString() === data.product);
+      
       // Convert subProduct ID to category name
       const selectedCategory = categories.find(cat => cat.id.toString() === data.subProduct);
+      
       const ticketData = {
         ...data,
+        product: selectedProduct ? selectedProduct.name : data.product,
         subProduct: selectedCategory ? selectedCategory.name : data.subProduct
       };
       
