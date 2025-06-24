@@ -82,11 +82,11 @@ export function AnalyticsDashboard() {
   });
 
   const { data: analyticsData, isLoading, refetch } = useQuery<AnalyticsData>({
-    queryKey: ["/api/analytics", timeRange, selectedGroup, customDateRange.enabled, customDateRange.startDate, customDateRange.endDate],
+    queryKey: ["/api/analytics", timeRange, selectedGroup, appliedCustomRange],
     queryFn: async () => {
       let url = `/api/analytics?group=${selectedGroup}`;
       
-      if (customDateRange.enabled && customDateRange.startDate && customDateRange.endDate) {
+      if (appliedCustomRange && customDateRange.enabled && customDateRange.startDate && customDateRange.endDate) {
         url += `&startDate=${customDateRange.startDate}&endDate=${customDateRange.endDate}`;
         console.log('Using custom date range:', customDateRange.startDate, 'to', customDateRange.endDate);
       } else {
@@ -145,6 +145,7 @@ export function AnalyticsDashboard() {
   const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
     setCustomDateRange(prev => ({ ...prev, [field]: value }));
     console.log('Date changed:', field, value);
+    // Don't auto-refresh when changing dates - wait for Apply button
   };
 
   const getDateRangeDisplay = () => {
@@ -262,10 +263,14 @@ export function AnalyticsDashboard() {
                       size="sm" 
                       onClick={() => {
                         if (customDateRange.startDate && customDateRange.endDate) {
+                          console.log('Apply Range clicked - forcing refetch');
+                          const rangeKey = `${customDateRange.startDate}-${customDateRange.endDate}`;
+                          setAppliedCustomRange(rangeKey);
                           refetch();
                         }
                       }}
                       disabled={!customDateRange.startDate || !customDateRange.endDate}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       Apply Range
                     </Button>
@@ -274,6 +279,7 @@ export function AnalyticsDashboard() {
                       variant="outline"
                       onClick={() => {
                         setCustomDateRange({ startDate: "", endDate: "", enabled: false });
+                        setAppliedCustomRange(null);
                         setTimeRange("30");
                         refetch();
                       }}
