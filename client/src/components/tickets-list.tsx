@@ -6,8 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Ticket, User } from "@shared/schema";
-import { Clock, User as UserIcon, AlertCircle, Package, Eye, CheckCircle, XCircle, Send } from "lucide-react";
+import { Ticket } from "@shared/schema";
+import { Clock, User as UserIcon, Users, AlertCircle, Package, Eye, CheckCircle, XCircle, Send } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDateIST } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Ticket, TicketHistory, User } from "@shared/schema";
+import { Ticket, TicketHistory } from "@shared/schema";
 import { Clock, User as UserIcon, Package, AlertCircle, MessageSquare, History, FileText, Download, Eye } from "lucide-react";
 import { formatDateIST } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
@@ -330,6 +330,16 @@ export function TicketDetailsModal({
                       </div>
                     </div>
                     <div>
+                      <label className="text-sm font-medium text-gray-500">Assigned to</label>
+                      <p className="text-sm">{ticket.assignedUser?.name || 'Unassigned'}</p>
+                    </div>
+                    {ticket.assignedGroup && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Assigned Group</label>
+                        <p className="text-sm">{ticket.assignedGroup}</p>
+                      </div>
+                    )}
+                    <div>
                       <label className="text-sm font-medium text-gray-500">Created</label>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-gray-400" />
@@ -389,6 +399,61 @@ export function TicketDetailsModal({
                           )}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    {/* Assignment Section */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Assigned To</label>
+                        <Select value={ticket.assignedTo?.toString() || ""} onValueChange={async (value) => {
+                          try {
+                            const updateData = { assignedTo: value ? parseInt(value) : null };
+                            await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
+                            toast({ title: "Success", description: "Ticket assignment updated" });
+                            queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+                          } catch (error) {
+                            toast({ title: "Error", description: "Failed to update assignment", variant: "destructive" });
+                          }
+                        }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select user" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Unassigned</SelectItem>
+                            {users?.map(user => (
+                              <SelectItem key={user.id} value={user.id.toString()}>
+                                {user.name} ({user.role})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Assigned Group</label>
+                        <Select value={ticket.assignedGroup || ""} onValueChange={async (value) => {
+                          try {
+                            const updateData = { assignedGroup: value || null };
+                            await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
+                            toast({ title: "Success", description: "Group assignment updated" });
+                            queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+                          } catch (error) {
+                            toast({ title: "Error", description: "Failed to update group assignment", variant: "destructive" });
+                          }
+                        }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select group" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">No Group</SelectItem>
+                            {groups?.map(group => (
+                              <SelectItem key={group.id} value={group.name}>
+                                {group.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   
                   <div>

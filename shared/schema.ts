@@ -96,6 +96,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type SelectUser = typeof users.$inferSelect;
 export type User = typeof users.$inferSelect;
 
 // Ticket history for tracking changes

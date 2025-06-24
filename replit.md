@@ -106,6 +106,22 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 24, 2025 - Group Assignment in Ticket Console Added ✓ COMPLETED
+- **Ticket Group Assignment**: Added complete group assignment functionality to ticket update interface
+  - Added assigned group dropdown to ticket details modal with live update capability
+  - Enhanced ticket display to show both individual user and group assignments
+  - Updated backend to properly handle group assignment updates with history tracking
+  - Fixed TypeScript export errors in schema file for User type
+- **Analytics Group Filtering Fixed**: Resolved backend group filtering issues in analytics dashboard
+  - Fixed whereConditions variable scope error that was causing 500 errors
+  - Added comprehensive group filtering to all analytics queries (basic metrics, trends, distributions)
+  - Group selection now properly filters ticket data and displays accurate metrics
+  - Analytics dashboard fully functional with group-specific data visualization
+- **UI Enhancement**: Improved ticket assignment interface with dual assignment capability
+  - Tickets can now be assigned to both individual users and support groups simultaneously
+  - Clear visual indicators for both assignment types using User and Users icons
+  - Live assignment updates without page refresh for better user experience
+
 ### June 24, 2025 - Analytics Dashboard Restored ✓ COMPLETED
 - **Analytics Dashboard Rebuilt**: Created new working analytics dashboard without performance optimizations
   - Comprehensive analytics with SLA tracking, ticket trends, priority distribution, and group performance
