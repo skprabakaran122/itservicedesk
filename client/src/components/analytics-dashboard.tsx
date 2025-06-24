@@ -80,6 +80,9 @@ export function AnalyticsDashboard() {
     endDate: "",
     enabled: false
   });
+  
+  // Add state to track when user has manually applied custom range
+  const [appliedCustomRange, setAppliedCustomRange] = useState<string | null>(null);
 
   const { data: analyticsData, isLoading, refetch } = useQuery<AnalyticsData>({
     queryKey: ["/api/analytics", timeRange, selectedGroup, appliedCustomRange],
