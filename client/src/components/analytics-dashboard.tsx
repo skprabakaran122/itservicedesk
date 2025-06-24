@@ -224,29 +224,31 @@ export function AnalyticsDashboard() {
                       onChange={(e) => handleDateRangeToggle(e.target.checked)}
                       className="rounded"
                     />
-                    <Label htmlFor="enableCustom">Use custom date range</Label>
+                    <label htmlFor="enableCustom" className="text-sm font-medium">Use custom date range</label>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="startDate">Start Date</Label>
-                    <Input
+                    <label htmlFor="startDate" className="text-sm font-medium">Start Date</label>
+                    <input
                       id="startDate"
                       type="date"
                       value={customDateRange.startDate}
                       onChange={(e) => handleDateChange('startDate', e.target.value)}
                       max={customDateRange.endDate || new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="endDate">End Date</Label>
-                    <Input
+                    <label htmlFor="endDate" className="text-sm font-medium">End Date</label>
+                    <input
                       id="endDate"
                       type="date"
                       value={customDateRange.endDate}
                       onChange={(e) => handleDateChange('endDate', e.target.value)}
                       min={customDateRange.startDate}
                       max={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   
