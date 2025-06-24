@@ -82,16 +82,19 @@ export function AnalyticsDashboard() {
   });
 
   const { data: analyticsData, isLoading, refetch } = useQuery<AnalyticsData>({
-    queryKey: ["/api/analytics", timeRange, selectedGroup, customDateRange],
+    queryKey: ["/api/analytics", timeRange, selectedGroup, customDateRange.enabled, customDateRange.startDate, customDateRange.endDate],
     queryFn: async () => {
       let url = `/api/analytics?group=${selectedGroup}`;
       
       if (customDateRange.enabled && customDateRange.startDate && customDateRange.endDate) {
         url += `&startDate=${customDateRange.startDate}&endDate=${customDateRange.endDate}`;
+        console.log('Using custom date range:', customDateRange.startDate, 'to', customDateRange.endDate);
       } else {
         url += `&days=${timeRange}`;
+        console.log('Using preset range:', timeRange, 'days');
       }
       
+      console.log('Analytics URL:', url);
       const response = await apiRequest("GET", url);
       return response.json();
     },
@@ -135,11 +138,13 @@ export function AnalyticsDashboard() {
     if (!enabled) {
       // Reset to default time range when disabling custom dates
       setTimeRange("30");
+      setTimeout(() => refetch(), 100);
     }
   };
 
   const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
     setCustomDateRange(prev => ({ ...prev, [field]: value }));
+    console.log('Date changed:', field, value);
   };
 
   const getDateRangeDisplay = () => {
@@ -255,7 +260,11 @@ export function AnalyticsDashboard() {
                   <div className="flex gap-2">
                     <Button 
                       size="sm" 
-                      onClick={() => refetch()}
+                      onClick={() => {
+                        if (customDateRange.startDate && customDateRange.endDate) {
+                          refetch();
+                        }
+                      }}
                       disabled={!customDateRange.startDate || !customDateRange.endDate}
                     >
                       Apply Range
@@ -266,6 +275,7 @@ export function AnalyticsDashboard() {
                       onClick={() => {
                         setCustomDateRange({ startDate: "", endDate: "", enabled: false });
                         setTimeRange("30");
+                        refetch();
                       }}
                     >
                       Reset
