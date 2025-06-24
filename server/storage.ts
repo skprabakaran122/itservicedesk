@@ -631,7 +631,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       overview: {
-        totalTickets: totalTickets[0].count,
+        totalTickets: metrics.total.toString(),
         openTickets: openTickets[0].count,
         resolvedTickets: resolvedTickets[0].count,
         averageResolutionTime: Math.round(avgResolutionTime),
