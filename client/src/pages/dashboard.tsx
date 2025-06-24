@@ -360,13 +360,30 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
               </TabsTrigger>
             )}
             
+            <TabsTrigger 
+              value="analytics"
+              className="group relative text-lg font-bold py-5 px-8 rounded-xl overflow-hidden data-[state=active]:bg-gradient-to-br data-[state=active]:from-emerald-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-emerald-500/25 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-emerald-100 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30 transition-all duration-300 transform hover:scale-105 data-[state=active]:scale-105"
+            >
+              {/* Animated Background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-emerald-600/20 opacity-0 group-hover:opacity-100 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
+              
+              {/* Content */}
+              <div className="relative flex items-center justify-center">
+                <BarChart3 className="h-7 w-7 mr-3 transition-transform duration-300 group-hover:rotate-12 group-data-[state=active]:rotate-12" />
+                <span className="font-bold tracking-wide">Analytics</span>
+              </div>
+              
+              {/* Shine Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+            </TabsTrigger>
+
             {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
               <TabsTrigger 
                 value="sla"
-                className="group relative text-lg font-bold py-5 px-8 rounded-xl overflow-hidden data-[state=active]:bg-gradient-to-br data-[state=active]:from-emerald-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-emerald-500/25 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-emerald-100 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30 transition-all duration-300 transform hover:scale-105 data-[state=active]:scale-105"
+                className="group relative text-lg font-bold py-5 px-8 rounded-xl overflow-hidden data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-orange-500/25 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-800/30 transition-all duration-300 transform hover:scale-105 data-[state=active]:scale-105"
               >
                 {/* Animated Background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-emerald-600/20 opacity-0 group-hover:opacity-100 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-orange-600/20 opacity-0 group-hover:opacity-100 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
                 
                 {/* Content */}
                 <div className="relative flex items-center justify-center">
