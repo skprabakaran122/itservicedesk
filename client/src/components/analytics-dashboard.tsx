@@ -202,75 +202,77 @@ export function AnalyticsDashboard() {
             </Select>
           )}
           
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <CalendarDays className="h-4 w-4 mr-2" />
-                Custom Range
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="enableCustom"
-                    checked={customDateRange.enabled}
-                    onChange={(e) => handleDateRangeToggle(e.target.checked)}
-                    className="rounded"
-                  />
-                  <Label htmlFor="enableCustom">Use custom date range</Label>
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCustomDateRange(prev => ({ ...prev, enabled: !prev.enabled }))}
+              className={customDateRange.enabled ? "bg-blue-50 border-blue-300" : ""}
+            >
+              <CalendarDays className="h-4 w-4 mr-2" />
+              Custom Range
+            </Button>
+            
+            {customDateRange.enabled && (
+              <div className="absolute top-full left-0 mt-2 p-4 bg-white border rounded-lg shadow-lg z-50 w-80">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="enableCustom"
+                      checked={customDateRange.enabled}
+                      onChange={(e) => handleDateRangeToggle(e.target.checked)}
+                      className="rounded"
+                    />
+                    <Label htmlFor="enableCustom">Use custom date range</Label>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="startDate">Start Date</Label>
+                    <Input
+                      id="startDate"
+                      type="date"
+                      value={customDateRange.startDate}
+                      onChange={(e) => handleDateChange('startDate', e.target.value)}
+                      max={customDateRange.endDate || new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="endDate">End Date</Label>
+                    <Input
+                      id="endDate"
+                      type="date"
+                      value={customDateRange.endDate}
+                      onChange={(e) => handleDateChange('endDate', e.target.value)}
+                      min={customDateRange.startDate}
+                      max={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      onClick={() => refetch()}
+                      disabled={!customDateRange.startDate || !customDateRange.endDate}
+                    >
+                      Apply Range
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setCustomDateRange({ startDate: "", endDate: "", enabled: false });
+                        setTimeRange("30");
+                      }}
+                    >
+                      Reset
+                    </Button>
+                  </div>
                 </div>
-                
-                {customDateRange.enabled && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="startDate">Start Date</Label>
-                      <Input
-                        id="startDate"
-                        type="date"
-                        value={customDateRange.startDate}
-                        onChange={(e) => handleDateChange('startDate', e.target.value)}
-                        max={customDateRange.endDate || new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="endDate">End Date</Label>
-                      <Input
-                        id="endDate"
-                        type="date"
-                        value={customDateRange.endDate}
-                        onChange={(e) => handleDateChange('endDate', e.target.value)}
-                        min={customDateRange.startDate}
-                        max={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        onClick={() => refetch()}
-                        disabled={!customDateRange.startDate || !customDateRange.endDate}
-                      >
-                        Apply Range
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          setCustomDateRange({ startDate: "", endDate: "", enabled: false });
-                          setTimeRange("30");
-                        }}
-                      >
-                        Reset
-                      </Button>
-                    </div>
-                  </>
-                )}
               </div>
-            </PopoverContent>
-          </Popover>
+            )}
+          </div>
           
           <Select value={selectedGroup} onValueChange={setSelectedGroup}>
             <SelectTrigger className="w-40">
