@@ -2039,10 +2039,11 @@ ${projectData.additionalNotes || 'None'}
         return res.status(404).json({ message: "Group not found" });
       }
 
-      // Add user to group members
+      // Add user to group members (ensure consistent data type)
       const currentMembers = group.members || [];
-      if (!currentMembers.includes(userId)) {
-        const updatedMembers = [...currentMembers, userId];
+      const userIdStr = userId.toString();
+      if (!currentMembers.includes(userIdStr)) {
+        const updatedMembers = [...currentMembers, userIdStr];
         await storage.updateGroup(groupId, { members: updatedMembers });
       }
       
@@ -2068,9 +2069,10 @@ ${projectData.additionalNotes || 'None'}
         return res.status(404).json({ message: "Group not found" });
       }
 
-      // Remove user from group members
+      // Remove user from group members (handle both string and number IDs)
       const currentMembers = group.members || [];
-      const updatedMembers = currentMembers.filter(id => id !== userId);
+      const userIdStr = userId.toString();
+      const updatedMembers = currentMembers.filter(id => id !== userIdStr && id !== userId);
       await storage.updateGroup(groupId, { members: updatedMembers });
       
       res.json({ message: "User removed from group successfully" });

@@ -501,11 +501,10 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {(() => {
-                          console.log(`User ${user.id} groups check:`, groups.map(g => ({ id: g.id, name: g.name, members: g.members })));
                           const userGroups = groups.filter(group => {
-                            return group.members && Array.isArray(group.members) && group.members.includes(user.id);
+                            return group.members && Array.isArray(group.members) && 
+                              (group.members.includes(user.id) || group.members.includes(user.id.toString()));
                           });
-                          console.log(`User ${user.id} belongs to:`, userGroups);
                           return userGroups.length > 0 ? (
                             userGroups.map((group, index) => (
                               <Badge key={index} variant="outline" className="text-xs">
