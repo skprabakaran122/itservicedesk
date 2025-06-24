@@ -11,11 +11,11 @@ import { ChangeForm } from "../components/change-form";
 import { TicketsList } from "../components/tickets-list";
 import { ChangesList } from "../components/changes-list";
 import { AdminConsole } from "../components/admin-console";
-import { SLADashboard } from "../components/sla-dashboard";
+
 import { UserManagement } from "../components/user-management";
 import { AnalyticsDashboard } from "../components/analytics-dashboard";
 import ITChatbot from "../components/it-chatbot";
-import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users, Target } from "lucide-react";
+import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users } from "lucide-react";
 // Using placeholder for Calpion logo - can be replaced with actual logo file
 const calpionLogo = "/calpion-logo.png";
 
@@ -322,7 +322,7 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
           {/* Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-emerald-500/10 rounded-2xl blur-xl"></div>
           
-          <TabsList className="relative grid w-full grid-cols-2 lg:grid-cols-5 h-20 p-3 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 border-2 border-gray-200/50 dark:border-gray-600/50 rounded-2xl shadow-2xl backdrop-blur-sm">
+          <TabsList className="relative grid w-full grid-cols-2 lg:grid-cols-4 h-20 p-3 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 border-2 border-gray-200/50 dark:border-gray-600/50 rounded-2xl shadow-2xl backdrop-blur-sm">
             
             <TabsTrigger 
               value="tickets" 
@@ -377,24 +377,7 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
             </TabsTrigger>
 
-            {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
-              <TabsTrigger 
-                value="sla"
-                className="group relative text-lg font-bold py-5 px-8 rounded-xl overflow-hidden data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-orange-500/25 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 dark:hover:from-orange-900/30 dark:hover:to-orange-800/30 transition-all duration-300 transform hover:scale-105 data-[state=active]:scale-105"
-              >
-                {/* Animated Background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-orange-600/20 opacity-0 group-hover:opacity-100 group-data-[state=active]:opacity-100 transition-opacity duration-300"></div>
-                
-                {/* Content */}
-                <div className="relative flex items-center justify-center">
-                  <Target className="h-7 w-7 mr-3 transition-transform duration-300 group-hover:scale-110 group-data-[state=active]:scale-110" />
-                  <span className="font-bold tracking-wide">SLA Metrics</span>
-                </div>
-                
-                {/* Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-              </TabsTrigger>
-            )}
+
             
             {currentUser?.role === 'admin' && (
               <TabsTrigger 
@@ -441,11 +424,7 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
           <AnalyticsDashboard />
         </TabsContent>
 
-        {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
-          <TabsContent value="sla">
-            <SLADashboard />
-          </TabsContent>
-        )}
+
 
         {currentUser?.role === 'admin' && (
           <TabsContent value="admin">
