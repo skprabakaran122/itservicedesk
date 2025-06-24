@@ -513,10 +513,7 @@ export class DatabaseStorage implements IStorage {
     const activeUsersResult = await db.select({ 
       count: sql`count(distinct ${tickets.requesterId})` 
     }).from(tickets)
-      .where(and(
-        gte(tickets.createdAt, startDate),
-        lte(tickets.createdAt, endDate)
-      ));
+      .where(whereConditions);
 
     // Ticket trends (daily data for the period)
     const ticketTrends = [];
@@ -527,18 +524,28 @@ export class DatabaseStorage implements IStorage {
       date.setDate(startDate.getDate() + i);
       const dateStr = date.toISOString().split('T')[0];
       
+      let dailyConditions = and(
+        gte(tickets.createdAt, date),
+        lt(tickets.createdAt, new Date(date.getTime() + 24 * 60 * 60 * 1000))
+      );
+      if (group && group !== 'all') {
+        dailyConditions = and(dailyConditions, eq(tickets.assignedGroup, group));
+      }
+      
       const created = await db.select({ count: sql`count(*)` }).from(tickets)
-        .where(and(
-          gte(tickets.createdAt, date),
-          lt(tickets.createdAt, new Date(date.getTime() + 24 * 60 * 60 * 1000))
-        ));
+        .where(dailyConditions);
+      
+      let resolvedConditions = and(
+        gte(tickets.resolvedAt, date),
+        lt(tickets.resolvedAt, new Date(date.getTime() + 24 * 60 * 60 * 1000)),
+        eq(tickets.status, 'resolved')
+      );
+      if (group && group !== 'all') {
+        resolvedConditions = and(resolvedConditions, eq(tickets.assignedGroup, group));
+      }
       
       const resolved = await db.select({ count: sql`count(*)` }).from(tickets)
-        .where(and(
-          gte(tickets.resolvedAt, date),
-          lt(tickets.resolvedAt, new Date(date.getTime() + 24 * 60 * 60 * 1000)),
-          eq(tickets.status, 'resolved')
-        ));
+        .where(resolvedConditions);
 
       ticketTrends.push({
         date: dateStr,

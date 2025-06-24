@@ -113,9 +113,7 @@ export function AnalyticsDashboard() {
 
   const { overview, ticketTrends, priorityDistribution, groupPerformance, slaMetrics, categoryBreakdown } = analyticsData;
   
-  console.log("Analytics data received:", analyticsData);
-  console.log("Overview data:", overview);
-  console.log("Current group:", selectedGroup);
+  // Remove debug logs now that we've identified the issue
 
   return (
     <div className="space-y-6">
