@@ -277,6 +277,16 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 }
               </Button>
               
+              {!isRegistering && (
+                <div className="text-center">
+                  <Link href="/forgot-password">
+                    <Button variant="link" className="text-sm text-muted-foreground hover:text-primary">
+                      Forgot your password?
+                    </Button>
+                  </Link>
+                </div>
+              )}
+              
               <div className="border-t pt-4">
                 <p className="text-sm text-muted-foreground mb-2">
                   Need help? Submit a ticket without logging in

@@ -436,6 +436,42 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async setPasswordResetToken(email: string, token: string, expiry: Date): Promise<void> {
+    await db.update(users)
+      .set({ 
+        resetToken: token, 
+        resetTokenExpiry: expiry 
+      })
+      .where(eq(users.email, email));
+  }
+
+  async getUserByResetToken(token: string): Promise<User | null> {
+    const [user] = await db.select()
+      .from(users)
+      .where(eq(users.resetToken, token))
+      .limit(1);
+    
+    return user || null;
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<boolean> {
+    const user = await this.getUserByResetToken(token);
+    
+    if (!user || !user.resetTokenExpiry || new Date() > user.resetTokenExpiry) {
+      return false;
+    }
+
+    await db.update(users)
+      .set({ 
+        password: newPassword,
+        resetToken: null,
+        resetTokenExpiry: null 
+      })
+      .where(eq(users.id, user.id));
+    
+    return true;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
