@@ -405,9 +405,9 @@ export function TicketDetailsModal({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-2">Assigned To</label>
-                        <Select value={ticket.assignedTo?.toString() || ""} onValueChange={async (value) => {
+                        <Select value={ticket.assignedTo?.toString() || "unassigned"} onValueChange={async (value) => {
                           try {
-                            const updateData = { assignedTo: value ? parseInt(value) : null };
+                            const updateData = { assignedTo: value === "unassigned" ? null : parseInt(value) };
                             await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
                             toast({ title: "Success", description: "Ticket assignment updated" });
                             queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
@@ -419,7 +419,7 @@ export function TicketDetailsModal({
                             <SelectValue placeholder="Select user" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Unassigned</SelectItem>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
                             {users?.map(user => (
                               <SelectItem key={user.id} value={user.id.toString()}>
                                 {user.name} ({user.role})
@@ -431,9 +431,9 @@ export function TicketDetailsModal({
 
                       <div>
                         <label className="block text-sm font-medium mb-2">Assigned Group</label>
-                        <Select value={ticket.assignedGroup || ""} onValueChange={async (value) => {
+                        <Select value={ticket.assignedGroup || "none"} onValueChange={async (value) => {
                           try {
-                            const updateData = { assignedGroup: value || null };
+                            const updateData = { assignedGroup: value === "none" ? null : value };
                             await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
                             toast({ title: "Success", description: "Group assignment updated" });
                             queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
@@ -445,7 +445,7 @@ export function TicketDetailsModal({
                             <SelectValue placeholder="Select group" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No Group</SelectItem>
+                            <SelectItem value="none">No Group</SelectItem>
                             {groups?.map(group => (
                               <SelectItem key={group.id} value={group.name}>
                                 {group.name}
