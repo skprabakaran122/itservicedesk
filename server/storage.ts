@@ -1,6 +1,6 @@
 import { tickets, changes, users, ticketHistory, changeHistory, products, attachments, approvalRouting, changeApprovals, settings, groups, categories, type Ticket, type InsertTicket, type Change, type InsertChange, type User, type InsertUser, type TicketHistory, type InsertTicketHistory, type ChangeHistory, type InsertChangeHistory, type Product, type InsertProduct, type Attachment, type InsertAttachment, type ApprovalRouting, type InsertApprovalRouting, type ChangeApproval, type InsertChangeApproval, type Setting, type InsertSetting, type Group, type InsertGroup, type Category, type InsertCategory } from "@shared/schema";
 import { db, pool } from "./db";
-import { eq, and, desc, or, like, sql, not, isNull, lte, notInArray, inArray } from "drizzle-orm";
+import { eq, and, desc, or, like, sql, not, isNull, lte, notInArray, inArray, gte, lt, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // Ticket methods

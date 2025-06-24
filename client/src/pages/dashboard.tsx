@@ -13,6 +13,7 @@ import { ChangesList } from "../components/changes-list";
 import { AdminConsole } from "../components/admin-console";
 import { SLADashboard } from "../components/sla-dashboard";
 import { UserManagement } from "../components/user-management";
+import { AnalyticsDashboard } from "../components/analytics-dashboard";
 import ITChatbot from "../components/it-chatbot";
 import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users, Target } from "lucide-react";
 // Using placeholder for Calpion logo - can be replaced with actual logo file
@@ -321,7 +322,7 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
           {/* Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-emerald-500/10 rounded-2xl blur-xl"></div>
           
-          <TabsList className="relative grid w-full grid-cols-2 lg:grid-cols-4 h-20 p-3 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 border-2 border-gray-200/50 dark:border-gray-600/50 rounded-2xl shadow-2xl backdrop-blur-sm">
+          <TabsList className="relative grid w-full grid-cols-2 lg:grid-cols-5 h-20 p-3 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 border-2 border-gray-200/50 dark:border-gray-600/50 rounded-2xl shadow-2xl backdrop-blur-sm">
             
             <TabsTrigger 
               value="tickets" 
@@ -418,6 +419,10 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
             />
           </TabsContent>
         )}
+
+        <TabsContent value="analytics">
+          <AnalyticsDashboard />
+        </TabsContent>
 
         {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
           <TabsContent value="sla">
