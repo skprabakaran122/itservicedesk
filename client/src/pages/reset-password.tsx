@@ -97,11 +97,12 @@ export function ResetPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Link href="/login">
-              <Button className="w-full">
-                Return to Login
-              </Button>
-            </Link>
+            <Button 
+              className="w-full"
+              onClick={() => navigate("/login")}
+            >
+              Return to Login
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -125,11 +126,12 @@ export function ResetPasswordPage() {
             <p className="text-sm text-muted-foreground">
               You can now log in with your new password.
             </p>
-            <Link href="/login">
-              <Button className="w-full">
-                Continue to Login
-              </Button>
-            </Link>
+            <Button 
+              className="w-full"
+              onClick={() => navigate("/login")}
+            >
+              Continue to Login
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -195,12 +197,14 @@ export function ResetPasswordPage() {
           </Form>
           
           <div className="mt-4 text-center">
-            <Link href="/login">
-              <Button variant="link" className="text-sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Login
-              </Button>
-            </Link>
+            <Button 
+              variant="link" 
+              className="text-sm"
+              onClick={() => navigate("/login")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Login
+            </Button>
           </div>
         </CardContent>
       </Card>

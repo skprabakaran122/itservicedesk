@@ -32,6 +32,9 @@ function Router({ currentUser, onLogout, onLogin }: { currentUser: any; onLogout
           <Login onLoginSuccess={onLogin} />
         )}
       </Route>
+      <Route path="/login">
+        <Login onLoginSuccess={onLogin} />
+      </Route>
       <Route path="/">
         {currentUser ? (
           <Dashboard currentUser={currentUser} onLogout={onLogout} />

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ const forgotPasswordSchema = z.object({
 export function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [, navigate] = useLocation();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof forgotPasswordSchema>>({
@@ -71,12 +72,14 @@ export function ForgotPasswordPage() {
             <p className="text-sm text-muted-foreground">
               Click the link in the email to reset your password. The link will expire in 1 hour.
             </p>
-            <Link href="/login">
-              <Button variant="outline" className="w-full">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Login
-              </Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => navigate("/login")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Login
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -124,12 +127,14 @@ export function ForgotPasswordPage() {
           </Form>
           
           <div className="mt-4 text-center">
-            <Link href="/login">
-              <Button variant="link" className="text-sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Login
-              </Button>
-            </Link>
+            <Button 
+              variant="link" 
+              className="text-sm"
+              onClick={() => navigate("/login")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Login
+            </Button>
           </div>
         </CardContent>
       </Card>
