@@ -2022,6 +2022,63 @@ ${projectData.additionalNotes || 'None'}
     }
   });
 
+  // Group member management routes
+  app.post("/api/groups/:id/members", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      const groupId = parseInt(req.params.id);
+      const { userId } = req.body;
+      
+      const group = await storage.getGroup(groupId);
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+
+      // Add user to group members
+      const currentMembers = group.members || [];
+      if (!currentMembers.includes(userId)) {
+        const updatedMembers = [...currentMembers, userId];
+        await storage.updateGroup(groupId, { members: updatedMembers });
+      }
+      
+      res.json({ message: "User added to group successfully" });
+    } catch (error) {
+      res.status(400).json({ message: "Failed to add user to group" });
+    }
+  });
+
+  app.delete("/api/groups/:groupId/members/:userId", async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin role required." });
+      }
+
+      const groupId = parseInt(req.params.groupId);
+      const userId = parseInt(req.params.userId);
+      
+      const group = await storage.getGroup(groupId);
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+
+      // Remove user from group members
+      const currentMembers = group.members || [];
+      const updatedMembers = currentMembers.filter(id => id !== userId);
+      await storage.updateGroup(groupId, { members: updatedMembers });
+      
+      res.json({ message: "User removed from group successfully" });
+    } catch (error) {
+      res.status(400).json({ message: "Failed to remove user from group" });
+    }
+  });
+
   // Get email settings endpoint
   app.get("/api/email/settings", async (req, res) => {
     try {

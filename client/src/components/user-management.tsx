@@ -90,6 +90,11 @@ export function UserManagement({ currentUser }: UserManagementProps) {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
+      // Force immediate refetch to update display
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/users"] });
+        queryClient.refetchQueries({ queryKey: ["/api/groups"] });
+      }, 100);
       setIsCreateDialogOpen(false);
       createForm.reset();
       setSelectedGroups([]);
@@ -128,6 +133,11 @@ export function UserManagement({ currentUser }: UserManagementProps) {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
+      // Force immediate refetch to update display
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/users"] });
+        queryClient.refetchQueries({ queryKey: ["/api/groups"] });
+      }, 100);
       setIsEditDialogOpen(false);
       setSelectedUser(null);
       editForm.reset();
@@ -488,7 +498,17 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {groups.filter(group => group.members && group.members.includes(user.id)).length} groups
+                      <div className="flex flex-wrap gap-1">
+                        {groups.filter(group => group.members && group.members.includes(user.id)).length > 0 ? (
+                          groups.filter(group => group.members && group.members.includes(user.id)).map((group, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {group.name}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-gray-500 italic">No groups assigned</span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
