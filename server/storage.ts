@@ -207,75 +207,52 @@ export class DatabaseStorage implements IStorage {
 
   async getTicketsForUser(userId: number): Promise<Ticket[]> {
     const user = await this.getUser(userId);
-    if (!user) {
-      return [];
-    }
+    if (!user) return [];
     
-    // Admins can see all tickets
     if (user.role === 'admin') {
       return await this.getTickets();
     }
     
-    // Regular users see only tickets they created
-    if (user.role === 'user') {
-      return await db.select().from(tickets)
-        .where(eq(tickets.requesterId, userId))
-        .orderBy(desc(tickets.createdAt));
-    }
-    
-    // For agents and managers - show tickets assigned to them, tickets they created, OR in their assigned products
-    const conditions = [];
-    
-    // Show tickets assigned to this user
-    conditions.push(eq(tickets.assignedTo, user.username));
-    
-    // Show tickets created by this user (agents can create tickets for any product)
-    conditions.push(eq(tickets.requesterId, userId));
-    
-    // Managers should see all tickets pending approval
-    if (user.role === 'manager') {
-      conditions.push(eq(tickets.approvalStatus, 'pending'));
-    }
-    
-    // Also show tickets for their assigned products (if they have any)
-    if (user.assignedProducts && user.assignedProducts.length > 0) {
-      // Get all actual product names from database for better matching
-      const allProducts = await this.getProducts();
-      const assignedProductNames: string[] = [];
-      
-      for (const assignedProduct of user.assignedProducts) {
-        // Direct match
-        const directMatch = allProducts.find(p => p.name === assignedProduct);
-        if (directMatch) {
-          assignedProductNames.push(directMatch.name);
-        }
-        
-        // Partial match for product variations (e.g., "Olympus 1.0" matches "Olympus RPA Solution")
-        const partialMatches = allProducts.filter(p => 
-          p.name.toLowerCase().includes(assignedProduct.toLowerCase().split(' ')[0]) ||
-          assignedProduct.toLowerCase().includes(p.name.toLowerCase().split(' ')[0])
-        );
-        
-        partialMatches.forEach(match => {
-          if (!assignedProductNames.includes(match.name)) {
-            assignedProductNames.push(match.name);
-          }
-        });
+    if (user.role === 'agent') {
+      // Agents see tickets for groups they are members of
+      const userGroups = await this.getUserGroups(userId);
+      if (userGroups.length === 0) {
+        return [];
       }
       
-      // Add product-based conditions
-      if (assignedProductNames.length > 0) {
-        conditions.push(or(...assignedProductNames.map(product => eq(tickets.product, product))));
-      }
+      return await this.getTicketsByGroups(userGroups);
     }
     
-    if (conditions.length === 0) {
+    // Users only see their own tickets
+    return await db.select().from(tickets)
+      .where(eq(tickets.requesterId, userId))
+      .orderBy(desc(tickets.createdAt));
+  }
+
+  async getUserGroups(userId: number): Promise<string[]> {
+    const allGroups = await db.select().from(groups);
+    console.log(`[DEBUG] getUserGroups for userId ${userId}:`, allGroups.map(g => ({ name: g.name, members: g.members })));
+    const userGroups = allGroups.filter(group => 
+      group.members && 
+      Array.isArray(group.members) && 
+      (group.members.includes(userId) || group.members.includes(userId.toString()))
+    );
+    console.log(`[DEBUG] User ${userId} belongs to groups:`, userGroups.map(g => g.name));
+    return userGroups.map(group => group.name);
+  }
+
+  async getTicketsByGroups(groupNames: string[]): Promise<Ticket[]> {
+    if (groupNames.length === 0) {
+      console.log(`[DEBUG] No groups provided, returning empty array`);
       return [];
     }
     
-    return await db.select().from(tickets)
-      .where(or(...conditions))
+    console.log(`[DEBUG] Filtering tickets by groups:`, groupNames);
+    const result = await db.select().from(tickets)
+      .where(or(...groupNames.map(groupName => eq(tickets.assignedGroup, groupName))))
       .orderBy(desc(tickets.createdAt));
+    console.log(`[DEBUG] Found tickets:`, result.map(t => ({ id: t.id, title: t.title, assignedGroup: t.assignedGroup })));
+    return result;
   }
 
   async getTicket(id: number): Promise<Ticket | undefined> {
