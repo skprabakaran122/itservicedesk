@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,59 +14,6 @@ import {
   TrendingUp, TrendingDown, Clock, Users, CheckCircle, AlertTriangle,
   BarChart3, Calendar, Download, Filter, RefreshCw
 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { formatDateIST } from "@/lib/utils";
-
-interface AnalyticsData {
-  overview: {
-    totalTickets: number;
-    openTickets: number;
-    resolvedTickets: number;
-    averageResolutionTime: number;
-    slaCompliance: number;
-    activeUsers: number;
-  };
-  ticketTrends: Array<{
-    date: string;
-    created: number;
-    resolved: number;
-    pending: number;
-  }>;
-  priorityDistribution: Array<{
-    priority: string;
-    count: number;
-    percentage: number;
-  }>;
-  groupPerformance: Array<{
-    groupName: string;
-    ticketsAssigned: number;
-    ticketsResolved: number;
-    averageResolutionTime: number;
-    slaCompliance: number;
-  }>;
-  slaMetrics: {
-    responseTimeCompliance: number;
-    resolutionTimeCompliance: number;
-    overallCompliance: number;
-    breachedTickets: number;
-  };
-  categoryBreakdown: Array<{
-    category: string;
-    count: number;
-    percentage: number;
-  }>;
-  monthlyReport: {
-    month: string;
-    totalTickets: number;
-    resolvedTickets: number;
-    averageResolutionHours: number;
-    customerSatisfaction: number;
-    topIssues: Array<{
-      category: string;
-      count: number;
-    }>;
-  };
-}
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -75,96 +21,63 @@ export function AnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState("30");
   const [selectedGroup, setSelectedGroup] = useState("all");
   const [reportType, setReportType] = useState("monthly");
-  const [customDateRange, setCustomDateRange] = useState({
-    startDate: "",
-    endDate: "",
-    enabled: false
-  });
-  
-  // Add state to track when user has manually applied custom range
-  const [appliedCustomRange, setAppliedCustomRange] = useState<string | null>(null);
+  const [customDateRange, setCustomDateRange] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  const { data: analyticsData, isLoading, refetch } = useQuery<AnalyticsData>({
-    queryKey: ["/api/analytics", timeRange, selectedGroup, appliedCustomRange],
-    queryFn: async () => {
-      let url = `/api/analytics?group=${selectedGroup}`;
-      
-      if (appliedCustomRange && customDateRange.enabled && customDateRange.startDate && customDateRange.endDate) {
-        url += `&startDate=${customDateRange.startDate}&endDate=${customDateRange.endDate}`;
-        console.log('Using custom date range:', customDateRange.startDate, 'to', customDateRange.endDate);
-      } else {
-        url += `&days=${timeRange}`;
-        console.log('Using preset range:', timeRange, 'days');
-      }
-      
-      console.log('Analytics URL:', url);
-      const response = await apiRequest("GET", url);
-      return response.json();
-    },
-    staleTime: 60000, // Consider data fresh for 1 minute
-    cacheTime: 300000, // Keep in cache for 5 minutes
+  console.log("Using preset range:", timeRange, "days");
+
+  // Build analytics query URL
+  const buildAnalyticsUrl = () => {
+    let url = `/api/analytics?group=${selectedGroup}&days=${timeRange}`;
+    if (customDateRange && startDate && endDate) {
+      url += `&startDate=${startDate}&endDate=${endDate}`;
+    }
+    console.log("Analytics URL:", url);
+    return url;
+  };
+
+  // Fetch analytics data
+  const { data: analyticsData, isLoading, refetch } = useQuery({
+    queryKey: ['analytics', timeRange, selectedGroup, startDate, endDate],
+    queryFn: () => fetch(buildAnalyticsUrl()).then(res => res.json()),
+    enabled: true
   });
 
+  // Fetch groups for filter
   const { data: groups = [] } = useQuery({
-    queryKey: ["/api/groups"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/groups");
-      return response.json();
-    },
+    queryKey: ['groups'],
+    queryFn: () => fetch('/api/groups').then(res => res.json())
   });
 
+  // Generate reports
   const generateReport = async () => {
     try {
-      let url = `/api/analytics/report?type=${reportType}`;
-      
-      if (customDateRange.enabled && customDateRange.startDate && customDateRange.endDate) {
-        url += `&startDate=${customDateRange.startDate}&endDate=${customDateRange.endDate}`;
-      } else {
-        url += `&days=${timeRange}`;
-      }
-      
-      const response = await apiRequest("GET", url);
+      const url = `/api/analytics/report?type=${reportType}&days=${timeRange}&group=${selectedGroup}${customDateRange && startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : ''}`;
+      const response = await fetch(url);
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `${reportType}-report-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = downloadUrl;
+      a.download = `analytics-report-${reportType}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
       window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.error('Failed to generate report:', error);
+      console.error('Error generating report:', error);
     }
   };
 
-  const handleDateRangeToggle = (enabled: boolean) => {
-    setCustomDateRange(prev => ({ ...prev, enabled }));
-    if (!enabled) {
-      // Reset to default time range when disabling custom dates
-      setTimeRange("30");
-      setTimeout(() => refetch(), 100);
-    }
+  const applyCustomDateRange = () => {
+    refetch();
   };
 
-  const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
-    setCustomDateRange(prev => ({ ...prev, [field]: value }));
-    console.log('Date changed:', field, value);
-    // Don't auto-refresh when changing dates - wait for Apply button
-  };
-
-  const getDateRangeDisplay = () => {
-    if (appliedCustomRange && customDateRange.startDate && customDateRange.endDate) {
-      return `${customDateRange.startDate} to ${customDateRange.endDate}`;
-    }
-    
-    switch (timeRange) {
-      case "7": return "Last 7 days";
-      case "30": return "Last 30 days";
-      case "90": return "Last 90 days";
-      case "365": return "Last year";
-      default: return "Last 30 days";
-    }
+  const resetDateRange = () => {
+    setCustomDateRange(false);
+    setStartDate("");
+    setEndDate("");
+    refetch();
   };
 
   if (isLoading) {
@@ -178,7 +91,7 @@ export function AnalyticsDashboard() {
     );
   }
 
-  if (!analyticsData || !analyticsData.overview) {
+  if (!analyticsData) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -192,13 +105,7 @@ export function AnalyticsDashboard() {
     );
   }
 
-  const overview = analyticsData.overview;
-  const ticketTrends = analyticsData.ticketTrends || [];
-  const priorityDistribution = analyticsData.priorityDistribution || [];
-  const groupPerformance = analyticsData.groupPerformance || [];
-  const slaMetrics = analyticsData.slaMetrics || {};
-  const categoryBreakdown = analyticsData.categoryBreakdown || [];
-  const monthlyReport = analyticsData.monthlyReport || {};
+  const { overview, ticketTrends, priorityDistribution, groupPerformance, slaMetrics, categoryBreakdown } = analyticsData;
 
   return (
     <div className="space-y-6">
@@ -207,106 +114,59 @@ export function AnalyticsDashboard() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h2>
           <p className="text-muted-foreground">
-            Comprehensive insights and performance metrics - {getDateRangeDisplay()}
+            Comprehensive insights and performance metrics
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {!customDateRange.enabled && (
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Last 7 days</SelectItem>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="90">Last 90 days</SelectItem>
-                <SelectItem value="365">Last year</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-          
-          <div className="relative">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCustomDateRange(prev => ({ ...prev, enabled: !prev.enabled }))}
-              className={appliedCustomRange ? "bg-green-50 border-green-300 text-green-700" : customDateRange.enabled ? "bg-blue-50 border-blue-300" : ""}
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              {appliedCustomRange ? "Custom Applied" : "Custom Range"}
-            </Button>
-            
-            {customDateRange.enabled && (
-              <div className="absolute top-full left-0 mt-2 p-4 bg-white border rounded-lg shadow-lg z-50 w-80">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="enableCustom"
-                      checked={customDateRange.enabled}
-                      onChange={(e) => handleDateRangeToggle(e.target.checked)}
-                      className="rounded"
-                    />
-                    <label htmlFor="enableCustom" className="text-sm font-medium">Use custom date range</label>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="startDate" className="text-sm font-medium">Start Date</label>
-                    <input
-                      id="startDate"
-                      type="date"
-                      value={customDateRange.startDate}
-                      onChange={(e) => handleDateChange('startDate', e.target.value)}
-                      max={customDateRange.endDate || new Date().toISOString().split('T')[0]}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="endDate" className="text-sm font-medium">End Date</label>
-                    <input
-                      id="endDate"
-                      type="date"
-                      value={customDateRange.endDate}
-                      onChange={(e) => handleDateChange('endDate', e.target.value)}
-                      min={customDateRange.startDate}
-                      max={new Date().toISOString().split('T')[0]}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      onClick={() => {
-                        if (customDateRange.startDate && customDateRange.endDate) {
-                          console.log('Apply Range clicked - forcing refetch');
-                          const rangeKey = `${customDateRange.startDate}-${customDateRange.endDate}`;
-                          setAppliedCustomRange(rangeKey);
-                          refetch();
-                          // Close the dropdown after applying
-                          setCustomDateRange(prev => ({ ...prev, enabled: false }));
-                        }
-                      }}
-                      disabled={!customDateRange.startDate || !customDateRange.endDate}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      Apply Range
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => {
-                        setCustomDateRange({ startDate: "", endDate: "", enabled: false });
-                        setAppliedCustomRange(null);
-                        setTimeRange("30");
-                        refetch();
-                      }}
-                    >
-                      Reset
-                    </Button>
-                  </div>
-                </div>
+        
+        <div className="flex items-center gap-4">
+          {/* Date Range Controls */}
+          <div className="flex items-center gap-2">
+            {!customDateRange ? (
+              <>
+                <Select value={timeRange} onValueChange={setTimeRange}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">Last 7 days</SelectItem>
+                    <SelectItem value="30">Last 30 days</SelectItem>
+                    <SelectItem value="90">Last 90 days</SelectItem>
+                    <SelectItem value="365">Last year</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCustomDateRange(true)}
+                >
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Custom
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="px-3 py-1 border rounded text-sm"
+                  max={new Date().toISOString().split('T')[0]}
+                />
+                <span className="text-sm text-gray-500">to</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="px-3 py-1 border rounded text-sm"
+                  min={startDate}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+                <Button size="sm" onClick={applyCustomDateRange} disabled={!startDate || !endDate}>
+                  Apply
+                </Button>
+                <Button size="sm" variant="outline" onClick={resetDateRange}>
+                  Reset
+                </Button>
               </div>
             )}
           </div>
@@ -317,7 +177,7 @@ export function AnalyticsDashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Groups</SelectItem>
-              {groups.map((group: any) => (
+              {groups && groups.map && groups.map((group: any) => (
                 <SelectItem key={group.id} value={group.name}>
                   {group.name}
                 </SelectItem>
@@ -340,9 +200,9 @@ export function AnalyticsDashboard() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overview?.totalTickets || '0'}</div>
+            <div className="text-2xl font-bold">{overview?.totalTickets || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {overview?.openTickets || '0'} open, {overview?.resolvedTickets || '0'} resolved
+              {overview?.openTickets || 0} open, {overview?.resolvedTickets || 0} resolved
             </p>
           </CardContent>
         </Card>
@@ -353,7 +213,7 @@ export function AnalyticsDashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overview?.avgResolutionTime || overview?.averageResolutionTime || '0'}h</div>
+            <div className="text-2xl font-bold">{overview?.avgResolutionTime || overview?.averageResolutionTime || 0}h</div>
             <p className="text-xs text-muted-foreground">
               Target: &lt;24h for most tickets
             </p>
@@ -366,8 +226,8 @@ export function AnalyticsDashboard() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overview?.slaCompliance || '0'}%</div>
-            <Progress value={parseInt(overview?.slaCompliance || '0') || 0} className="mt-2" />
+            <div className="text-2xl font-bold">{overview?.slaCompliance || 0}%</div>
+            <Progress value={parseInt(overview?.slaCompliance || '0')} className="mt-2" />
           </CardContent>
         </Card>
 
@@ -377,7 +237,7 @@ export function AnalyticsDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overview?.activeUsers || '0'}</div>
+            <div className="text-2xl font-bold">{overview?.activeUsers || 0}</div>
             <p className="text-xs text-muted-foreground">
               Users with activity this period
             </p>
@@ -395,7 +255,7 @@ export function AnalyticsDashboard() {
 
         <TabsContent value="trends" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Ticket Trends Chart */}
+            {/* Ticket Trends */}
             <Card>
               <CardHeader>
                 <CardTitle>Ticket Trends</CardTitle>
@@ -499,6 +359,11 @@ export function AnalyticsDashboard() {
                     <Progress value={group.slaCompliance} className="mt-2" />
                   </div>
                 ))}
+                {(!groupPerformance || groupPerformance.length === 0) && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No group performance data available for the selected period.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -514,24 +379,20 @@ export function AnalyticsDashboard() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Response Time SLA</span>
-                    <span className="font-medium">{slaMetrics?.responseTimeCompliance || '0'}%</span>
+                    <span>Compliance Rate</span>
+                    <span className="font-medium">{slaMetrics?.compliance || 0}%</span>
                   </div>
-                  <Progress value={parseInt(slaMetrics?.responseTimeCompliance || '0') || 0} />
+                  <Progress value={parseInt(slaMetrics?.compliance || '0')} />
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Resolution Time SLA</span>
-                    <span className="font-medium">{slaMetrics?.resolutionTimeCompliance || '0'}%</span>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Total Tickets</p>
+                    <p className="text-lg font-semibold">{slaMetrics?.totalTickets || 0}</p>
                   </div>
-                  <Progress value={parseInt(slaMetrics?.resolutionTimeCompliance || '0') || 0} />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Overall Compliance</span>
-                    <span className="font-medium">{slaMetrics?.overallCompliance || '0'}%</span>
+                  <div>
+                    <p className="text-muted-foreground">Compliant</p>
+                    <p className="text-lg font-semibold text-green-600">{slaMetrics?.compliantTickets || 0}</p>
                   </div>
-                  <Progress value={parseInt(slaMetrics?.overallCompliance || '0') || 0} />
                 </div>
               </CardContent>
             </Card>
@@ -544,17 +405,16 @@ export function AnalyticsDashboard() {
               <CardContent>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-red-600 mb-2">
-                    {slaMetrics?.breachedTickets || '0'}
+                    {slaMetrics?.breachedTickets || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Tickets breached SLA in the selected period
                   </p>
-                  {slaMetrics.breachedTickets > 0 && (
-                    <div className="mt-4 flex items-center justify-center text-orange-600">
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Requires attention</span>
-                    </div>
-                  )}
+                  <div className="mt-4 text-sm">
+                    <p className="text-muted-foreground">
+                      Avg Resolution Time: {slaMetrics?.avgResolutionTime || 0}h
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -564,56 +424,41 @@ export function AnalyticsDashboard() {
         <TabsContent value="reports" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Monthly Report</CardTitle>
-              <CardDescription>Comprehensive monthly performance summary</CardDescription>
+              <CardTitle>Generate Reports</CardTitle>
+              <CardDescription>Download detailed analytics reports for stakeholders</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{monthlyReport.totalTickets}</div>
-                  <p className="text-sm text-muted-foreground">Total Tickets</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{monthlyReport.resolvedTickets}</div>
-                  <p className="text-sm text-muted-foreground">Resolved</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{monthlyReport.averageResolutionHours}h</div>
-                  <p className="text-sm text-muted-foreground">Avg Resolution</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{monthlyReport.customerSatisfaction}%</div>
-                  <p className="text-sm text-muted-foreground">Satisfaction</p>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-2">Top Issues This Month</h4>
-                <div className="space-y-2">
-                  {monthlyReport.topIssues.map((issue, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span>{issue.category}</span>
-                      <Badge variant="outline">{issue.count}</Badge>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Report Summary</h4>
+                    <div className="text-sm space-y-1">
+                      <p><span className="font-medium">Period:</span> {customDateRange && startDate && endDate ? `${startDate} to ${endDate}` : `Last ${timeRange} days`}</p>
+                      <p><span className="font-medium">Group:</span> {selectedGroup === 'all' ? 'All Groups' : selectedGroup}</p>
+                      <p><span className="font-medium">Total Tickets:</span> {overview?.totalTickets || 0}</p>
+                      <p><span className="font-medium">Resolution Rate:</span> {overview?.totalTickets ? Math.round((parseInt(overview.resolvedTickets || '0') / parseInt(overview.totalTickets || '1')) * 100) : 0}%</p>
                     </div>
-                  ))}
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">Export Options</h4>
+                    <div className="flex gap-2">
+                      <Select value={reportType} onValueChange={setReportType}>
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="monthly">Monthly Report</SelectItem>
+                          <SelectItem value="quarterly">Quarterly Report</SelectItem>
+                          <SelectItem value="annual">Annual Report</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button onClick={generateReport}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Generate CSV
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Select value={reportType} onValueChange={setReportType}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Monthly Report</SelectItem>
-                    <SelectItem value="quarterly">Quarterly Report</SelectItem>
-                    <SelectItem value="annual">Annual Report</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button onClick={generateReport}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Generate Report
-                </Button>
               </div>
             </CardContent>
           </Card>

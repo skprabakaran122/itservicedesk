@@ -13,7 +13,7 @@ import { ChangesList } from "../components/changes-list";
 import { AdminConsole } from "../components/admin-console";
 
 import { UserManagement } from "../components/user-management";
-// import { AnalyticsDashboard } from "../components/analytics-dashboard";
+import { AnalyticsDashboard } from "../components/analytics-dashboard";
 import ITChatbot from "../components/it-chatbot";
 import { Plus, Ticket as TicketIcon, Settings, BarChart3, Users } from "lucide-react";
 // Using placeholder for Calpion logo - can be replaced with actual logo file
@@ -421,49 +421,7 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
         )}
 
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analytics Dashboard</CardTitle>
-              <CardDescription>System metrics and performance data</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Total Tickets</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{tickets?.length || 0}</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Open Tickets</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {tickets?.filter(t => t.status === 'open').length || 0}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Resolved Tickets</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {tickets?.filter(t => t.status === 'resolved').length || 0}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              <div className="mt-6">
-                <p className="text-sm text-muted-foreground">
-                  Full analytics dashboard temporarily disabled for maintenance.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <AnalyticsDashboard />
         </TabsContent>
 
 
