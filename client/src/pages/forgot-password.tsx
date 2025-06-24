@@ -31,6 +31,7 @@ export function ForgotPasswordPage() {
     setIsLoading(true);
     try {
       const response = await apiRequest("POST", "/api/auth/forgot-password", data);
+      const result = await response.json();
       
       if (response.ok) {
         setIsSubmitted(true);
@@ -39,10 +40,9 @@ export function ForgotPasswordPage() {
           description: "Check your email for password reset instructions.",
         });
       } else {
-        const errorData = await response.json();
         toast({
           title: "Error",
-          description: errorData.message || "Failed to send reset email",
+          description: result.message || "Failed to send reset email",
           variant: "destructive",
         });
       }

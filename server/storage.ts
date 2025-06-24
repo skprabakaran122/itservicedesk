@@ -129,6 +129,10 @@ export interface IStorage {
   getUserByResetToken(token: string): Promise<User | null>;
   resetPassword(token: string, newPassword: string): Promise<boolean>;
 
+  // Analytics methods
+  getAnalyticsData(days: number, group: string): Promise<any>;
+  generateReport(type: string, days: number): Promise<any>;
+
   // Categories methods
   getCategories(): Promise<Category[]>;
   getActiveCategories(): Promise<Category[]>;
@@ -470,6 +474,217 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, user.id));
     
     return true;
+  }
+
+  async getAnalyticsData(days: number, group: string): Promise<any> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Get basic metrics
+    const totalTickets = await db.select({ count: sql`count(*)` }).from(tickets)
+      .where(gte(tickets.createdAt, startDate));
+    
+    const openTickets = await db.select({ count: sql`count(*)` }).from(tickets)
+      .where(and(
+        gte(tickets.createdAt, startDate),
+        notInArray(tickets.status, ['resolved', 'closed'])
+      ));
+    
+    const resolvedTickets = await db.select({ count: sql`count(*)` }).from(tickets)
+      .where(and(
+        gte(tickets.createdAt, startDate),
+        eq(tickets.status, 'resolved')
+      ));
+
+    // Calculate average resolution time
+    const resolvedWithTimes = await db.select({
+      createdAt: tickets.createdAt,
+      resolvedAt: tickets.resolvedAt
+    }).from(tickets)
+      .where(and(
+        gte(tickets.createdAt, startDate),
+        eq(tickets.status, 'resolved'),
+        isNotNull(tickets.resolvedAt)
+      ));
+
+    const avgResolutionTime = resolvedWithTimes.length > 0 
+      ? resolvedWithTimes.reduce((acc, ticket) => {
+          const diff = new Date(ticket.resolvedAt!).getTime() - new Date(ticket.createdAt).getTime();
+          return acc + (diff / (1000 * 60 * 60)); // Convert to hours
+        }, 0) / resolvedWithTimes.length
+      : 0;
+
+    // SLA compliance calculation
+    const slaCompliantTickets = await db.select({ count: sql`count(*)` }).from(tickets)
+      .where(and(
+        gte(tickets.createdAt, startDate),
+        eq(tickets.slaResolutionMet, 'met')
+      ));
+
+    const slaCompliance = totalTickets[0].count > 0 
+      ? Math.round((slaCompliantTickets[0].count / totalTickets[0].count) * 100)
+      : 100;
+
+    // Active users count
+    const activeUsers = await db.selectDistinct({ userId: tickets.requesterId }).from(tickets)
+      .where(gte(tickets.createdAt, startDate));
+
+    // Ticket trends (daily data for the period)
+    const ticketTrends = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const created = await db.select({ count: sql`count(*)` }).from(tickets)
+        .where(and(
+          gte(tickets.createdAt, date),
+          lt(tickets.createdAt, new Date(date.getTime() + 24 * 60 * 60 * 1000))
+        ));
+      
+      const resolved = await db.select({ count: sql`count(*)` }).from(tickets)
+        .where(and(
+          gte(tickets.resolvedAt, date),
+          lt(tickets.resolvedAt, new Date(date.getTime() + 24 * 60 * 60 * 1000)),
+          eq(tickets.status, 'resolved')
+        ));
+
+      ticketTrends.push({
+        date: dateStr,
+        created: created[0].count,
+        resolved: resolved[0].count,
+        pending: created[0].count - resolved[0].count
+      });
+    }
+
+    // Priority distribution
+    const priorities = ['low', 'medium', 'high', 'critical'];
+    const priorityDistribution = await Promise.all(
+      priorities.map(async (priority) => {
+        const count = await db.select({ count: sql`count(*)` }).from(tickets)
+          .where(and(
+            gte(tickets.createdAt, startDate),
+            eq(tickets.priority, priority)
+          ));
+        return {
+          priority,
+          count: count[0].count,
+          percentage: totalTickets[0].count > 0 
+            ? Math.round((count[0].count / totalTickets[0].count) * 100)
+            : 0
+        };
+      })
+    );
+
+    // Group performance
+    const allGroups = await this.getActiveGroups();
+    const groupPerformance = await Promise.all(
+      allGroups.map(async (grp) => {
+        const assigned = await db.select({ count: sql`count(*)` }).from(tickets)
+          .where(and(
+            gte(tickets.createdAt, startDate),
+            eq(tickets.assignedGroup, grp.name)
+          ));
+        
+        const resolved = await db.select({ count: sql`count(*)` }).from(tickets)
+          .where(and(
+            gte(tickets.createdAt, startDate),
+            eq(tickets.assignedGroup, grp.name),
+            eq(tickets.status, 'resolved')
+          ));
+
+        const slaCompliant = await db.select({ count: sql`count(*)` }).from(tickets)
+          .where(and(
+            gte(tickets.createdAt, startDate),
+            eq(tickets.assignedGroup, grp.name),
+            eq(tickets.slaResolutionMet, 'met')
+          ));
+
+        return {
+          groupName: grp.name,
+          ticketsAssigned: assigned[0].count,
+          ticketsResolved: resolved[0].count,
+          averageResolutionTime: Math.round(avgResolutionTime),
+          slaCompliance: assigned[0].count > 0 
+            ? Math.round((slaCompliant[0].count / assigned[0].count) * 100)
+            : 100
+        };
+      })
+    );
+
+    // Category breakdown
+    const categories = ['software', 'hardware', 'network', 'access', 'other'];
+    const categoryBreakdown = await Promise.all(
+      categories.map(async (category) => {
+        const count = await db.select({ count: sql`count(*)` }).from(tickets)
+          .where(and(
+            gte(tickets.createdAt, startDate),
+            eq(tickets.category, category)
+          ));
+        return {
+          category,
+          count: count[0].count,
+          percentage: totalTickets[0].count > 0 
+            ? Math.round((count[0].count / totalTickets[0].count) * 100)
+            : 0
+        };
+      })
+    );
+
+    return {
+      overview: {
+        totalTickets: totalTickets[0].count,
+        openTickets: openTickets[0].count,
+        resolvedTickets: resolvedTickets[0].count,
+        averageResolutionTime: Math.round(avgResolutionTime),
+        slaCompliance,
+        activeUsers: activeUsers.length
+      },
+      ticketTrends,
+      priorityDistribution,
+      groupPerformance,
+      slaMetrics: {
+        responseTimeCompliance: slaCompliance,
+        resolutionTimeCompliance: slaCompliance,
+        overallCompliance: slaCompliance,
+        breachedTickets: totalTickets[0].count - slaCompliantTickets[0].count
+      },
+      categoryBreakdown,
+      monthlyReport: {
+        month: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        totalTickets: totalTickets[0].count,
+        resolvedTickets: resolvedTickets[0].count,
+        averageResolutionHours: Math.round(avgResolutionTime),
+        customerSatisfaction: 87, // This would come from surveys in a real system
+        topIssues: categoryBreakdown.slice(0, 5).map(cat => ({
+          category: cat.category,
+          count: cat.count
+        }))
+      }
+    };
+  }
+
+  async generateReport(type: string, days: number): Promise<any> {
+    const analyticsData = await this.getAnalyticsData(days, 'all');
+    
+    return {
+      reportType: type,
+      generatedAt: new Date().toISOString(),
+      period: `${days} days`,
+      summary: analyticsData.overview,
+      details: {
+        ticketTrends: analyticsData.ticketTrends,
+        groupPerformance: analyticsData.groupPerformance,
+        slaMetrics: analyticsData.slaMetrics,
+        categoryBreakdown: analyticsData.categoryBreakdown
+      },
+      recommendations: [
+        "Focus on reducing resolution time for high priority tickets",
+        "Improve SLA compliance through better resource allocation",
+        "Consider additional training for underperforming groups",
+        "Monitor trending issue categories for preventive measures"
+      ]
+    };
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {

@@ -180,11 +180,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email is required" });
       }
 
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Please enter a valid email address" });
+      }
+
       const user = await storage.getUserByUsernameOrEmail(email);
       
       if (!user) {
-        // Don't reveal if email exists for security
-        return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+        return res.status(404).json({ message: "No account found with this email address" });
       }
 
       // Generate reset token
@@ -245,6 +250,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Reset password error:', error);
       res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  // Analytics routes
+  app.get("/api/analytics", async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 30;
+      const group = req.query.group as string || 'all';
+      
+      const analytics = await storage.getAnalyticsData(days, group);
+      res.json(analytics);
+    } catch (error) {
+      console.error('Analytics error:', error);
+      res.status(500).json({ message: "Failed to fetch analytics data" });
+    }
+  });
+
+  app.get("/api/analytics/report", async (req, res) => {
+    try {
+      const reportType = req.query.type as string || 'monthly';
+      const days = parseInt(req.query.days as string) || 30;
+      
+      const reportData = await storage.generateReport(reportType, days);
+      
+      // In a real implementation, you would generate a PDF here
+      // For now, we'll return JSON data
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${reportType}-report.json"`);
+      res.json(reportData);
+    } catch (error) {
+      console.error('Report generation error:', error);
+      res.status(500).json({ message: "Failed to generate report" });
     }
   });
 
