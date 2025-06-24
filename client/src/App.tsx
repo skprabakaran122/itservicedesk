@@ -37,9 +37,15 @@ function Router({ currentUser, onLogout, onLogin }: { currentUser: any; onLogout
       </Route>
       <Route path="/">
         {currentUser ? (
-          <Dashboard currentUser={currentUser} onLogout={onLogout} />
+          <>
+            {console.log('Rendering Dashboard for user:', currentUser)}
+            <Dashboard currentUser={currentUser} onLogout={onLogout} />
+          </>
         ) : (
-          <Login onLoginSuccess={onLogin} />
+          <>
+            {console.log('Rendering Login page')}
+            <Login onLoginSuccess={onLogin} />
+          </>
         )}
       </Route>
       <Route component={NotFound} />
@@ -52,8 +58,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Defer authentication check to not block initial render
-    const timeoutId = setTimeout(async () => {
+    // Check authentication immediately on app load
+    const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/me', {
           credentials: 'include'
@@ -63,21 +69,17 @@ function App() {
           setCurrentUser(data.user);
         }
       } catch (error) {
-        // Silent fail for auth check
+        console.log('Auth check failed:', error);
       }
       setIsLoading(false);
-    }, 50); // Minimal delay to allow initial render
+    };
 
-    return () => clearTimeout(timeoutId);
+    checkAuth();
   }, []);
 
   const handleLogin = (user: any) => {
     console.log('Setting current user:', user);
     setCurrentUser(user);
-    // Force a re-render to trigger navigation
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 100);
   };
 
   const handleLogout = async () => {

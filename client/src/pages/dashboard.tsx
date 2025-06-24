@@ -25,15 +25,21 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ currentUser, onLogout, initialTab }: DashboardProps) {
+  console.log('Dashboard rendering with currentUser:', currentUser);
+  
   const [showTicketForm, setShowTicketForm] = useState(false);
   const [showChangeForm, setShowChangeForm] = useState(false);
 
-  const { data: tickets = [], isLoading: ticketsLoading } = useQuery<Ticket[]>({
+  const { data: tickets = [], isLoading: ticketsLoading, error: ticketsError } = useQuery<Ticket[]>({
     queryKey: ["/api/tickets"],
+    retry: 1,
+    staleTime: 30000,
   });
 
-  const { data: changes = [], isLoading: changesLoading } = useQuery<Change[]>({
+  const { data: changes = [], isLoading: changesLoading, error: changesError } = useQuery<Change[]>({
     queryKey: ["/api/changes"],
+    retry: 1,
+    staleTime: 30000,
   });
 
   const getStatusColor = (status: string) => {
@@ -99,7 +105,48 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
     failed: changes.filter(c => c.status === "failed").length,
   };
 
-  if (ticketsLoading || changesLoading) {
+  // Show error state if queries fail
+  if (ticketsError || changesError) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center">
+            <img 
+              src={calpionLogo} 
+              alt="Calpion Logo" 
+              className="h-12 w-auto object-contain mr-4"
+            />
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">IT Service Desk</h1>
+              <p className="text-red-600">Error loading dashboard data</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Refresh Page
+            </Button>
+            <div className="flex items-center gap-3 border-l pl-4">
+              <div className="text-right">
+                <div className="text-sm font-medium text-gray-900 dark:text-white">{currentUser?.name}</div>
+                <div className="text-xs text-gray-500 capitalize">{currentUser?.role}</div>
+              </div>
+              <Button onClick={onLogout} variant="outline" size="sm">
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-gray-600">Unable to load dashboard data. Please refresh the page.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show loading only when both are loading initially
+  if (ticketsLoading && changesLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
