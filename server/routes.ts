@@ -388,7 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      // Use product-based filtering for agents
+      // Use group-based filtering for agents
       const tickets = await storage.getTicketsForUser(currentUser.id);
       res.json(tickets);
     } catch (error) {

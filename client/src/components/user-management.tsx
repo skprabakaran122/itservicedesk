@@ -45,8 +45,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
   const { data: groups = [] } = useQuery<Group[]>({
     queryKey: ["/api/groups"],
-    refetchInterval: 2000, // Faster refresh for testing
-    staleTime: 0, // Always refetch fresh data
+    refetchInterval: 30000,
   });
 
   const createForm = useForm<z.infer<typeof userFormSchema>>({
@@ -506,8 +505,8 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                               (group.members.includes(user.id) || group.members.includes(user.id.toString()));
                           });
                           return userGroups.length > 0 ? (
-                            userGroups.map((group, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
+                            userGroups.map((group) => (
+                              <Badge key={`user-${user.id}-group-${group.id}`} variant="outline" className="text-xs">
                                 {group.name}
                               </Badge>
                             ))
