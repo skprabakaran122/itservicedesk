@@ -37,11 +37,11 @@ export function AnalyticsDashboard() {
     return url;
   };
 
-  // Fetch analytics data
+  // Fetch analytics data - only auto-fetch when not in custom date range mode
   const { data: analyticsData, isLoading, refetch } = useQuery({
-    queryKey: ['analytics', timeRange, selectedGroup, startDate, endDate],
+    queryKey: ['analytics', timeRange, selectedGroup, customDateRange ? null : startDate, customDateRange ? null : endDate],
     queryFn: () => fetch(buildAnalyticsUrl()).then(res => res.json()),
-    enabled: true
+    enabled: !customDateRange || (customDateRange && startDate && endDate)
   });
 
   // Fetch groups for filter
@@ -70,14 +70,17 @@ export function AnalyticsDashboard() {
   };
 
   const applyCustomDateRange = () => {
-    refetch();
+    if (startDate && endDate) {
+      refetch();
+    }
   };
 
   const resetDateRange = () => {
     setCustomDateRange(false);
     setStartDate("");
     setEndDate("");
-    refetch();
+    // Automatically refetch with preset range when resetting
+    setTimeout(() => refetch(), 100);
   };
 
   if (isLoading) {
