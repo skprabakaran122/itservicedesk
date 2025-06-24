@@ -38,6 +38,15 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
   const [approvingTicket, setApprovingTicket] = useState<Ticket | null>(null);
   const [requestingApprovalTicket, setRequestingApprovalTicket] = useState<Ticket | null>(null);
 
+  // Fetch users for approval manager selection
+  const { data: users = [] } = useQuery({
+    queryKey: ["/api/users"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/users");
+      return response.json();
+    },
+  });
+
   // Tickets are already filtered by the server based on user role
   const filteredTickets = tickets;
 
