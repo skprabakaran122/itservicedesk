@@ -453,7 +453,7 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={categoryBreakdown}>
+                  <BarChart data={categoryBreakdown || []}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="category" />
                     <YAxis />
@@ -474,7 +474,7 @@ export function AnalyticsDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {groupPerformance.map((group, index) => (
+                {(groupPerformance || []).map((group, index) => (
                   <div key={index} className="border rounded-lg p-4">
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="font-semibold">{group.groupName}</h4>
