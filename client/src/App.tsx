@@ -8,12 +8,16 @@ import Dashboard from "@/pages/dashboard";
 import Login from "@/pages/login";
 import PublicTicketPage from "@/pages/public-ticket";
 import NotFound from "@/pages/not-found";
+import { ForgotPasswordPage } from "@/pages/forgot-password";
+import { ResetPasswordPage } from "@/pages/reset-password";
 
 function Router({ currentUser, onLogout, onLogin }: { currentUser: any; onLogout: () => void; onLogin: (user: any) => void }) {
   return (
     <Switch>
       <Route path="/support" component={PublicTicketPage} />
       <Route path="/public-ticket" component={PublicTicketPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/admin">
         {currentUser ? (
           <Dashboard currentUser={currentUser} onLogout={onLogout} initialTab="admin" />

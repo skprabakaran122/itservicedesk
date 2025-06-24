@@ -85,6 +85,8 @@ export const users = pgTable("users", {
   role: varchar("role", { length: 20 }).notNull(), // admin, technician, manager, user
   name: text("name").notNull(),
   assignedProducts: text("assigned_products").array(), // Array of product names this user can access
+  resetToken: varchar("reset_token", { length: 255 }),
+  resetTokenExpiry: timestamp("reset_token_expiry"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -124,6 +124,11 @@ export interface IStorage {
   deleteGroup(id: number): Promise<boolean>;
   getActiveGroups(): Promise<Group[]>;
 
+  // Password reset methods
+  setPasswordResetToken(email: string, token: string, expiry: Date): Promise<void>;
+  getUserByResetToken(token: string): Promise<User | null>;
+  resetPassword(token: string, newPassword: string): Promise<boolean>;
+
   // Categories methods
   getCategories(): Promise<Category[]>;
   getActiveCategories(): Promise<Category[]>;

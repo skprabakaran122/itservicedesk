@@ -172,6 +172,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const user = await storage.getUserByUsernameOrEmail(email);
+      
+      if (!user) {
+        // Don't reveal if email exists for security
+        return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+      }
+
+      // Generate reset token
+      const resetToken = require('crypto').randomBytes(32).toString('hex');
+      const expiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+      await storage.setPasswordResetToken(user.email, resetToken, expiry);
+
+      // Send reset email
+      const { emailService } = await import('./email-sendgrid');
+      
+      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}`;
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Password Reset Request</h2>
+          <p>You requested a password reset for your Calpion IT Service Desk account.</p>
+          <p>Click the link below to reset your password:</p>
+          <a href="${resetUrl}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+          <p style="margin-top: 20px;">This link will expire in 1 hour.</p>
+          <p>If you didn't request this reset, please ignore this email.</p>
+        </div>
+      `;
+
+      await emailService.sendEmail(user.email, "Password Reset - Calpion IT Service Desk", emailHtml);
+
+      res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.status(500).json({ message: "Failed to process password reset request" });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+      
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and password are required" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+
+      // Hash the new password if bcrypt is available
+      let hashedPassword = password;
+      if (bcrypt) {
+        hashedPassword = await bcrypt.hash(password, 10);
+      }
+
+      const success = await storage.resetPassword(token, hashedPassword);
+      
+      if (!success) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      res.json({ message: "Password reset successful" });
+    } catch (error) {
+      console.error('Reset password error:', error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
   // User routes
   app.get("/api/users", async (req, res) => {
     try {
