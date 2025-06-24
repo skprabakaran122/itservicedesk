@@ -24,13 +24,14 @@ export function AnalyticsDashboard() {
   const [customDateRange, setCustomDateRange] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [appliedCustomRange, setAppliedCustomRange] = useState(false);
 
   console.log("Using preset range:", timeRange, "days");
 
   // Build analytics query URL
   const buildAnalyticsUrl = () => {
     let url = `/api/analytics?group=${selectedGroup}&days=${timeRange}`;
-    if (customDateRange && startDate && endDate) {
+    if (appliedCustomRange && startDate && endDate) {
       url += `&startDate=${startDate}&endDate=${endDate}`;
     }
     console.log("Analytics URL:", url);
@@ -39,9 +40,9 @@ export function AnalyticsDashboard() {
 
   // Fetch analytics data
   const { data: analyticsData, isLoading, refetch } = useQuery({
-    queryKey: ['analytics', timeRange, selectedGroup, startDate, endDate],
+    queryKey: ['analytics', timeRange, selectedGroup, appliedCustomRange ? startDate : '', appliedCustomRange ? endDate : ''],
     queryFn: () => fetch(buildAnalyticsUrl()).then(res => res.json()),
-    enabled: customDateRange ? false : true
+    enabled: true
   });
 
   // Fetch groups for filter
@@ -71,12 +72,14 @@ export function AnalyticsDashboard() {
 
   const applyCustomDateRange = () => {
     if (startDate && endDate) {
+      setAppliedCustomRange(true);
       refetch();
     }
   };
 
   const resetDateRange = () => {
     setCustomDateRange(false);
+    setAppliedCustomRange(false);
     setStartDate("");
     setEndDate("");
     // Automatically refetch with preset range when resetting
