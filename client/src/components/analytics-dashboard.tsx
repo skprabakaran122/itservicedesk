@@ -178,15 +178,27 @@ export function AnalyticsDashboard() {
     );
   }
 
-  if (!analyticsData) {
+  if (!analyticsData || !analyticsData.overview) {
     return (
-      <div className="text-center py-8">
-        <p>No analytics data available</p>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-gray-500">No analytics data available</p>
+          <Button onClick={() => refetch()} className="mt-2">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
 
-  const { overview, ticketTrends, priorityDistribution, groupPerformance, slaMetrics, categoryBreakdown, monthlyReport } = analyticsData;
+  const overview = analyticsData.overview;
+  const ticketTrends = analyticsData.ticketTrends || [];
+  const priorityDistribution = analyticsData.priorityDistribution || [];
+  const groupPerformance = analyticsData.groupPerformance || [];
+  const slaMetrics = analyticsData.slaMetrics || {};
+  const categoryBreakdown = analyticsData.categoryBreakdown || [];
+  const monthlyReport = analyticsData.monthlyReport || {};
 
   return (
     <div className="space-y-6">
@@ -328,9 +340,9 @@ export function AnalyticsDashboard() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overview.totalTickets}</div>
+            <div className="text-2xl font-bold">{overview?.totalTickets || '0'}</div>
             <p className="text-xs text-muted-foreground">
-              {overview.openTickets} open, {overview.resolvedTickets} resolved
+              {overview?.openTickets || '0'} open, {overview?.resolvedTickets || '0'} resolved
             </p>
           </CardContent>
         </Card>
@@ -341,7 +353,7 @@ export function AnalyticsDashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overview.avgResolutionTime || overview.averageResolutionTime}h</div>
+            <div className="text-2xl font-bold">{overview?.avgResolutionTime || overview?.averageResolutionTime || '0'}h</div>
             <p className="text-xs text-muted-foreground">
               Target: &lt;24h for most tickets
             </p>
@@ -354,8 +366,8 @@ export function AnalyticsDashboard() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overview.slaCompliance}%</div>
-            <Progress value={parseInt(overview.slaCompliance) || 0} className="mt-2" />
+            <div className="text-2xl font-bold">{overview?.slaCompliance || '0'}%</div>
+            <Progress value={parseInt(overview?.slaCompliance || '0') || 0} className="mt-2" />
           </CardContent>
         </Card>
 
@@ -365,7 +377,7 @@ export function AnalyticsDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overview.activeUsers}</div>
+            <div className="text-2xl font-bold">{overview?.activeUsers || '0'}</div>
             <p className="text-xs text-muted-foreground">
               Users with activity this period
             </p>
