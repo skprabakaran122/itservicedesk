@@ -45,7 +45,8 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
   const { data: groups = [] } = useQuery<Group[]>({
     queryKey: ["/api/groups"],
-    refetchInterval: 10000,
+    refetchInterval: 2000, // Faster refresh for testing
+    staleTime: 0, // Always refetch fresh data
   });
 
   const createForm = useForm<z.infer<typeof userFormSchema>>({
@@ -499,15 +500,22 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {groups.filter(group => group.members && group.members.includes(user.id)).length > 0 ? (
-                          groups.filter(group => group.members && group.members.includes(user.id)).map((group, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {group.name}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-gray-500 italic">No groups assigned</span>
-                        )}
+                        {(() => {
+                          console.log(`User ${user.id} groups check:`, groups.map(g => ({ id: g.id, name: g.name, members: g.members })));
+                          const userGroups = groups.filter(group => {
+                            return group.members && Array.isArray(group.members) && group.members.includes(user.id);
+                          });
+                          console.log(`User ${user.id} belongs to:`, userGroups);
+                          return userGroups.length > 0 ? (
+                            userGroups.map((group, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {group.name}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-gray-500 italic">No groups assigned</span>
+                          );
+                        })()}
                       </div>
                     </TableCell>
                     <TableCell>
