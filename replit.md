@@ -106,6 +106,18 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 24, 2025 - Group-Based Ticket Access Control Implemented ✓ COMPLETED
+- **Ticket Viewing Based on Group Membership**: Changed ticket access from product assignment to group membership
+  - Agents now see only tickets assigned to groups they are members of
+  - Updated backend filtering logic to use getUserGroups and getTicketsByGroups methods
+  - Removed product-based access control in favor of group-based permissions
+  - Enhanced storage layer with group membership queries for proper ticket filtering
+- **Group Assignment Interface Completed**: Removed "No Group" option from assignment dropdown
+  - Only configured support groups are available for ticket assignment
+  - Automatic status change to "Open" when ticket assigned to different group
+  - Status update button always enabled for independent status management
+  - Group assignment works independently from status updates
+
 ### June 24, 2025 - Group Assignment in Ticket Console Added ✓ COMPLETED
 - **Ticket Group Assignment**: Added complete group assignment functionality to ticket update interface
   - Added assigned group dropdown to ticket details modal with live update capability
