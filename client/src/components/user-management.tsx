@@ -437,7 +437,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 <TableRow>
                   <TableHead>User</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Assigned Products</TableHead>
+                  <TableHead>Group Membership</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
