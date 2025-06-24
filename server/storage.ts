@@ -202,7 +202,7 @@ export class DatabaseStorage implements IStorage {
 
   // Ticket methods
   async getTickets(): Promise<Ticket[]> {
-    return await db.select().from(tickets).orderBy(tickets.createdAt);
+    return await db.select().from(tickets).orderBy(desc(tickets.createdAt));
   }
 
   async getTicketsForUser(userId: number): Promise<Ticket[]> {
@@ -210,7 +210,8 @@ export class DatabaseStorage implements IStorage {
     if (!user) return [];
     
     if (user.role === 'admin') {
-      return await this.getTickets();
+      // Admins see all tickets
+      return await db.select().from(tickets).orderBy(desc(tickets.createdAt));
     }
     
     if (user.role === 'agent') {
