@@ -13,25 +13,17 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { User, Product } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { User, Group } from "@shared/schema";
 import { UserPlus, Users, Shield, UserCheck, UserX, Edit, Trash2, RefreshCw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const createUserSchema = z.object({
+const userFormSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Valid email is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
   name: z.string().min(1, "Name is required"),
   role: z.enum(["user", "agent", "manager", "admin"]),
-});
-
-const editUserSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Valid email is required"),
-  name: z.string().min(1, "Name is required"),
-  role: z.enum(["user", "agent", "manager", "admin"]),
-  assignedProducts: z.array(z.string()).optional(),
 });
 
 interface UserManagementProps {
@@ -42,6 +34,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -50,15 +43,13 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     refetchInterval: 30000,
   });
 
-  const { data: products = [], refetch: refetchProducts } = useQuery<Product[]>({
-    queryKey: ["/api/products"],
-    refetchInterval: 10000, // Refetch every 10 seconds for immediate updates
-    staleTime: 0, // Always consider data stale to fetch fresh updates
-    refetchOnWindowFocus: true, // Refetch when user returns to tab
+  const { data: groups = [] } = useQuery<Group[]>({
+    queryKey: ["/api/groups"],
+    refetchInterval: 10000,
   });
 
-  const createForm = useForm<z.infer<typeof createUserSchema>>({
-    resolver: zodResolver(createUserSchema),
+  const createForm = useForm<z.infer<typeof userFormSchema>>({
+    resolver: zodResolver(userFormSchema),
     defaultValues: {
       username: "",
       email: "",
@@ -68,8 +59,8 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     },
   });
 
-  const editForm = useForm<z.infer<typeof editUserSchema>>({
-    resolver: zodResolver(editUserSchema),
+  const editForm = useForm<z.infer<typeof userFormSchema>>({
+    resolver: zodResolver(userFormSchema.partial({ password: true })),
     defaultValues: {
       username: "",
       email: "",
@@ -79,18 +70,18 @@ export function UserManagement({ currentUser }: UserManagementProps) {
   });
 
   const createUserMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof createUserSchema>) => {
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create user");
+    mutationFn: async (userData: z.infer<typeof userFormSchema>) => {
+      const response = await apiRequest("POST", "/api/users", userData);
+      const newUser = await response.json();
+      
+      // If groups selected, update group membership
+      if (selectedGroups.length > 0) {
+        for (const groupId of selectedGroups) {
+          await apiRequest("POST", `/api/groups/${groupId}/members`, { userId: newUser.user.id });
+        }
       }
-      return response.json();
+      
+      return newUser;
     },
     onSuccess: () => {
       toast({
@@ -98,8 +89,10 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         description: "The new user has been added to the system",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
       setIsCreateDialogOpen(false);
       createForm.reset();
+      setSelectedGroups([]);
     },
     onError: (error: any) => {
       toast({
@@ -111,18 +104,22 @@ export function UserManagement({ currentUser }: UserManagementProps) {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async (data: { id: number } & z.infer<typeof editUserSchema>) => {
-      const response = await fetch(`/api/users/${data.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to update user");
+    mutationFn: async (data: { id: number } & Partial<z.infer<typeof userFormSchema>>) => {
+      const { id, ...userData } = data;
+      const response = await apiRequest("PATCH", `/api/users/${id}`, userData);
+      
+      // Update group memberships - remove user from all groups then add to selected ones
+      const userGroups = groups.filter(group => group.members && group.members.includes(id));
+      for (const group of userGroups) {
+        await apiRequest("DELETE", `/api/groups/${group.id}/members/${id}`);
       }
-      return response.json();
+      
+      // Add to selected groups
+      for (const groupId of selectedGroups) {
+        await apiRequest("POST", `/api/groups/${groupId}/members`, { userId: id });
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       toast({
@@ -130,9 +127,11 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         description: "The user information has been updated",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
       setIsEditDialogOpen(false);
       setSelectedUser(null);
       editForm.reset();
+      setSelectedGroups([]);
     },
     onError: (error: any) => {
       toast({
@@ -145,12 +144,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        throw new Error("Failed to delete user");
-      }
+      const response = await apiRequest("DELETE", `/api/users/${userId}`);
       return response.json();
     },
     onSuccess: () => {
@@ -169,13 +163,17 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     },
   });
 
-  const onCreateUser = (data: z.infer<typeof createUserSchema>) => {
+  const onCreateUser = (data: z.infer<typeof userFormSchema>) => {
     createUserMutation.mutate(data);
   };
 
-  const onEditUser = (data: z.infer<typeof editUserSchema>) => {
+  const onEditUser = (data: z.infer<typeof userFormSchema>) => {
     if (selectedUser) {
-      updateUserMutation.mutate({ ...data, id: selectedUser.id });
+      const updateData = { ...data };
+      if (!updateData.password) {
+        delete updateData.password;
+      }
+      updateUserMutation.mutate({ ...updateData, id: selectedUser.id });
     }
   };
 
@@ -186,8 +184,10 @@ export function UserManagement({ currentUser }: UserManagementProps) {
       email: user.email,
       name: user.name,
       role: user.role as "user" | "agent" | "manager" | "admin",
-      assignedProducts: user.assignedProducts || [],
     });
+    // Find groups this user belongs to
+    const userGroups = groups.filter(group => group.members && group.members.includes(user.id));
+    setSelectedGroups(userGroups.map(g => g.id));
     setIsEditDialogOpen(true);
   };
 
@@ -256,7 +256,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         <div>
           <h2 className="text-2xl font-bold">User Management</h2>
           <p className="text-muted-foreground">
-            Manage user accounts, roles, and permissions
+            Manage user accounts, roles, and group membership
           </p>
         </div>
         <div className="flex gap-2">
@@ -264,8 +264,8 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             variant="outline"
             size="sm"
             onClick={() => {
-              refetchProducts();
               queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/groups"] });
             }}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -282,7 +282,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
               <DialogHeader>
                 <DialogTitle>Create New User</DialogTitle>
                 <DialogDescription>
-                  Add a new user to the system with appropriate role assignment
+                  Add a new user to the system with appropriate role and group assignment
                 </DialogDescription>
               </DialogHeader>
               <Form {...createForm}>
@@ -362,6 +362,35 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                       </FormItem>
                     )}
                   />
+                  
+                  {/* Group Membership */}
+                  <FormItem>
+                    <FormLabel>Group Membership</FormLabel>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {groups.map((group: any) => (
+                        <div key={group.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`group-${group.id}`}
+                            checked={selectedGroups.includes(group.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedGroups([...selectedGroups, group.id]);
+                              } else {
+                                setSelectedGroups(selectedGroups.filter(g => g !== group.id));
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`group-${group.id}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {group.name}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </FormItem>
+                  
                   <div className="flex gap-2 pt-4">
                     <Button type="submit" disabled={createUserMutation.isPending} className="flex-1">
                       {createUserMutation.isPending ? "Creating..." : "Create User"}
@@ -422,7 +451,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         <CardHeader>
           <CardTitle>Users</CardTitle>
           <CardDescription>
-            Manage user accounts and role assignments
+            Manage user accounts and group assignments
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -459,17 +488,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {user.assignedProducts && user.assignedProducts.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {user.assignedProducts.map((productName, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {productName}
-                            </Badge>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-gray-500 italic">No products assigned</span>
-                      )}
+                      {groups.filter(group => group.members && group.members.includes(user.id)).length} groups
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
@@ -479,18 +498,15 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                           onClick={() => handleEditUser(user)}
                           disabled={user.id === currentUser?.id}
                         >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
+                          <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteUser(user)}
-                          disabled={user.id === currentUser?.id || deleteUserMutation.isPending}
-                          className="text-destructive hover:text-destructive"
+                          disabled={user.id === currentUser?.id}
                         >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -508,7 +524,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
-              Update user information and role assignment
+              Update user information and group assignments
             </DialogDescription>
           </DialogHeader>
           {selectedUser && (
@@ -577,40 +593,33 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                   )}
                 />
                 
-                {/* Product Assignment for Agents and Managers */}
-                {(editForm.watch("role") === "agent" || editForm.watch("role") === "manager") && (
-                  <FormField
-                    control={editForm.control}
-                    name="assignedProducts"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Assigned Products</FormLabel>
-                        <div className="space-y-2">
-                          {products.map((product) => (
-                            <div key={product.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`product-${product.id}`}
-                                checked={field.value?.includes(product.name) || false}
-                                onCheckedChange={(checked) => {
-                                  const currentProducts = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...currentProducts, product.name]);
-                                  } else {
-                                    field.onChange(currentProducts.filter(p => p !== product.name));
-                                  }
-                                }}
-                              />
-                              <label htmlFor={`product-${product.id}`} className="text-sm font-medium">
-                                {product.name}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                {/* Group Membership */}
+                <FormItem>
+                  <FormLabel>Group Membership</FormLabel>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {groups.map((group: any) => (
+                      <div key={group.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`edit-group-${group.id}`}
+                          checked={selectedGroups.includes(group.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedGroups([...selectedGroups, group.id]);
+                            } else {
+                              setSelectedGroups(selectedGroups.filter(g => g !== group.id));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`edit-group-${group.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {group.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </FormItem>
 
                 <div className="flex gap-2 pt-4">
                   <Button
