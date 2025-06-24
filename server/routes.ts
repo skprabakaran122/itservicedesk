@@ -258,8 +258,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const days = parseInt(req.query.days as string) || 30;
       const group = req.query.group as string || 'all';
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
       
-      const analytics = await storage.getAnalyticsData(days, group);
+      const analytics = await storage.getAnalyticsData(days, group, startDate, endDate);
       res.json(analytics);
     } catch (error) {
       console.error('Analytics error:', error);
@@ -271,8 +273,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const reportType = req.query.type as string || 'monthly';
       const days = parseInt(req.query.days as string) || 30;
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
       
-      const reportData = await storage.generateReport(reportType, days);
+      const reportData = await storage.generateReport(reportType, days, startDate, endDate);
       
       // In a real implementation, you would generate a PDF here
       // For now, we'll return JSON data

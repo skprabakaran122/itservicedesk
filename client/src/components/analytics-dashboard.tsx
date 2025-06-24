@@ -75,11 +75,24 @@ export function AnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState("30");
   const [selectedGroup, setSelectedGroup] = useState("all");
   const [reportType, setReportType] = useState("monthly");
+  const [customDateRange, setCustomDateRange] = useState({
+    startDate: "",
+    endDate: "",
+    enabled: false
+  });
 
   const { data: analyticsData, isLoading, refetch } = useQuery<AnalyticsData>({
-    queryKey: ["/api/analytics", timeRange, selectedGroup],
+    queryKey: ["/api/analytics", timeRange, selectedGroup, customDateRange],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/analytics?days=${timeRange}&group=${selectedGroup}`);
+      let url = `/api/analytics?group=${selectedGroup}`;
+      
+      if (customDateRange.enabled && customDateRange.startDate && customDateRange.endDate) {
+        url += `&startDate=${customDateRange.startDate}&endDate=${customDateRange.endDate}`;
+      } else {
+        url += `&days=${timeRange}`;
+      }
+      
+      const response = await apiRequest("GET", url);
       return response.json();
     },
   });
@@ -94,18 +107,52 @@ export function AnalyticsDashboard() {
 
   const generateReport = async () => {
     try {
-      const response = await apiRequest("GET", `/api/analytics/report?type=${reportType}&days=${timeRange}`);
+      let url = `/api/analytics/report?type=${reportType}`;
+      
+      if (customDateRange.enabled && customDateRange.startDate && customDateRange.endDate) {
+        url += `&startDate=${customDateRange.startDate}&endDate=${customDateRange.endDate}`;
+      } else {
+        url += `&days=${timeRange}`;
+      }
+      
+      const response = await apiRequest("GET", url);
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
-      link.download = `${reportType}-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      link.href = downloadUrl;
+      link.download = `${reportType}-report-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
       console.error('Failed to generate report:', error);
+    }
+  };
+
+  const handleDateRangeToggle = (enabled: boolean) => {
+    setCustomDateRange(prev => ({ ...prev, enabled }));
+    if (!enabled) {
+      // Reset to default time range when disabling custom dates
+      setTimeRange("30");
+    }
+  };
+
+  const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
+    setCustomDateRange(prev => ({ ...prev, [field]: value }));
+  };
+
+  const getDateRangeDisplay = () => {
+    if (customDateRange.enabled && customDateRange.startDate && customDateRange.endDate) {
+      return `${customDateRange.startDate} to ${customDateRange.endDate}`;
+    }
+    
+    switch (timeRange) {
+      case "7": return "Last 7 days";
+      case "30": return "Last 30 days";
+      case "90": return "Last 90 days";
+      case "365": return "Last year";
+      default: return "Last 30 days";
     }
   };
 
@@ -136,20 +183,95 @@ export function AnalyticsDashboard() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h2>
-          <p className="text-muted-foreground">Comprehensive insights and performance metrics</p>
+          <p className="text-muted-foreground">
+            Comprehensive insights and performance metrics - {getDateRangeDisplay()}
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
-              <SelectItem value="365">Last year</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex gap-2 flex-wrap">
+          {!customDateRange.enabled && (
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+                <SelectItem value="365">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <CalendarDays className="h-4 w-4 mr-2" />
+                Custom Range
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="enableCustom"
+                    checked={customDateRange.enabled}
+                    onChange={(e) => handleDateRangeToggle(e.target.checked)}
+                    className="rounded"
+                  />
+                  <Label htmlFor="enableCustom">Use custom date range</Label>
+                </div>
+                
+                {customDateRange.enabled && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="startDate">Start Date</Label>
+                      <Input
+                        id="startDate"
+                        type="date"
+                        value={customDateRange.startDate}
+                        onChange={(e) => handleDateChange('startDate', e.target.value)}
+                        max={customDateRange.endDate || new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="endDate">End Date</Label>
+                      <Input
+                        id="endDate"
+                        type="date"
+                        value={customDateRange.endDate}
+                        onChange={(e) => handleDateChange('endDate', e.target.value)}
+                        min={customDateRange.startDate}
+                        max={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => refetch()}
+                        disabled={!customDateRange.startDate || !customDateRange.endDate}
+                      >
+                        Apply Range
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setCustomDateRange({ startDate: "", endDate: "", enabled: false });
+                          setTimeRange("30");
+                        }}
+                      >
+                        Reset
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+          
           <Select value={selectedGroup} onValueChange={setSelectedGroup}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -163,6 +285,7 @@ export function AnalyticsDashboard() {
               ))}
             </SelectContent>
           </Select>
+          
           <Button onClick={() => refetch()} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh

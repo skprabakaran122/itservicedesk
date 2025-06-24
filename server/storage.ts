@@ -130,8 +130,8 @@ export interface IStorage {
   resetPassword(token: string, newPassword: string): Promise<boolean>;
 
   // Analytics methods
-  getAnalyticsData(days: number, group: string): Promise<any>;
-  generateReport(type: string, days: number): Promise<any>;
+  getAnalyticsData(days: number, group: string, startDate?: string, endDate?: string): Promise<any>;
+  generateReport(type: string, days: number, startDate?: string, endDate?: string): Promise<any>;
 
   // Categories methods
   getCategories(): Promise<Category[]>;
@@ -476,23 +476,38 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
-  async getAnalyticsData(days: number, group: string): Promise<any> {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+  async getAnalyticsData(days: number, group: string, customStartDate?: string, customEndDate?: string): Promise<any> {
+    let startDate: Date;
+    let endDate: Date;
+    
+    if (customStartDate && customEndDate) {
+      startDate = new Date(customStartDate);
+      endDate = new Date(customEndDate);
+      endDate.setHours(23, 59, 59, 999); // Include the entire end date
+    } else {
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      endDate = new Date();
+    }
 
     // Get basic metrics
     const totalTickets = await db.select({ count: sql`count(*)` }).from(tickets)
-      .where(gte(tickets.createdAt, startDate));
+      .where(and(
+        gte(tickets.createdAt, startDate),
+        lte(tickets.createdAt, endDate)
+      ));
     
     const openTickets = await db.select({ count: sql`count(*)` }).from(tickets)
       .where(and(
         gte(tickets.createdAt, startDate),
+        lte(tickets.createdAt, endDate),
         notInArray(tickets.status, ['resolved', 'closed'])
       ));
     
     const resolvedTickets = await db.select({ count: sql`count(*)` }).from(tickets)
       .where(and(
         gte(tickets.createdAt, startDate),
+        lte(tickets.createdAt, endDate),
         eq(tickets.status, 'resolved')
       ));
 
@@ -503,6 +518,7 @@ export class DatabaseStorage implements IStorage {
     }).from(tickets)
       .where(and(
         gte(tickets.createdAt, startDate),
+        lte(tickets.createdAt, endDate),
         eq(tickets.status, 'resolved'),
         isNotNull(tickets.resolvedAt)
       ));
@@ -518,6 +534,7 @@ export class DatabaseStorage implements IStorage {
     const slaCompliantTickets = await db.select({ count: sql`count(*)` }).from(tickets)
       .where(and(
         gte(tickets.createdAt, startDate),
+        lte(tickets.createdAt, endDate),
         eq(tickets.slaResolutionMet, 'met')
       ));
 
@@ -527,13 +544,18 @@ export class DatabaseStorage implements IStorage {
 
     // Active users count
     const activeUsers = await db.selectDistinct({ userId: tickets.requesterId }).from(tickets)
-      .where(gte(tickets.createdAt, startDate));
+      .where(and(
+        gte(tickets.createdAt, startDate),
+        lte(tickets.createdAt, endDate)
+      ));
 
     // Ticket trends (daily data for the period)
     const ticketTrends = [];
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
+    const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    for (let i = 0; i <= daysDiff; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
       const dateStr = date.toISOString().split('T')[0];
       
       const created = await db.select({ count: sql`count(*)` }).from(tickets)
@@ -564,6 +586,7 @@ export class DatabaseStorage implements IStorage {
         const count = await db.select({ count: sql`count(*)` }).from(tickets)
           .where(and(
             gte(tickets.createdAt, startDate),
+            lte(tickets.createdAt, endDate),
             eq(tickets.priority, priority)
           ));
         return {
@@ -583,12 +606,14 @@ export class DatabaseStorage implements IStorage {
         const assigned = await db.select({ count: sql`count(*)` }).from(tickets)
           .where(and(
             gte(tickets.createdAt, startDate),
+            lte(tickets.createdAt, endDate),
             eq(tickets.assignedGroup, grp.name)
           ));
         
         const resolved = await db.select({ count: sql`count(*)` }).from(tickets)
           .where(and(
             gte(tickets.createdAt, startDate),
+            lte(tickets.createdAt, endDate),
             eq(tickets.assignedGroup, grp.name),
             eq(tickets.status, 'resolved')
           ));
@@ -596,6 +621,7 @@ export class DatabaseStorage implements IStorage {
         const slaCompliant = await db.select({ count: sql`count(*)` }).from(tickets)
           .where(and(
             gte(tickets.createdAt, startDate),
+            lte(tickets.createdAt, endDate),
             eq(tickets.assignedGroup, grp.name),
             eq(tickets.slaResolutionMet, 'met')
           ));
@@ -619,6 +645,7 @@ export class DatabaseStorage implements IStorage {
         const count = await db.select({ count: sql`count(*)` }).from(tickets)
           .where(and(
             gte(tickets.createdAt, startDate),
+            lte(tickets.createdAt, endDate),
             eq(tickets.category, category)
           ));
         return {
@@ -664,13 +691,20 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async generateReport(type: string, days: number): Promise<any> {
-    const analyticsData = await this.getAnalyticsData(days, 'all');
+  async generateReport(type: string, days: number, customStartDate?: string, customEndDate?: string): Promise<any> {
+    const analyticsData = await this.getAnalyticsData(days, 'all', customStartDate, customEndDate);
+    
+    let periodDescription: string;
+    if (customStartDate && customEndDate) {
+      periodDescription = `${customStartDate} to ${customEndDate}`;
+    } else {
+      periodDescription = `${days} days`;
+    }
     
     return {
       reportType: type,
       generatedAt: new Date().toISOString(),
-      period: `${days} days`,
+      period: periodDescription,
       summary: analyticsData.overview,
       details: {
         ticketTrends: analyticsData.ticketTrends,
