@@ -72,7 +72,12 @@ function App() {
   }, []);
 
   const handleLogin = (user: any) => {
+    console.log('Setting current user:', user);
     setCurrentUser(user);
+    // Force a re-render to trigger navigation
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 100);
   };
 
   const handleLogout = async () => {

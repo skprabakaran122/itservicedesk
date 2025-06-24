@@ -58,6 +58,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       return await response.json();
     },
     onSuccess: (data) => {
+      console.log('Login successful, user data:', data.user);
       toast({
         title: "Success",
         description: "Logged in successfully",
