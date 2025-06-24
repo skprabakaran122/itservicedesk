@@ -27,6 +27,7 @@ export function AnalyticsDashboard() {
   const [appliedCustomRange, setAppliedCustomRange] = useState(false);
 
   console.log("Using preset range:", timeRange, "days");
+  console.log("Analytics data received:", analyticsData);
 
   // Build analytics query URL
   const buildAnalyticsUrl = () => {
@@ -112,6 +113,9 @@ export function AnalyticsDashboard() {
   }
 
   const { overview, ticketTrends, priorityDistribution, groupPerformance, slaMetrics, categoryBreakdown } = analyticsData;
+  
+  console.log("Overview data:", overview);
+  console.log("Current group:", selectedGroup);
 
   return (
     <div className="space-y-6">
