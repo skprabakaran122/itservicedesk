@@ -398,13 +398,12 @@ export function TicketDetailsModal({
                     {/* Group Assignment Section */}
                     <div>
                       <label className="block text-sm font-medium mb-2">Assigned Group</label>
-                      <Select value={ticket.assignedGroup || "none"} onValueChange={async (value) => {
+                      <Select value={ticket.assignedGroup || ""} onValueChange={async (value) => {
                         try {
-                          const newGroup = value === "none" ? null : value;
-                          const updateData: any = { assignedGroup: newGroup };
+                          const updateData: any = { assignedGroup: value };
                           
                           // If assigning to a different group, set status to 'open'
-                          if (newGroup && newGroup !== ticket.assignedGroup) {
+                          if (value && value !== ticket.assignedGroup) {
                             updateData.status = 'open';
                           }
                           
@@ -419,7 +418,6 @@ export function TicketDetailsModal({
                           <SelectValue placeholder="Select group" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">No Group</SelectItem>
                           {groups?.map(group => (
                             <SelectItem key={group.id} value={group.name}>
                               {group.name}
