@@ -37,15 +37,9 @@ function Router({ currentUser, onLogout, onLogin }: { currentUser: any; onLogout
       </Route>
       <Route path="/">
         {currentUser ? (
-          <>
-            {console.log('Rendering Dashboard for user:', currentUser)}
-            <Dashboard currentUser={currentUser} onLogout={onLogout} />
-          </>
+          <Dashboard currentUser={currentUser} onLogout={onLogout} />
         ) : (
-          <>
-            {console.log('Rendering Login page')}
-            <Login onLoginSuccess={onLogin} />
-          </>
+          <Login onLoginSuccess={onLogin} />
         )}
       </Route>
       <Route component={NotFound} />

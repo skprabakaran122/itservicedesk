@@ -25,8 +25,6 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ currentUser, onLogout, initialTab }: DashboardProps) {
-  console.log('Dashboard rendering with currentUser:', currentUser);
-  
   const [showTicketForm, setShowTicketForm] = useState(false);
   const [showChangeForm, setShowChangeForm] = useState(false);
 
@@ -145,8 +143,8 @@ export default function Dashboard({ currentUser, onLogout, initialTab }: Dashboa
     );
   }
 
-  // Show loading only when both are loading initially
-  if (ticketsLoading && changesLoading) {
+  // Show loading only for initial load, not individual queries
+  if ((ticketsLoading && changesLoading) || (!tickets.length && !changes.length && (ticketsLoading || changesLoading))) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
