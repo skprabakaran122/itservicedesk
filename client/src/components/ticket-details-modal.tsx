@@ -75,6 +75,7 @@ export function TicketDetailsModal({
       queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tickets", ticket.id, "history"] });
       setNotes("");
+      onClose(); // Close the modal after successful update
     },
     onError: () => {
       toast({
