@@ -341,7 +341,7 @@ export function AnalyticsDashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overview.averageResolutionTime}h</div>
+            <div className="text-2xl font-bold">{overview.avgResolutionTime || overview.averageResolutionTime}h</div>
             <p className="text-xs text-muted-foreground">
               Target: &lt;24h for most tickets
             </p>
@@ -355,7 +355,7 @@ export function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{overview.slaCompliance}%</div>
-            <Progress value={overview.slaCompliance} className="mt-2" />
+            <Progress value={parseInt(overview.slaCompliance) || 0} className="mt-2" />
           </CardContent>
         </Card>
 
