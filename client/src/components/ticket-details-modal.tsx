@@ -310,7 +310,6 @@ export function TicketDetailsModal({
                     <div>
                       <label className="text-sm font-medium text-gray-500">Requester Details</label>
                       <div className="flex items-start gap-2">
-                        <UserIcon className="h-4 w-4 text-gray-400 mt-0.5" />
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-gray-900 dark:text-white">{getRequesterName()}</p>
                           <p className="text-sm text-blue-600 dark:text-blue-400">{getRequesterEmail()}</p>

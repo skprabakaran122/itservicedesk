@@ -40,10 +40,6 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
 
   // Tickets are already filtered by the server based on user role
   const filteredTickets = tickets;
-  
-  const { data: users = [] } = useQuery<User[]>({
-    queryKey: ["/api/users"],
-  });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
@@ -300,7 +296,6 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <UserIcon className="h-4 w-4" />
                 <div>
                   <div className="font-medium">{getRequesterName(ticket)}</div>
                   <div className="text-xs">{getRequesterEmail(ticket)}</div>
