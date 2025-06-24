@@ -152,7 +152,7 @@ export function AnalyticsDashboard() {
   };
 
   const getDateRangeDisplay = () => {
-    if (customDateRange.enabled && customDateRange.startDate && customDateRange.endDate) {
+    if (appliedCustomRange && customDateRange.startDate && customDateRange.endDate) {
       return `${customDateRange.startDate} to ${customDateRange.endDate}`;
     }
     
@@ -216,10 +216,10 @@ export function AnalyticsDashboard() {
               variant="outline"
               size="sm"
               onClick={() => setCustomDateRange(prev => ({ ...prev, enabled: !prev.enabled }))}
-              className={customDateRange.enabled ? "bg-blue-50 border-blue-300" : ""}
+              className={appliedCustomRange ? "bg-green-50 border-green-300 text-green-700" : customDateRange.enabled ? "bg-blue-50 border-blue-300" : ""}
             >
               <Calendar className="h-4 w-4 mr-2" />
-              Custom Range
+              {appliedCustomRange ? "Custom Applied" : "Custom Range"}
             </Button>
             
             {customDateRange.enabled && (
@@ -270,6 +270,8 @@ export function AnalyticsDashboard() {
                           const rangeKey = `${customDateRange.startDate}-${customDateRange.endDate}`;
                           setAppliedCustomRange(rangeKey);
                           refetch();
+                          // Close the dropdown after applying
+                          setCustomDateRange(prev => ({ ...prev, enabled: false }));
                         }
                       }}
                       disabled={!customDateRange.startDate || !customDateRange.endDate}
