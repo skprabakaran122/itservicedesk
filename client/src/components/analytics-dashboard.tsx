@@ -37,11 +37,11 @@ export function AnalyticsDashboard() {
     return url;
   };
 
-  // Fetch analytics data - only auto-fetch when not in custom date range mode
+  // Fetch analytics data
   const { data: analyticsData, isLoading, refetch } = useQuery({
-    queryKey: ['analytics', timeRange, selectedGroup, customDateRange ? null : startDate, customDateRange ? null : endDate],
+    queryKey: ['analytics', timeRange, selectedGroup, startDate, endDate],
     queryFn: () => fetch(buildAnalyticsUrl()).then(res => res.json()),
-    enabled: !customDateRange || (customDateRange && startDate && endDate)
+    enabled: customDateRange ? false : true
   });
 
   // Fetch groups for filter
