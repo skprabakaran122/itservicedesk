@@ -490,6 +490,20 @@ export class DatabaseStorage implements IStorage {
       endDate = new Date();
     }
 
+    // Base query with date filtering and group filtering
+    let whereConditions = and(
+      gte(tickets.createdAt, startDate),
+      lte(tickets.createdAt, endDate)
+    );
+
+    // Add group filtering if specified
+    if (group && group !== 'all') {
+      whereConditions = and(
+        whereConditions,
+        eq(tickets.assignedGroup, group)
+      );
+    }
+
     // Get basic metrics in a single query
     const basicMetrics = await db.select({
       total: sql`count(*)`,
@@ -498,10 +512,7 @@ export class DatabaseStorage implements IStorage {
       slaCompliant: sql`count(case when ${tickets.slaResolutionMet} = 'met' then 1 end)`,
       avgResolutionHours: sql`avg(case when ${tickets.resolvedAt} is not null then extract(epoch from ${tickets.resolvedAt} - ${tickets.createdAt})/3600 end)`
     }).from(tickets)
-      .where(and(
-        gte(tickets.createdAt, startDate),
-        lte(tickets.createdAt, endDate)
-      ));
+      .where(whereConditions);
 
     const metrics = basicMetrics[0];
     const avgResolutionTime = metrics.avgResolutionHours || 0;
@@ -560,10 +571,7 @@ export class DatabaseStorage implements IStorage {
       priority: tickets.priority,
       count: sql`count(*)`
     }).from(tickets)
-      .where(and(
-        gte(tickets.createdAt, startDate),
-        lte(tickets.createdAt, endDate)
-      ))
+      .where(whereConditions)
       .groupBy(tickets.priority);
 
     const priorityData = ['low', 'medium', 'high', 'critical'].map(priority => {
@@ -620,10 +628,7 @@ export class DatabaseStorage implements IStorage {
       category: tickets.category,
       count: sql`count(*)`
     }).from(tickets)
-      .where(and(
-        gte(tickets.createdAt, startDate),
-        lte(tickets.createdAt, endDate)
-      ))
+      .where(whereConditions)
       .groupBy(tickets.category);
 
     const categoryData = ['software', 'hardware', 'network', 'access', 'other'].map(category => {
