@@ -233,7 +233,12 @@ export function TicketDetailsModal({
       return;
     }
     
-    updateTicketMutation.mutate({ status: newStatus, notes: notes.trim() || undefined });
+    const updateData: any = { status: newStatus };
+    if (notes.trim()) {
+      updateData.notes = notes.trim();
+    }
+    
+    updateTicketMutation.mutate(updateData);
   };
 
   const handleAddComment = () => {
@@ -395,7 +400,14 @@ export function TicketDetailsModal({
                       <label className="block text-sm font-medium mb-2">Assigned Group</label>
                       <Select value={ticket.assignedGroup || "none"} onValueChange={async (value) => {
                         try {
-                          const updateData = { assignedGroup: value === "none" ? null : value };
+                          const newGroup = value === "none" ? null : value;
+                          const updateData: any = { assignedGroup: newGroup };
+                          
+                          // If assigning to a different group, set status to 'open'
+                          if (newGroup && newGroup !== ticket.assignedGroup) {
+                            updateData.status = 'open';
+                          }
+                          
                           await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
                           toast({ title: "Success", description: "Group assignment updated" });
                           queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
@@ -447,7 +459,7 @@ export function TicketDetailsModal({
                   <div className="flex gap-2">
                     <Button 
                       onClick={handleStatusUpdate}
-                      disabled={updateTicketMutation.isPending || newStatus === ticket.status}
+                      disabled={updateTicketMutation.isPending}
                     >
                       {updateTicketMutation.isPending ? "Updating..." : "Update Status"}
                     </Button>
