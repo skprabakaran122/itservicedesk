@@ -403,7 +403,7 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={ticketTrends}>
+                  <AreaChart data={ticketTrends || []}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
@@ -426,7 +426,7 @@ export function AnalyticsDashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={priorityDistribution}
+                      data={priorityDistribution || []}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -435,7 +435,7 @@ export function AnalyticsDashboard() {
                       fill="#8884d8"
                       dataKey="count"
                     >
-                      {priorityDistribution.map((entry, index) => (
+                      {(priorityDistribution || []).map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -515,23 +515,23 @@ export function AnalyticsDashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Response Time SLA</span>
-                    <span className="font-medium">{slaMetrics.responseTimeCompliance}%</span>
+                    <span className="font-medium">{slaMetrics?.responseTimeCompliance || '0'}%</span>
                   </div>
-                  <Progress value={slaMetrics.responseTimeCompliance} />
+                  <Progress value={parseInt(slaMetrics?.responseTimeCompliance || '0') || 0} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Resolution Time SLA</span>
-                    <span className="font-medium">{slaMetrics.resolutionTimeCompliance}%</span>
+                    <span className="font-medium">{slaMetrics?.resolutionTimeCompliance || '0'}%</span>
                   </div>
-                  <Progress value={slaMetrics.resolutionTimeCompliance} />
+                  <Progress value={parseInt(slaMetrics?.resolutionTimeCompliance || '0') || 0} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Overall Compliance</span>
-                    <span className="font-medium">{slaMetrics.overallCompliance}%</span>
+                    <span className="font-medium">{slaMetrics?.overallCompliance || '0'}%</span>
                   </div>
-                  <Progress value={slaMetrics.overallCompliance} />
+                  <Progress value={parseInt(slaMetrics?.overallCompliance || '0') || 0} />
                 </div>
               </CardContent>
             </Card>
@@ -544,7 +544,7 @@ export function AnalyticsDashboard() {
               <CardContent>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-red-600 mb-2">
-                    {slaMetrics.breachedTickets}
+                    {slaMetrics?.breachedTickets || '0'}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Tickets breached SLA in the selected period
