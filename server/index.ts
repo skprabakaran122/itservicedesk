@@ -307,7 +307,6 @@ function startOverdueChangeScheduler() {
     });
 
     // Start schedulers
-    startSLAScheduler();
     startAutoCloseScheduler();
     startOverdueChangeScheduler();
     
