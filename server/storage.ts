@@ -632,32 +632,22 @@ export class DatabaseStorage implements IStorage {
     return {
       overview: {
         totalTickets: metrics.total.toString(),
-        openTickets: openTickets[0].count,
-        resolvedTickets: resolvedTickets[0].count,
-        averageResolutionTime: Math.round(avgResolutionTime),
-        slaCompliance,
-        activeUsers: activeUsers.length
+        openTickets: metrics.open.toString(),
+        resolvedTickets: metrics.resolved.toString(),
+        avgResolutionTime: Math.round(avgResolutionTime).toString(),
+        slaCompliance: slaCompliance.toString(),
+        activeUsers: activeUsersResult[0].count.toString()
       },
       ticketTrends,
-      priorityDistribution,
+      priorityDistribution: priorityData,
       groupPerformance,
+      categoryBreakdown: categoryData,
       slaMetrics: {
-        responseTimeCompliance: slaCompliance,
-        resolutionTimeCompliance: slaCompliance,
-        overallCompliance: slaCompliance,
-        breachedTickets: totalTickets[0].count - slaCompliantTickets[0].count
-      },
-      categoryBreakdown,
-      monthlyReport: {
-        month: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        totalTickets: totalTickets[0].count,
-        resolvedTickets: resolvedTickets[0].count,
-        averageResolutionHours: Math.round(avgResolutionTime),
-        customerSatisfaction: 87, // This would come from surveys in a real system
-        topIssues: categoryBreakdown.slice(0, 5).map(cat => ({
-          category: cat.category,
-          count: cat.count
-        }))
+        compliance: slaCompliance,
+        totalTickets: metrics.total,
+        compliantTickets: metrics.slaCompliant,
+        breachedTickets: metrics.total - metrics.slaCompliant,
+        avgResolutionTime: Math.round(avgResolutionTime)
       }
     };
   }
