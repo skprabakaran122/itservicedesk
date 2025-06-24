@@ -37,10 +37,7 @@ export function TicketDetailsModal({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: users = [] } = useQuery({
-    queryKey: ["/api/users"],
-    queryFn: () => fetch('/api/users').then(res => res.json())
-  });
+
 
   const { data: groups = [] } = useQuery({
     queryKey: ["/api/groups"],
@@ -329,10 +326,6 @@ export function TicketDetailsModal({
                         </div>
                       </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Assigned to</label>
-                      <p className="text-sm">{ticket.assignedUser?.name || 'Unassigned'}</p>
-                    </div>
                     {ticket.assignedGroup && (
                       <div>
                         <label className="text-sm font-medium text-gray-500">Assigned Group</label>
@@ -401,59 +394,31 @@ export function TicketDetailsModal({
                       </Select>
                     </div>
 
-                    {/* Assignment Section */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Assigned To</label>
-                        <Select value={ticket.assignedTo?.toString() || "unassigned"} onValueChange={async (value) => {
-                          try {
-                            const updateData = { assignedTo: value === "unassigned" ? null : parseInt(value) };
-                            await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
-                            toast({ title: "Success", description: "Ticket assignment updated" });
-                            queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
-                          } catch (error) {
-                            toast({ title: "Error", description: "Failed to update assignment", variant: "destructive" });
-                          }
-                        }}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select user" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="unassigned">Unassigned</SelectItem>
-                            {users?.map(user => (
-                              <SelectItem key={user.id} value={user.id.toString()}>
-                                {user.name} ({user.role})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Assigned Group</label>
-                        <Select value={ticket.assignedGroup || "none"} onValueChange={async (value) => {
-                          try {
-                            const updateData = { assignedGroup: value === "none" ? null : value };
-                            await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
-                            toast({ title: "Success", description: "Group assignment updated" });
-                            queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
-                          } catch (error) {
-                            toast({ title: "Error", description: "Failed to update group assignment", variant: "destructive" });
-                          }
-                        }}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select group" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No Group</SelectItem>
-                            {groups?.map(group => (
-                              <SelectItem key={group.id} value={group.name}>
-                                {group.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    {/* Group Assignment Section */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Assigned Group</label>
+                      <Select value={ticket.assignedGroup || "none"} onValueChange={async (value) => {
+                        try {
+                          const updateData = { assignedGroup: value === "none" ? null : value };
+                          await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
+                          toast({ title: "Success", description: "Group assignment updated" });
+                          queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+                        } catch (error) {
+                          toast({ title: "Error", description: "Failed to update group assignment", variant: "destructive" });
+                        }
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select group" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No Group</SelectItem>
+                          {groups?.map(group => (
+                            <SelectItem key={group.id} value={group.name}>
+                              {group.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   
                   <div>

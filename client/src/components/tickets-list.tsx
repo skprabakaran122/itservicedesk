@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Ticket } from "@shared/schema";
-import { Clock, User as UserIcon, Users, AlertCircle, Package, Eye, CheckCircle, XCircle, Send } from "lucide-react";
+import { Clock, Users, AlertCircle, Package, Eye, CheckCircle, XCircle, Send } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDateIST } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
@@ -330,20 +330,12 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
               </div>
             </div>
             
-            {(ticket.assignedTo || ticket.assignedGroup) && (
-              <div className="mb-4 space-y-1">
-                {ticket.assignedTo && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <User className="h-4 w-4" />
-                    <span>Assigned to: <span className="font-medium text-gray-900 dark:text-white">{ticket.assignedTo}</span></span>
-                  </div>
-                )}
-                {ticket.assignedGroup && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Users className="h-4 w-4" />
-                    <span>Group: <span className="font-medium text-gray-900 dark:text-white">{ticket.assignedGroup}</span></span>
-                  </div>
-                )}
+            {ticket.assignedGroup && (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Users className="h-4 w-4" />
+                  <span>Group: <span className="font-medium text-gray-900 dark:text-white">{ticket.assignedGroup}</span></span>
+                </div>
               </div>
             )}
 
