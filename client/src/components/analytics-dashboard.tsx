@@ -209,7 +209,7 @@ export function AnalyticsDashboard() {
               onClick={() => setCustomDateRange(prev => ({ ...prev, enabled: !prev.enabled }))}
               className={customDateRange.enabled ? "bg-blue-50 border-blue-300" : ""}
             >
-              <CalendarDays className="h-4 w-4 mr-2" />
+              <Calendar className="h-4 w-4 mr-2" />
               Custom Range
             </Button>
             
