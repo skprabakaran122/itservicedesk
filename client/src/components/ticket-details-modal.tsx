@@ -37,8 +37,14 @@ export function TicketDetailsModal({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: users = [] } = useQuery<User[]>({
+  const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
+    queryFn: () => fetch('/api/users').then(res => res.json())
+  });
+
+  const { data: groups = [] } = useQuery({
+    queryKey: ["/api/groups"],
+    queryFn: () => fetch('/api/groups').then(res => res.json())
   });
 
   const { data: history = [] } = useQuery<TicketHistory[]>({

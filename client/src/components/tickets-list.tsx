@@ -330,11 +330,20 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
               </div>
             </div>
             
-            {ticket.assignedTo && (
-              <div className="mb-4">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Assigned to: <span className="font-medium text-gray-900 dark:text-white">{ticket.assignedTo}</span>
-                </span>
+            {(ticket.assignedTo || ticket.assignedGroup) && (
+              <div className="mb-4 space-y-1">
+                {ticket.assignedTo && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <User className="h-4 w-4" />
+                    <span>Assigned to: <span className="font-medium text-gray-900 dark:text-white">{ticket.assignedTo}</span></span>
+                  </div>
+                )}
+                {ticket.assignedGroup && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <Users className="h-4 w-4" />
+                    <span>Group: <span className="font-medium text-gray-900 dark:text-white">{ticket.assignedGroup}</span></span>
+                  </div>
+                )}
               </div>
             )}
 
