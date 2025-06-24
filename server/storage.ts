@@ -231,28 +231,22 @@ export class DatabaseStorage implements IStorage {
 
   async getUserGroups(userId: number): Promise<string[]> {
     const allGroups = await db.select().from(groups);
-    console.log(`[DEBUG] getUserGroups for userId ${userId}:`, allGroups.map(g => ({ name: g.name, members: g.members })));
     const userGroups = allGroups.filter(group => 
       group.members && 
       Array.isArray(group.members) && 
       (group.members.includes(userId) || group.members.includes(userId.toString()))
     );
-    console.log(`[DEBUG] User ${userId} belongs to groups:`, userGroups.map(g => g.name));
     return userGroups.map(group => group.name);
   }
 
   async getTicketsByGroups(groupNames: string[]): Promise<Ticket[]> {
     if (groupNames.length === 0) {
-      console.log(`[DEBUG] No groups provided, returning empty array`);
       return [];
     }
     
-    console.log(`[DEBUG] Filtering tickets by groups:`, groupNames);
-    const result = await db.select().from(tickets)
+    return await db.select().from(tickets)
       .where(or(...groupNames.map(groupName => eq(tickets.assignedGroup, groupName))))
       .orderBy(desc(tickets.createdAt));
-    console.log(`[DEBUG] Found tickets:`, result.map(t => ({ id: t.id, title: t.title, assignedGroup: t.assignedGroup })));
-    return result;
   }
 
   async getTicket(id: number): Promise<Ticket | undefined> {
