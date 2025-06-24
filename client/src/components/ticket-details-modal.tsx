@@ -182,10 +182,9 @@ export function TicketDetailsModal({
     // Use stored requester name if available
     if (ticket.requesterName) return ticket.requesterName;
     
-    // Fall back to user lookup if requesterId exists
+    // Fall back to generic name if requesterId exists
     if (ticket.requesterId) {
-      const user = users.find(u => u.id === ticket.requesterId);
-      return user ? user.name : `User ${ticket.requesterId}`;
+      return `User ${ticket.requesterId}`;
     }
     
     return 'Unknown User';
@@ -195,18 +194,16 @@ export function TicketDetailsModal({
     // Use stored requester email if available
     if (ticket.requesterEmail) return ticket.requesterEmail;
     
-    // Fall back to user lookup if requesterId exists
+    // Fall back to generic email if requesterId exists
     if (ticket.requesterId) {
-      const user = users.find(u => u.id === ticket.requesterId);
-      return user ? user.email : `user${ticket.requesterId}@company.com`;
+      return `user${ticket.requesterId}@company.com`;
     }
     
     return 'No email provided';
   };
 
   const getUserName = (userId: number) => {
-    const user = users.find(u => u.id === userId);
-    return user ? user.name : `User ${userId}`;
+    return `User ${userId}`;
   };
 
   const canUserReopenTicket = () => {
