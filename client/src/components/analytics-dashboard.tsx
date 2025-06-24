@@ -101,6 +101,8 @@ export function AnalyticsDashboard() {
       const response = await apiRequest("GET", url);
       return response.json();
     },
+    staleTime: 60000, // Consider data fresh for 1 minute
+    cacheTime: 300000, // Keep in cache for 5 minutes
   });
 
   const { data: groups = [] } = useQuery({

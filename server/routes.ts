@@ -253,7 +253,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Analytics routes
+  // Analytics routes with caching
+  let analyticsCache = new Map();
+  const CACHE_DURATION = 60000; // 1 minute cache
+  
   app.get("/api/analytics", async (req, res) => {
     try {
       const days = parseInt(req.query.days as string) || 30;
@@ -261,7 +264,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startDate = req.query.startDate as string;
       const endDate = req.query.endDate as string;
       
+      // Create cache key
+      const cacheKey = `${days}-${group}-${startDate || 'null'}-${endDate || 'null'}`;
+      
+      // Check cache
+      const cached = analyticsCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        console.log('Analytics cache hit for:', cacheKey);
+        return res.json(cached.data);
+      }
+      
+      console.log('Analytics cache miss, fetching data for:', cacheKey);
       const analytics = await storage.getAnalyticsData(days, group, startDate, endDate);
+      
+      // Cache the result
+      analyticsCache.set(cacheKey, {
+        data: analytics,
+        timestamp: Date.now()
+      });
+      
+      // Clean old cache entries (keep last 10)
+      if (analyticsCache.size > 10) {
+        const oldestKey = analyticsCache.keys().next().value;
+        analyticsCache.delete(oldestKey);
+      }
+      
       res.json(analytics);
     } catch (error) {
       console.error('Analytics error:', error);

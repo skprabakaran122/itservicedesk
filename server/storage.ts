@@ -490,60 +490,29 @@ export class DatabaseStorage implements IStorage {
       endDate = new Date();
     }
 
-    // Get basic metrics
-    const totalTickets = await db.select({ count: sql`count(*)` }).from(tickets)
+    // Get basic metrics in a single query
+    const basicMetrics = await db.select({
+      total: sql`count(*)`,
+      open: sql`count(case when ${tickets.status} not in ('resolved', 'closed') then 1 end)`,
+      resolved: sql`count(case when ${tickets.status} = 'resolved' then 1 end)`,
+      slaCompliant: sql`count(case when ${tickets.slaResolutionMet} = 'met' then 1 end)`,
+      avgResolutionHours: sql`avg(case when ${tickets.resolvedAt} is not null then extract(epoch from ${tickets.resolvedAt} - ${tickets.createdAt})/3600 end)`
+    }).from(tickets)
       .where(and(
         gte(tickets.createdAt, startDate),
         lte(tickets.createdAt, endDate)
       ));
-    
-    const openTickets = await db.select({ count: sql`count(*)` }).from(tickets)
-      .where(and(
-        gte(tickets.createdAt, startDate),
-        lte(tickets.createdAt, endDate),
-        notInArray(tickets.status, ['resolved', 'closed'])
-      ));
-    
-    const resolvedTickets = await db.select({ count: sql`count(*)` }).from(tickets)
-      .where(and(
-        gte(tickets.createdAt, startDate),
-        lte(tickets.createdAt, endDate),
-        eq(tickets.status, 'resolved')
-      ));
 
-    // Calculate average resolution time
-    const resolvedWithTimes = await db.select({
-      createdAt: tickets.createdAt,
-      resolvedAt: tickets.resolvedAt
-    }).from(tickets)
-      .where(and(
-        gte(tickets.createdAt, startDate),
-        lte(tickets.createdAt, endDate),
-        eq(tickets.status, 'resolved'),
-        isNotNull(tickets.resolvedAt)
-      ));
-
-    const avgResolutionTime = resolvedWithTimes.length > 0 
-      ? resolvedWithTimes.reduce((acc, ticket) => {
-          const diff = new Date(ticket.resolvedAt!).getTime() - new Date(ticket.createdAt).getTime();
-          return acc + (diff / (1000 * 60 * 60)); // Convert to hours
-        }, 0) / resolvedWithTimes.length
-      : 0;
-
-    // SLA compliance calculation
-    const slaCompliantTickets = await db.select({ count: sql`count(*)` }).from(tickets)
-      .where(and(
-        gte(tickets.createdAt, startDate),
-        lte(tickets.createdAt, endDate),
-        eq(tickets.slaResolutionMet, 'met')
-      ));
-
-    const slaCompliance = totalTickets[0].count > 0 
-      ? Math.round((slaCompliantTickets[0].count / totalTickets[0].count) * 100)
+    const metrics = basicMetrics[0];
+    const avgResolutionTime = metrics.avgResolutionHours || 0;
+    const slaCompliance = metrics.total > 0 
+      ? Math.round((metrics.slaCompliant / metrics.total) * 100)
       : 100;
 
-    // Active users count
-    const activeUsers = await db.selectDistinct({ userId: tickets.requesterId }).from(tickets)
+    // Active users count - optimized
+    const activeUsersResult = await db.select({ 
+      count: sql`count(distinct ${tickets.requesterId})` 
+    }).from(tickets)
       .where(and(
         gte(tickets.createdAt, startDate),
         lte(tickets.createdAt, endDate)
@@ -579,25 +548,26 @@ export class DatabaseStorage implements IStorage {
       });
     }
 
-    // Priority distribution
-    const priorities = ['low', 'medium', 'high', 'critical'];
-    const priorityDistribution = await Promise.all(
-      priorities.map(async (priority) => {
-        const count = await db.select({ count: sql`count(*)` }).from(tickets)
-          .where(and(
-            gte(tickets.createdAt, startDate),
-            lte(tickets.createdAt, endDate),
-            eq(tickets.priority, priority)
-          ));
-        return {
-          priority,
-          count: count[0].count,
-          percentage: totalTickets[0].count > 0 
-            ? Math.round((count[0].count / totalTickets[0].count) * 100)
-            : 0
-        };
-      })
-    );
+    // Priority distribution - optimized single query
+    const priorityDistribution = await db.select({
+      priority: tickets.priority,
+      count: sql`count(*)`
+    }).from(tickets)
+      .where(and(
+        gte(tickets.createdAt, startDate),
+        lte(tickets.createdAt, endDate)
+      ))
+      .groupBy(tickets.priority);
+
+    const priorityData = ['low', 'medium', 'high', 'critical'].map(priority => {
+      const found = priorityDistribution.find(p => p.priority === priority);
+      const count = found ? found.count : 0;
+      return {
+        priority,
+        count,
+        percentage: metrics.total > 0 ? Math.round((count / metrics.total) * 100) : 0
+      };
+    });
 
     // Group performance
     const allGroups = await this.getActiveGroups();
@@ -638,25 +608,26 @@ export class DatabaseStorage implements IStorage {
       })
     );
 
-    // Category breakdown
-    const categories = ['software', 'hardware', 'network', 'access', 'other'];
-    const categoryBreakdown = await Promise.all(
-      categories.map(async (category) => {
-        const count = await db.select({ count: sql`count(*)` }).from(tickets)
-          .where(and(
-            gte(tickets.createdAt, startDate),
-            lte(tickets.createdAt, endDate),
-            eq(tickets.category, category)
-          ));
-        return {
-          category,
-          count: count[0].count,
-          percentage: totalTickets[0].count > 0 
-            ? Math.round((count[0].count / totalTickets[0].count) * 100)
-            : 0
-        };
-      })
-    );
+    // Category breakdown - optimized single query
+    const categoryBreakdown = await db.select({
+      category: tickets.category,
+      count: sql`count(*)`
+    }).from(tickets)
+      .where(and(
+        gte(tickets.createdAt, startDate),
+        lte(tickets.createdAt, endDate)
+      ))
+      .groupBy(tickets.category);
+
+    const categoryData = ['software', 'hardware', 'network', 'access', 'other'].map(category => {
+      const found = categoryBreakdown.find(c => c.category === category);
+      const count = found ? found.count : 0;
+      return {
+        category,
+        count,
+        percentage: metrics.total > 0 ? Math.round((count / metrics.total) * 100) : 0
+      };
+    });
 
     return {
       overview: {
