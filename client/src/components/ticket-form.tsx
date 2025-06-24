@@ -264,7 +264,7 @@ export function TicketForm({ onClose, currentUser }: TicketFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {groups.map((group: Group) => (
+                        {groups.map((group: any) => (
                           <SelectItem key={group.id} value={group.name}>
                             {group.name}
                           </SelectItem>
