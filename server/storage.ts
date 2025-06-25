@@ -1432,13 +1432,14 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Change not found');
     }
 
-    const groupId = change.assignedGroup ? parseInt(change.assignedGroup) : undefined;
-    const workflow = await this.getApprovalWorkflow(change.productId, groupId, change.riskLevel);
+    const workflows = await this.getApprovalWorkflowForChange(change);
+    console.log(`[Approval] Found ${workflows.length} workflow routes for change ${changeId}`);
     
     // Check approval requirements for current level
     const currentLevel = currentApproval.approvalLevel;
-    const currentLevelRouting = workflow.find(r => r.approvalLevel === currentLevel);
+    const currentLevelRouting = workflows.find(r => r.approvalLevel === currentLevel);
     const requireAllApprovals = currentLevelRouting?.requireAllApprovals === 'true';
+    console.log(`[Approval] Level ${currentLevel}: requireAllApprovals=${requireAllApprovals}`);
     
     const currentLevelApprovals = approvals.filter(a => a.approvalLevel === currentLevel);
     const approvedAtCurrentLevel = currentLevelApprovals.filter(a => a.status === 'approved').length;
@@ -1460,11 +1461,13 @@ export class DatabaseStorage implements IStorage {
     
     if (nextLevelApprovals.length === 0) {
       // No more levels, change is fully approved
+      console.log(`[Approval] Change ${changeId} fully approved - updating status`);
       await this.updateChange(changeId, { status: 'approved' });
       return { approved: true, completed: true };
     }
 
     // Move to next approval level
+    console.log(`[Approval] Change ${changeId} moving to next level ${nextLevel}`);
     return { approved: true, nextLevel, completed: false };
   }
 
