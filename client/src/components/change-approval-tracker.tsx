@@ -155,7 +155,7 @@ export function ChangeApprovalTracker({ changeId, currentUser }: ChangeApprovalT
     const routing = approvalRouting.find((r: any) => 
       r.approvalLevel === level && 
       r.riskLevel === change.riskLevel &&
-      r.isActive === true
+      r.isActive === 'true' // Compare as string, not boolean
     );
     
     return routing?.requireAllApprovals === 'true' ? 'all' : 'any';
