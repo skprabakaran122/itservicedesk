@@ -262,7 +262,15 @@ export function ChangeApprovalTracker({ changeId, currentUser }: ChangeApprovalT
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {approvals.map((approval: ChangeApproval, index: number) => (
+            {approvals
+              .filter((approval: ChangeApproval) => {
+                // If the level is complete with "any one approver" logic, only show approved approvals
+                if (isLevelComplete(approval.approvalLevel) && approval.status === 'pending') {
+                  return false;
+                }
+                return true;
+              })
+              .map((approval: ChangeApproval, index: number) => (
               <div key={approval.id} className="flex items-center gap-4 p-4 border rounded-lg">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="font-mono">
@@ -303,7 +311,12 @@ export function ChangeApprovalTracker({ changeId, currentUser }: ChangeApprovalT
                   </Button>
                 )}
 
-                {index < approvals.length - 1 && (
+                {index < approvals.filter((approval: ChangeApproval) => {
+                  if (isLevelComplete(approval.approvalLevel) && approval.status === 'pending') {
+                    return false;
+                  }
+                  return true;
+                }).length - 1 && (
                   <ArrowRight className="h-4 w-4 text-gray-400" />
                 )}
               </div>
