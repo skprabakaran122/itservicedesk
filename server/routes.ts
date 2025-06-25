@@ -1251,30 +1251,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: 'approved',
           approvedBy: 'Auto-approved (Standard Change)'
         });
-      } else if (changeData.product && changeData.riskLevel) {
-        // Initialize multilevel approvals for Normal and Emergency changes
-        const products = await storage.getProducts();
-        const product = products.find(p => p.name === changeData.product);
-        
-        if (product) {
-          await storage.initializeChangeApprovals(change.id, product.id, changeData.riskLevel, changeData.changeType);
+      } else if (changeData.status === 'submitted' || changeData.status === 'pending') {
+        // Initialize approval workflow for Normal and Emergency changes based on new routing system
+        try {
+          await storage.createChangeApprovals(change.id);
           
           // Send email notifications to first level approvers
-          try {
-            const approvals = await storage.getChangeApprovals(change.id);
-            const firstLevelApprovals = approvals.filter(a => a.approvalLevel === 1);
-            const users = await storage.getUsers();
-            
-            for (const approval of firstLevelApprovals) {
-              const approver = users.find(u => u.id === approval.approverId);
-              if (approver?.email) {
-                await emailService.sendChangeApprovalEmail(change, approver.email, approver.name);
-              }
+          const approvals = await storage.getChangeApprovals(change.id);
+          const firstLevelApprovals = approvals.filter(a => a.approvalLevel === 1);
+          const users = await storage.getUsers();
+          
+          for (const approval of firstLevelApprovals) {
+            const approver = users.find(u => u.id === approval.approverId);
+            if (approver?.email) {
+              const { emailService } = await import('./email-sendgrid');
+              await emailService.sendChangeApprovalEmail(change, approver.email, approver.name);
             }
-          } catch (error) {
-            console.error('Failed to send change approval emails:', error);
-            // Don't fail the change creation if email fails
           }
+          
+          console.log(`Created ${approvals.length} approval entries for change ${change.id}`);
+        } catch (error) {
+          console.error('Failed to create change approvals:', error);
+          // Don't fail the change creation if approval workflow fails
         }
       }
       
