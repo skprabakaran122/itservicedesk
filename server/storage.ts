@@ -1426,6 +1426,9 @@ export class DatabaseStorage implements IStorage {
       return { approved: false, completed: true };
     }
 
+    // Get updated approvals after the status change
+    const updatedApprovals = await this.getChangeApprovals(changeId);
+    
     // Get the change and routing info to determine approval requirements
     const change = await this.getChange(changeId);
     if (!change) {
@@ -1441,7 +1444,7 @@ export class DatabaseStorage implements IStorage {
     const requireAllApprovals = currentLevelRouting?.requireAllApprovals === 'true';
     console.log(`[Approval] Level ${currentLevel}: requireAllApprovals=${requireAllApprovals}`);
     
-    const currentLevelApprovals = approvals.filter(a => a.approvalLevel === currentLevel);
+    const currentLevelApprovals = updatedApprovals.filter(a => a.approvalLevel === currentLevel);
     const approvedAtCurrentLevel = currentLevelApprovals.filter(a => a.status === 'approved').length;
     const totalAtCurrentLevel = currentLevelApprovals.length;
 
@@ -1459,7 +1462,7 @@ export class DatabaseStorage implements IStorage {
 
     // Current level is satisfied, check for next level
     const nextLevel = currentLevel + 1;
-    const nextLevelApprovals = approvals.filter(a => a.approvalLevel === nextLevel);
+    const nextLevelApprovals = updatedApprovals.filter(a => a.approvalLevel === nextLevel);
     
     if (nextLevelApprovals.length === 0) {
       // No more levels, change is fully approved
