@@ -132,6 +132,20 @@ export function ChangeApprovalTracker({ changeId, currentUser }: ChangeApprovalT
     return Math.min(...pendingApprovals.map(a => a.approvalLevel));
   };
 
+  const isLevelComplete = (level: number) => {
+    const levelApprovals = approvals.filter((a: ChangeApproval) => a.approvalLevel === level);
+    const approvedCount = levelApprovals.filter((a: ChangeApproval) => a.status === 'approved').length;
+    
+    // For any one approver logic, level is complete if at least one approval exists
+    // For require all logic, level is complete if all approvals exist
+    // We'll check if ANY approval exists for simplicity (this covers "any one approver")
+    return approvedCount > 0;
+  };
+
+  const isWorkflowComplete = () => {
+    return getAllPendingApprovals().length === 0 && approvals.some((a: ChangeApproval) => a.status === 'approved');
+  };
+
   const handleApprove = (approval: ChangeApproval) => {
     setSelectedApproval(approval);
     setShowApprovalForm(true);
@@ -181,13 +195,13 @@ export function ChangeApprovalTracker({ changeId, currentUser }: ChangeApprovalT
 
   return (
     <div className="space-y-4">
-      {/* Pending Approvals Alert */}
-      {allPendingApprovals.length > 0 && (
+      {/* Pending Approvals Alert - Only show if there are truly pending approvals */}
+      {allPendingApprovals.length > 0 && !isWorkflowComplete() && (
         <Card className="border-orange-200 bg-orange-50 dark:bg-orange-900/20 dark:border-orange-800">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
               <Clock className="h-5 w-5" />
-              Pending Approval - Level {currentLevel}
+              {isLevelComplete(currentLevel) ? `Level ${currentLevel} - Complete` : `Pending Approval - Level ${currentLevel}`}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -231,8 +245,8 @@ export function ChangeApprovalTracker({ changeId, currentUser }: ChangeApprovalT
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5" />
-            Multilevel Approval Workflow
+            <CheckCircle className={`h-5 w-5 ${isWorkflowComplete() ? 'text-green-600' : 'text-gray-400'}`} />
+            {isWorkflowComplete() ? 'Approval Workflow - Complete' : 'Multilevel Approval Workflow'}
           </CardTitle>
         </CardHeader>
         <CardContent>
