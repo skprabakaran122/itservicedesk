@@ -106,6 +106,26 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 25, 2025 - Group-Based Change Management Access Control ✓ COMPLETED
+- **Change Management Group Filtering**: Implemented group-based access control for change requests matching ticket system
+  - Agents and managers now see only changes assigned to groups they are members of
+  - Added assignedGroup field to changes schema and database table
+  - Updated backend getChangesForUser method to filter by user group memberships
+  - Modified change form to include group assignment dropdown populated with active groups
+  - Enhanced change display to show assigned group badges for better visibility
+- **Consistent Access Control Pattern**: Unified access control across tickets and changes
+  - Admins see all changes regardless of group assignment
+  - Users see only their own change requests
+  - Agents/managers see changes for their assigned groups only
+  - Applied database migration to add assigned_group column to changes table
+
+### June 25, 2025 - Activity Log User Name Display Fixed ✓ COMPLETED
+- **User Name Resolution in Activity History**: Fixed activity log to show actual user names instead of "User 2"
+  - Updated getUserName function to lookup user names from users array
+  - Fixed assignment action display to show proper "assigned to [User Name]" format
+  - Added assignment transition details showing "Previous User → New User" format
+  - Activity log now displays "Jane Smith assigned to Mike Wilson" with clear transition information
+
 ### June 25, 2025 - Inline Assignment Controls in Main Ticket List ✓ COMPLETED
 - **Main Screen Assignment Interface**: Added group and user assignment controls directly in the tickets list view
   - Inline dropdown selectors for both group assignment and user assignment in main ticket cards

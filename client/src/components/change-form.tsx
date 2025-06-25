@@ -364,6 +364,32 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
 
             <FormField
               control={form.control}
+              name="assignedGroup"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Assigned Group</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a group" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No Group</SelectItem>
+                      {groups?.filter(g => g.active).map((group) => (
+                        <SelectItem key={group.id} value={group.name}>
+                          {group.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="rollbackPlan"
               render={({ field }) => (
                 <FormItem>
