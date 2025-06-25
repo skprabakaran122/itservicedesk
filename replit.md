@@ -106,16 +106,17 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
-### June 25, 2025 - User Assignment for Agents and Managers Added ✓ COMPLETED
-- **Ticket Assignment Functionality**: Added user assignment capability for agents and managers within their support groups
-  - New "Assigned To" dropdown in ticket details modal for agent and manager roles
-  - Users filtered by group membership - only agents/managers in the same group as the ticket are shown
-  - Assignment updates trigger real-time API calls with proper error handling and success notifications
-  - Support for unassigning tickets by selecting "Unassigned" option
-- **Group-Based User Filtering**: Smart filtering ensures agents can only assign tickets to team members in their group
-  - Prevents cross-group assignments that would violate access control policies
-  - Maintains consistency between group-based ticket visibility and assignment capabilities
-  - Includes role validation to show only agents and managers in assignment dropdown
+### June 25, 2025 - Inline Assignment Controls in Main Ticket List ✓ COMPLETED
+- **Main Screen Assignment Interface**: Added group and user assignment controls directly in the tickets list view
+  - Inline dropdown selectors for both group assignment and user assignment in main ticket cards
+  - Real-time assignment updates without needing to open ticket details modal
+  - Visual display of current assignments with user names and group names
+  - Compact design with smaller dropdowns that fit naturally in ticket card layout
+- **Role-Based Assignment Controls**: Assignment dropdowns visible to agents, managers, and admins
+  - Read-only assignment display for regular users showing current assignments
+  - All support groups available in group assignment dropdown for flexibility
+  - User assignment shows all agents, managers, and admins for comprehensive assignment options
+  - Fixed SelectItem error by using proper non-empty string values for all options
 
 ### June 25, 2025 - Smart Ticket Sorting and Closed Ticket Filtering ✓ COMPLETED
 - **Priority-Based Sorting for Agents/Managers**: Implemented intelligent ticket ordering based on status and priority

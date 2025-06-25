@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Ticket } from "@shared/schema";
-import { Clock, Users, AlertCircle, Package, Eye, CheckCircle, XCircle, Send } from "lucide-react";
+import { Clock, Users, AlertCircle, Package, Eye, CheckCircle, XCircle, Send, User as UserIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDateIST } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
@@ -334,14 +334,91 @@ export function TicketsList({ tickets, getStatusColor, getPriorityColor, current
               </div>
             </div>
             
-            {ticket.assignedGroup && (
-              <div className="mb-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Users className="h-4 w-4" />
-                  <span>Group: <span className="font-medium text-gray-900 dark:text-white">{ticket.assignedGroup}</span></span>
-                </div>
+            {/* Assignment Information */}
+            <div className="mb-4 space-y-2">
+              {/* Group Assignment */}
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Users className="h-4 w-4" />
+                <span>Group:</span>
+                {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') ? (
+                  <Select 
+                    value={ticket.assignedGroup || "none"} 
+                    onValueChange={async (value) => {
+                      try {
+                        const updateData: any = { assignedGroup: value === "none" ? null : value };
+                        if (value && value !== ticket.assignedGroup) {
+                          updateData.status = 'open';
+                        }
+                        
+                        const response = await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
+                        queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+                      } catch (error) {
+                        console.error('Failed to update group assignment:', error);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-40 h-6 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Group</SelectItem>
+                      {users.length > 0 && (
+                        <>
+                          <SelectItem value="ASM - Olympus">ASM - Olympus</SelectItem>
+                          <SelectItem value="Infra">Infra</SelectItem>
+                          <SelectItem value="Admin">Admin</SelectItem>
+                          <SelectItem value="ASM - RPA">ASM - RPA</SelectItem>
+                          <SelectItem value="ASM - Anodyne Pay">ASM - Anodyne Pay</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {ticket.assignedGroup || 'Unassigned'}
+                  </span>
+                )}
               </div>
-            )}
+
+              {/* User Assignment */}
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <UserIcon className="h-4 w-4" />
+                <span>Assigned to:</span>
+                {(currentUser?.role === 'agent' || currentUser?.role === 'manager' || currentUser?.role === 'admin') ? (
+                  <Select 
+                    value={ticket.assignedTo?.toString() || "unassigned"} 
+                    onValueChange={async (value) => {
+                      try {
+                        const updateData: any = { assignedTo: value === "unassigned" ? null : parseInt(value) };
+                        
+                        const response = await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
+                        queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+                      } catch (error) {
+                        console.error('Failed to update user assignment:', error);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-40 h-6 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {users
+                        .filter(user => ['agent', 'manager', 'admin'].includes(user.role))
+                        .map(user => (
+                          <SelectItem key={user.id} value={user.id.toString()}>
+                            {user.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {ticket.assignedTo ? users.find(u => u.id === ticket.assignedTo)?.name || `User ${ticket.assignedTo}` : 'Unassigned'}
+                  </span>
+                )}
+              </div>
+            </div>
 
             <div className="flex justify-between items-center">
               <div className="text-xs text-gray-500 dark:text-gray-500">
