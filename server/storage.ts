@@ -255,22 +255,25 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
     
-    // Priority order: critical > high > medium > low
-    const priorityOrder = sql`CASE 
-      WHEN ${tickets.priority} = 'critical' THEN 1
-      WHEN ${tickets.priority} = 'high' THEN 2
-      WHEN ${tickets.priority} = 'medium' THEN 3
-      WHEN ${tickets.priority} = 'low' THEN 4
-      ELSE 5
-    END`;
-
-    // Status order: open > in_progress > pending > resolved
-    const statusOrder = sql`CASE
-      WHEN ${tickets.status} = 'open' THEN 1
-      WHEN ${tickets.status} = 'in_progress' THEN 2
-      WHEN ${tickets.status} = 'pending' THEN 3
-      WHEN ${tickets.status} = 'resolved' THEN 4
-      ELSE 5
+    // Combined sorting: Status first, then priority within each status
+    const combinedOrder = sql`CASE
+      WHEN ${tickets.status} = 'open' AND ${tickets.priority} = 'critical' THEN 1
+      WHEN ${tickets.status} = 'open' AND ${tickets.priority} = 'high' THEN 2
+      WHEN ${tickets.status} = 'open' AND ${tickets.priority} = 'medium' THEN 3
+      WHEN ${tickets.status} = 'open' AND ${tickets.priority} = 'low' THEN 4
+      WHEN ${tickets.status} = 'in_progress' AND ${tickets.priority} = 'critical' THEN 5
+      WHEN ${tickets.status} = 'in_progress' AND ${tickets.priority} = 'high' THEN 6
+      WHEN ${tickets.status} = 'in_progress' AND ${tickets.priority} = 'medium' THEN 7
+      WHEN ${tickets.status} = 'in_progress' AND ${tickets.priority} = 'low' THEN 8
+      WHEN ${tickets.status} = 'pending' AND ${tickets.priority} = 'critical' THEN 9
+      WHEN ${tickets.status} = 'pending' AND ${tickets.priority} = 'high' THEN 10
+      WHEN ${tickets.status} = 'pending' AND ${tickets.priority} = 'medium' THEN 11
+      WHEN ${tickets.status} = 'pending' AND ${tickets.priority} = 'low' THEN 12
+      WHEN ${tickets.status} = 'resolved' AND ${tickets.priority} = 'critical' THEN 13
+      WHEN ${tickets.status} = 'resolved' AND ${tickets.priority} = 'high' THEN 14
+      WHEN ${tickets.status} = 'resolved' AND ${tickets.priority} = 'medium' THEN 15
+      WHEN ${tickets.status} = 'resolved' AND ${tickets.priority} = 'low' THEN 16
+      ELSE 17
     END`;
     
     return await db.select().from(tickets)
@@ -278,7 +281,7 @@ export class DatabaseStorage implements IStorage {
         or(...groupNames.map(groupName => eq(tickets.assignedGroup, groupName))),
         not(eq(tickets.status, 'closed'))
       ))
-      .orderBy(statusOrder, priorityOrder, desc(tickets.createdAt));
+      .orderBy(combinedOrder, desc(tickets.createdAt));
   }
 
   async getTicket(id: number): Promise<Ticket | undefined> {
