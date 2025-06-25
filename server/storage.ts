@@ -22,7 +22,7 @@ export interface IStorage {
   
   // Change methods
   getChanges(): Promise<Change[]>;
-  getChangesForUser(userId: number): Promise<Change[]>;
+  getChangesForUser(userId: number, userRole: string): Promise<Change[]>;
   getChange(id: number): Promise<Change | undefined>;
   createChange(change: InsertChange): Promise<Change>;
   updateChange(id: number, updates: Partial<InsertChange>): Promise<Change | undefined>;
@@ -405,6 +405,13 @@ export class DatabaseStorage implements IStorage {
       }
 
       const groupNames = userGroups.map(g => g.name);
+      console.log('[Storage] User groups for changes:', groupNames);
+      
+      // If no group names, return empty array
+      if (groupNames.length === 0) {
+        return [];
+      }
+      
       const result = await db
         .select()
         .from(changes)
@@ -414,6 +421,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
         .orderBy(desc(changes.createdAt));
+      console.log('[Storage] Changes found for groups:', result.length);
       return result;
     }
 

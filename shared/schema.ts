@@ -64,6 +64,7 @@ export const changes = pgTable("changes", {
   approvalToken: text("approval_token"), // Secure token for email-based approval
   overdueNotificationSent: timestamp("overdue_notification_sent"), // Track when overdue notification was sent
   isOverdue: varchar("is_overdue", { length: 10 }).default('false'), // 'true' if change is overdue
+  assignedGroup: varchar("assigned_group", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

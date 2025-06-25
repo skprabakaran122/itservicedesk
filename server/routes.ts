@@ -1201,11 +1201,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
+      console.log('[Changes API] User:', currentUser.id, 'Role:', currentUser.role);
+      
       // Use group-based filtering for agents and managers
       const changes = await storage.getChangesForUser(currentUser.id, currentUser.role);
+      console.log('[Changes API] Retrieved changes:', changes.length);
       res.json(changes);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch changes" });
+      console.error('[Changes API] Error:', error);
+      res.status(500).json({ message: "Failed to fetch changes", error: error.message });
     }
   });
 
