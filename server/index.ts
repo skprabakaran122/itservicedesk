@@ -29,8 +29,14 @@ let setupVite: any = null;
 const isDevelopment = process.env.NODE_ENV === 'development';
 import { storage } from "./storage";
 
-// Load environment variables from .env file
+// Load environment variables from .env file (Docker-compatible)
 dotenv.config();
+
+// Docker-specific environment setup
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isDocker = process.env.DOCKER_ENV === 'true' || process.env.DATABASE_URL?.includes('@database:');
+const port = parseInt(process.env.PORT || '5000');
+const host = process.env.HOST || (isDocker ? '0.0.0.0' : 'localhost');
 
 // SSL Certificate configuration
 function getSSLCredentials() {

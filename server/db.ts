@@ -6,18 +6,19 @@ import * as schema from "@shared/schema";
 let pool: Pool;
 
 if (process.env.DATABASE_URL) {
-  // Replit development environment
+  // Parse DATABASE_URL for Docker, Replit, or external environments
   pool = new Pool({ 
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+    ssl: process.env.DATABASE_URL.includes('localhost') || process.env.NODE_ENV === 'development' ? false : { rejectUnauthorized: false }
   });
 } else {
-  // Ubuntu production environment
+  // Fallback configuration for direct deployment
   pool = new Pool({
-    host: 'localhost',
-    database: 'servicedesk',
-    user: 'postgres',
-    port: 5432
+    host: process.env.DB_HOST || 'localhost',
+    database: process.env.DB_NAME || 'servicedesk',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '',
+    port: parseInt(process.env.DB_PORT || '5432')
   });
 }
 

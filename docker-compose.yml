@@ -24,14 +24,24 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=5000
       - HOST=0.0.0.0
+      - DOCKER_ENV=true
       - DATABASE_URL=postgresql://postgres:password@database:5432/itservicedesk?sslmode=disable
+      - UPLOAD_DIR=/app/uploads
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       database:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   postgres_data:

@@ -32,10 +32,22 @@ function generateApprovalToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
-// Configure multer for file uploads
-const uploadDir = path.join(process.cwd(), 'uploads');
+// Configure multer for file uploads (Docker-compatible)
+const uploadDir = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Health check endpoint for Docker
+function addHealthCheck(app: Express) {
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || '1.0.0',
+      environment: process.env.NODE_ENV || 'development'
+    });
+  });
 }
 
 const upload = multer({
@@ -69,6 +81,8 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add health check endpoint for Docker
+  addHealthCheck(app);
   // Session middleware
   app.use(session({
     store: new (connectPgSimple(session))({
