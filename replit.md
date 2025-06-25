@@ -106,7 +106,7 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
-### June 25, 2025 - Enhanced Change Approval Display and Role-Based Approver Restrictions ✓ COMPLETED
+### June 25, 2025 - Enhanced Change Approval Display and Approval Workflow Security ✓ COMPLETED
 - **Prominent Pending Approval Display**: Added clear visibility of who approval is pending with in change details
   - Orange alert card at top of approval tracker showing current pending approvers
   - Level-based grouping with approver names and roles clearly displayed
@@ -117,6 +117,11 @@ The application follows a full-stack TypeScript architecture with:
   - Agents are automatically filtered out from approver selection interface
   - Backend validation ensures no agents can be assigned as approvers
   - Clear role separation: Users request, agents implement, managers/admins approve
+- **Approval Workflow Security**: Prevented bypassing approval process through direct status updates
+  - Backend validation blocks direct status changes to "approved" unless all approvals are complete
+  - Managers must use approval workflow buttons, cannot skip approval process via status dropdown
+  - Frontend restricts available status options to prevent approval workflow bypass attempts
+  - Only Standard changes or fully approved changes can be directly marked as approved
 - **Enhanced Change Details Modal**: Improved approval workflow visibility and user experience
   - Approval tracker only shows for relevant change statuses (submitted, pending, approved, rejected)
   - Clear indication of current approval level and remaining approvers

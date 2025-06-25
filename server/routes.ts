@@ -1287,6 +1287,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { notes, userId, ...updates } = req.body;
+      const currentUser = (req as any).session?.user;
+      
+      // Critical: Prevent bypassing approval workflow by directly setting status to "approved"
+      if (updates.status === 'approved') {
+        const currentChange = await storage.getChange(id);
+        if (!currentChange) {
+          return res.status(404).json({ message: "Change not found" });
+        }
+        
+        // Only allow direct approval for Standard changes or when all approvals are complete
+        if (currentChange.changeType !== 'standard') {
+          const approvalStatus = await storage.checkApprovalStatus(id);
+          if (!approvalStatus.allLevelsComplete || !approvalStatus.canProceed) {
+            return res.status(403).json({ 
+              message: "Cannot approve change: All required approvals must be completed first. Use the approval workflow instead." 
+            });
+          }
+        }
+      }
       
       // Validate implementation timing
       if (updates.status === 'in-progress') {

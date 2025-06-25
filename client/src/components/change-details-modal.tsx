@@ -214,16 +214,22 @@ export function ChangeDetailsModal({
     const userRole = currentUser?.role;
     const currentStatus = change.status;
     
+    // Prevent manual approval - must use approval workflow
     if (userRole === 'admin') {
+      // Admins can manage all statuses except direct approval (use approval workflow instead)
+      if (currentStatus === 'submitted' || currentStatus === 'pending') {
+        return ['submitted', 'pending', 'rejected', 'implemented', 'completed', 'rolled-back'];
+      }
       return ['submitted', 'pending', 'approved', 'rejected', 'implemented', 'completed', 'rolled-back'];
     }
     
+    // Managers should use approval workflow, not direct status changes
     if ((userRole === 'manager') && (currentStatus === 'submitted' || currentStatus === 'pending')) {
-      return ['approved', 'rejected'];
+      return ['rejected']; // Can reject, but approval must go through workflow
     }
     
-    if (userRole === 'technician' && currentStatus === 'approved') {
-      return ['implemented', 'completed'];
+    if (userRole === 'agent' && currentStatus === 'approved') {
+      return ['in-progress', 'testing', 'completed', 'failed'];
     }
     
     return [currentStatus];
