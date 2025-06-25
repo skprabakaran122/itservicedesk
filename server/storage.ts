@@ -210,8 +210,32 @@ export class DatabaseStorage implements IStorage {
     if (!user) return [];
     
     if (user.role === 'admin') {
-      // Admins see all tickets
-      return await db.select().from(tickets).orderBy(desc(tickets.createdAt));
+      // Admins see all tickets with proper priority sorting
+      const combinedOrder = sql`CASE
+        WHEN ${tickets.status} = 'open' AND ${tickets.priority} = 'critical' THEN 1
+        WHEN ${tickets.status} = 'open' AND ${tickets.priority} = 'high' THEN 2
+        WHEN ${tickets.status} = 'open' AND ${tickets.priority} = 'medium' THEN 3
+        WHEN ${tickets.status} = 'open' AND ${tickets.priority} = 'low' THEN 4
+        WHEN ${tickets.status} = 'in_progress' AND ${tickets.priority} = 'critical' THEN 5
+        WHEN ${tickets.status} = 'in_progress' AND ${tickets.priority} = 'high' THEN 6
+        WHEN ${tickets.status} = 'in_progress' AND ${tickets.priority} = 'medium' THEN 7
+        WHEN ${tickets.status} = 'in_progress' AND ${tickets.priority} = 'low' THEN 8
+        WHEN ${tickets.status} = 'pending' AND ${tickets.priority} = 'critical' THEN 9
+        WHEN ${tickets.status} = 'pending' AND ${tickets.priority} = 'high' THEN 10
+        WHEN ${tickets.status} = 'pending' AND ${tickets.priority} = 'medium' THEN 11
+        WHEN ${tickets.status} = 'pending' AND ${tickets.priority} = 'low' THEN 12
+        WHEN ${tickets.status} = 'resolved' AND ${tickets.priority} = 'critical' THEN 13
+        WHEN ${tickets.status} = 'resolved' AND ${tickets.priority} = 'high' THEN 14
+        WHEN ${tickets.status} = 'resolved' AND ${tickets.priority} = 'medium' THEN 15
+        WHEN ${tickets.status} = 'resolved' AND ${tickets.priority} = 'low' THEN 16
+        WHEN ${tickets.status} = 'closed' AND ${tickets.priority} = 'critical' THEN 17
+        WHEN ${tickets.status} = 'closed' AND ${tickets.priority} = 'high' THEN 18
+        WHEN ${tickets.status} = 'closed' AND ${tickets.priority} = 'medium' THEN 19
+        WHEN ${tickets.status} = 'closed' AND ${tickets.priority} = 'low' THEN 20
+        ELSE 21
+      END`;
+      
+      return await db.select().from(tickets).orderBy(combinedOrder, desc(tickets.createdAt));
     }
     
     if (user.role === 'agent' || user.role === 'manager') {
