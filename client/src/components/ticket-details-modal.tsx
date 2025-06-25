@@ -439,9 +439,9 @@ export function TicketDetailsModal({
                     {(currentUser?.role === 'agent' || currentUser?.role === 'manager') && (
                       <div>
                         <label className="block text-sm font-medium mb-2">Assigned To</label>
-                        <Select value={ticket.assignedTo?.toString() || ""} onValueChange={async (value) => {
+                        <Select value={ticket.assignedTo?.toString() || "unassigned"} onValueChange={async (value) => {
                           try {
-                            const updateData: any = { assignedTo: value ? parseInt(value) : null };
+                            const updateData: any = { assignedTo: value === "unassigned" ? null : parseInt(value) };
                             
                             await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
                             toast({ title: "Success", description: "User assignment updated" });
@@ -454,7 +454,7 @@ export function TicketDetailsModal({
                             <SelectValue placeholder="Select agent" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Unassigned</SelectItem>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
                             {users
                               .filter(user => {
                                 // Show agents and managers who are in the same group as the ticket
