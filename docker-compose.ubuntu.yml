@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: itservice_app_ubuntu
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"  # Bind to localhost only (nginx proxy)
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - HOST=0.0.0.0
+      - DOCKER_ENV=true
+    env_file:
+      - .env.prod
+    volumes:
+      # Persistent data volumes
+      - ./uploads:/app/uploads:rw
+      - ./logs:/app/logs:rw
+      # Optional: Mount custom configs
+      - ./custom-nginx.conf:/app/nginx.conf:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - app-network
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# No database service - using external AWS RDS
+# No volumes for database - RDS handles persistence
