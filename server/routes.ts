@@ -1771,9 +1771,12 @@ ${projectData.additionalNotes || 'None'}
         return res.status(401).json({ message: "Authentication required" });
       }
 
+      console.log(`[Approval API] User ${currentUser.id} (${currentUser.name}) attempting to approve change ${changeId}`);
+
       // Process the approval through the workflow
       const result = await storage.processApproval(changeId, currentUser.id, 'approved', comments);
       
+      console.log(`[Approval API] Result:`, result);
       res.json(result);
     } catch (error: any) {
       console.error('Error processing approval:', error);
@@ -1801,37 +1804,7 @@ ${projectData.additionalNotes || 'None'}
     }
   });
 
-  app.post("/api/changes/:id/approve", async (req, res) => {
-    try {
-      const changeId = parseInt(req.params.id);
-      const { approverId, action, comments } = req.body;
-      
-      const result = await storage.processApproval(changeId, approverId, action, comments);
-      
-      // Send email notifications for next level approvals
-      if (result.approved && !result.completed && result.nextLevel) {
-        try {
-          const change = await storage.getChange(changeId);
-          const approvals = await storage.getChangeApprovals(changeId);
-          const nextLevelApprovals = approvals.filter(a => a.approvalLevel === result.nextLevel && a.status === 'pending');
-          const users = await storage.getUsers();
-          
-          for (const approval of nextLevelApprovals) {
-            const approver = users.find(u => u.id === approval.approverId);
-            if (approver?.email && change) {
-              await emailService.sendChangeApprovalEmail(change, approver.email, approver.name);
-            }
-          }
-        } catch (error) {
-          console.error('Failed to send next level approval emails:', error);
-        }
-      }
-      
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ message: error?.message || "Failed to process approval" });
-    }
-  });
+
 
   // IT Support chatbot endpoint
   app.post("/api/chat", async (req, res) => {

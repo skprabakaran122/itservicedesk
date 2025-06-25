@@ -106,6 +106,18 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 25, 2025 - Change Approval "Any One Approver" Bug Fixed ✓ COMPLETED
+- **Critical Bug Resolution**: Fixed "any one approver" workflow completion logic that was preventing automatic approval
+  - Root cause: processApproval method was using stale approval data instead of fetching fresh data after status updates
+  - Solution: Updated logic to fetch fresh approval data (updatedApprovals) before checking completion requirements
+  - Testing confirmed: Mike Wilson + John Doe both approved change #7, system correctly identified 2 approvals ≥ 1 required
+  - Approval routing properly configured with require_all_approvals = false for "any one approver is enough"
+  - Enhanced debug logging to track approval completion workflow and identify future issues
+- **API Endpoint Cleanup**: Removed duplicate approval endpoints causing 400 errors and API conflicts
+  - Consolidated to single /api/changes/:id/approve endpoint with proper session-based authentication
+  - Added comprehensive error logging for troubleshooting approval workflow issues
+  - Fixed approval workflow to properly complete when "any one approver" requirement is met
+
 ### June 25, 2025 - Enhanced Change Approval Display and Approval Workflow Security ✓ COMPLETED
 - **Prominent Pending Approval Display**: Added clear visibility of who approval is pending with in change details
   - Orange alert card at top of approval tracker showing current pending approvers
