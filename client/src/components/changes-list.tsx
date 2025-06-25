@@ -289,10 +289,10 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                   <div className="flex gap-2">
                     <Button 
                       size="sm" 
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => handleStatusUpdate(change.id, 'approved')}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => setSelectedChange(change)}
                     >
-                      Approve
+                      Review Approvals
                     </Button>
                     <Button 
                       size="sm" 
