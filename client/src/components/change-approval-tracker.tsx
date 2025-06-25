@@ -47,6 +47,22 @@ export function ChangeApprovalTracker({ changeId, currentUser }: ChangeApprovalT
     },
   });
 
+  const { data: change } = useQuery({
+    queryKey: ["/api/changes", changeId],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/changes/${changeId}`);
+      return response.json();
+    },
+  });
+
+  const { data: approvalRouting = [] } = useQuery({
+    queryKey: ["/api/approval-routing"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/approval-routing");
+      return response.json();
+    },
+  });
+
   const form = useForm<z.infer<typeof approvalSchema>>({
     resolver: zodResolver(approvalSchema),
     defaultValues: {
@@ -132,24 +148,40 @@ export function ChangeApprovalTracker({ changeId, currentUser }: ChangeApprovalT
     return Math.min(...pendingApprovals.map(a => a.approvalLevel));
   };
 
+  const getApprovalRequirement = (level: number) => {
+    if (!change || !approvalRouting.length) return 'any'; // default to any one approver
+    
+    // Find the matching approval routing based on change's assigned group and risk level
+    const routing = approvalRouting.find((r: any) => 
+      r.approvalLevel === level && 
+      r.riskLevel === change.riskLevel &&
+      r.isActive === true
+    );
+    
+    return routing?.requireAllApprovals === 'true' ? 'all' : 'any';
+  };
+
   const isLevelComplete = (level: number) => {
     const levelApprovals = approvals.filter((a: ChangeApproval) => a.approvalLevel === level);
     const approvedCount = levelApprovals.filter((a: ChangeApproval) => a.status === 'approved').length;
+    const totalCount = levelApprovals.length;
     
-    // For any one approver logic, level is complete if at least one approval exists
-    // For require all logic, level is complete if all approvals exist
-    // We'll check if ANY approval exists for simplicity (this covers "any one approver")
-    return approvedCount > 0;
+    const requirement = getApprovalRequirement(level);
+    
+    if (requirement === 'all') {
+      // All approvers must approve
+      return approvedCount === totalCount;
+    } else {
+      // Any one approver is sufficient
+      return approvedCount > 0;
+    }
   };
 
   const isWorkflowComplete = () => {
-    // Check if there are any approved approvals and the change should be complete
-    // For "any one approver", workflow is complete when at least one approval exists
-    const hasApprovals = approvals.some((a: ChangeApproval) => a.status === 'approved');
+    // Check if all required levels are complete
+    const levels = [...new Set(approvals.map((a: ChangeApproval) => a.approvalLevel))];
     
-    // For this implementation, if ANY approver has approved, the workflow is complete
-    // (since we're using "any one approver" logic)
-    return hasApprovals;
+    return levels.every(level => isLevelComplete(level));
   };
 
   const handleApprove = (approval: ChangeApproval) => {
