@@ -214,14 +214,14 @@ export class DatabaseStorage implements IStorage {
       return await db.select().from(tickets).orderBy(desc(tickets.createdAt));
     }
     
-    if (user.role === 'agent') {
-      // Agents see tickets for groups they are members of
+    if (user.role === 'agent' || user.role === 'manager') {
+      // Agents and managers see tickets for groups they are members of, excluding closed tickets
       const userGroups = await this.getUserGroups(userId);
       if (userGroups.length === 0) {
         return [];
       }
       
-      return await this.getTicketsByGroups(userGroups);
+      return await this.getTicketsByGroupsExcludingClosed(userGroups);
     }
     
     // Users only see their own tickets
