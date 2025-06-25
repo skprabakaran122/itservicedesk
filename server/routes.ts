@@ -1304,6 +1304,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
+
+      // Clear approval token if change is being revised and resubmitted
+      if (updates.status === 'pending' && notes?.includes('revised and resubmitted')) {
+        updates.approvalToken = null;
+      }
       
       const change = await storage.updateChangeWithHistory(id, updates, userId || 1, notes);
       if (!change) {
@@ -1311,6 +1316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(change);
     } catch (error) {
+      console.error('Error updating change:', error);
       res.status(400).json({ message: "Invalid update data" });
     }
   });

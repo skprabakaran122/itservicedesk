@@ -106,6 +106,17 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 25, 2025 - Change Revision Workflow Implemented ✓ COMPLETED
+- **Rejected Change Revision**: Added complete revision workflow for rejected change requests
+  - Agents can revise and resubmit rejected changes with updated details and revision notes
+  - Revision form includes all change fields: title, description, priority, risk level, rollback plan
+  - Automatic status reset to 'pending' when changes are resubmitted for new approval cycle
+  - Clear visual indicators and guidance for agents when changes require revision
+- **Enhanced Change Details Modal**: Added revision interface and conditional rendering
+  - Edit form shows when agent selects "Revise & Resubmit" on rejected changes
+  - Maintains change history and audit trail throughout revision process
+  - Proper validation and user feedback for revision submissions
+
 ### June 25, 2025 - Change Management Role-Based Permissions Fixed ✓ COMPLETED
 - **Approval Permission Control**: Restricted change approval/rejection buttons to admin and manager roles only
   - Agents can no longer approve or reject change requests (only admins and managers can)

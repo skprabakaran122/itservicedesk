@@ -285,13 +285,31 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                   <Eye className="h-3 w-3" />
                   View Details
                 </Button>
-                {change.status === 'pending' && (
+                {change.status === 'pending' && (currentUser?.role === 'admin' || currentUser?.role === 'manager') && (
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => handleStatusUpdate(change.id, 'approved')}
+                    >
+                      Approve
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="destructive"
+                      onClick={() => handleStatusUpdate(change.id, 'rejected')}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                )}
+                {change.status === 'rejected' && (currentUser?.role === 'agent' || currentUser?.role === 'admin') && (
                   <Button 
                     size="sm" 
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => handleStatusUpdate(change.id, 'approved')}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                    onClick={() => setSelectedChange(change)}
                   >
-                    Approve
+                    Revise & Resubmit
                   </Button>
                 )}
                 {change.status === 'approved' && (
