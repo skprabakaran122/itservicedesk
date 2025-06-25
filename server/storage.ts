@@ -799,12 +799,27 @@ export class DatabaseStorage implements IStorage {
     // Create history entries for changes
     for (const [field, newValue] of Object.entries(updates)) {
       if (field !== 'updatedAt' && existingTicket[field as keyof Ticket] !== newValue) {
+        let action = `updated_${field}`;
+        let displayNewValue = String(newValue || '');
+        
+        // Special handling for assignedTo field to show user names
+        if (field === 'assignedTo') {
+          if (newValue) {
+            const assignedUser = await this.getUser(Number(newValue));
+            displayNewValue = assignedUser ? assignedUser.name : `User ${newValue}`;
+            action = `assigned to ${displayNewValue}`;
+          } else {
+            action = 'unassigned';
+            displayNewValue = '';
+          }
+        }
+        
         await this.createTicketHistory({
           ticketId: id,
-          action: `updated_${field}`,
+          action,
           field,
           oldValue: String(existingTicket[field as keyof Ticket] || ''),
-          newValue: String(newValue || ''),
+          newValue: displayNewValue,
           userId,
           notes,
         });
