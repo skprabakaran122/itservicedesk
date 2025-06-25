@@ -1450,6 +1450,8 @@ export class DatabaseStorage implements IStorage {
       ? approvedAtCurrentLevel === totalAtCurrentLevel
       : approvedAtCurrentLevel >= 1;
 
+    console.log(`[Approval] Level ${currentLevel} satisfied: ${currentLevelSatisfied}, approved: ${approvedAtCurrentLevel}, total: ${totalAtCurrentLevel}`);
+    
     if (!currentLevelSatisfied) {
       // Still waiting for more approvals at this level
       return { approved: true, completed: false };
