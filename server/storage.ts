@@ -1215,17 +1215,58 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount || 0) > 0;
   }
 
-  async getApprovalWorkflow(productId: number, riskLevel: string): Promise<ApprovalRouting[]> {
+  async getApprovalWorkflow(productId?: number, groupId?: number, riskLevel?: string): Promise<ApprovalRouting[]> {
+    let whereConditions = [eq(approvalRouting.isActive, 'true')];
+    
+    if (productId) {
+      whereConditions.push(eq(approvalRouting.productId, productId));
+    }
+    
+    if (groupId) {
+      whereConditions.push(eq(approvalRouting.groupId, groupId));
+    }
+    
+    if (riskLevel) {
+      whereConditions.push(eq(approvalRouting.riskLevel, riskLevel));
+    }
+
     const routings = await db.select()
       .from(approvalRouting)
-      .where(and(
-        eq(approvalRouting.productId, productId),
-        eq(approvalRouting.riskLevel, riskLevel),
-        eq(approvalRouting.isActive, 'true')
-      ))
+      .where(and(...whereConditions))
       .orderBy(approvalRouting.approvalLevel);
 
     return routings;
+  }
+
+  async getApprovalWorkflowForChange(change: Change): Promise<ApprovalRouting[]> {
+    // Get group ID from group name if assigned
+    let groupId: number | undefined;
+    if (change.assignedGroup) {
+      const group = await db.select()
+        .from(groups)
+        .where(eq(groups.name, change.assignedGroup))
+        .limit(1);
+      
+      if (group.length > 0) {
+        groupId = group[0].id;
+      }
+    }
+
+    // Try to find routing based on group and risk level first
+    if (groupId) {
+      const groupRoutings = await this.getApprovalWorkflow(undefined, groupId, change.riskLevel);
+      if (groupRoutings.length > 0) {
+        return groupRoutings;
+      }
+    }
+
+    // Fallback to product-based routing if available
+    if (change.productId) {
+      return await this.getApprovalWorkflow(change.productId, undefined, change.riskLevel);
+    }
+
+    // If no specific routing found, return empty array
+    return [];
   }
 
   // Change approval methods
@@ -1233,7 +1274,84 @@ export class DatabaseStorage implements IStorage {
     return await db.select()
       .from(changeApprovals)
       .where(eq(changeApprovals.changeId, changeId))
-      .orderBy(changeApprovals.approvalLevel);
+      .orderBy(changeApprovals.approvalLevel, changeApprovals.createdAt);
+  }
+
+  async createChangeApprovals(changeId: number): Promise<void> {
+    const change = await this.getChange(changeId);
+    if (!change) return;
+
+    const workflows = await this.getApprovalWorkflowForChange(change);
+    
+    for (const workflow of workflows) {
+      // Create approval entries for each approver in the workflow
+      for (const approverId of workflow.approverIds) {
+        await db.insert(changeApprovals).values({
+          changeId,
+          approverId: parseInt(approverId),
+          approvalLevel: workflow.approvalLevel,
+          status: 'pending'
+        });
+      }
+    }
+  }
+
+  async checkApprovalStatus(changeId: number): Promise<{ canProceed: boolean; allLevelsComplete: boolean }> {
+    const approvals = await this.getChangeApprovals(changeId);
+    const change = await this.getChange(changeId);
+    
+    if (!change || approvals.length === 0) {
+      return { canProceed: false, allLevelsComplete: false };
+    }
+
+    const workflows = await this.getApprovalWorkflowForChange(change);
+    
+    // Group approvals by level
+    const approvalsByLevel = approvals.reduce((acc, approval) => {
+      if (!acc[approval.approvalLevel]) {
+        acc[approval.approvalLevel] = [];
+      }
+      acc[approval.approvalLevel].push(approval);
+      return acc;
+    }, {} as Record<number, ChangeApproval[]>);
+
+    let allLevelsComplete = true;
+    let canProceed = true;
+
+    for (const workflow of workflows) {
+      const levelApprovals = approvalsByLevel[workflow.approvalLevel] || [];
+      
+      if (workflow.requireAllApprovals === 'true') {
+        // All approvers at this level must approve
+        const approvedCount = levelApprovals.filter(a => a.status === 'approved').length;
+        const requiredCount = workflow.approverIds.length;
+        
+        if (approvedCount < requiredCount) {
+          allLevelsComplete = false;
+          // Check if any approver at this level has rejected
+          const hasRejection = levelApprovals.some(a => a.status === 'rejected');
+          if (hasRejection) {
+            canProceed = false;
+            break;
+          }
+        }
+      } else {
+        // At least one approver at this level must approve
+        const hasApproval = levelApprovals.some(a => a.status === 'approved');
+        const hasRejection = levelApprovals.some(a => a.status === 'rejected');
+        
+        if (!hasApproval) {
+          allLevelsComplete = false;
+        }
+        
+        if (hasRejection && !hasApproval) {
+          canProceed = false;
+          break;
+        }
+      }
+    }
+
+    return { canProceed, allLevelsComplete };
   }
 
   async createChangeApproval(insertApproval: InsertChangeApproval): Promise<ChangeApproval> {

@@ -1308,12 +1308,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Clear approval token if change is being revised and resubmitted
       if (updates.status === 'pending' && notes?.includes('revised and resubmitted')) {
         updates.approvalToken = null;
+        // Recreate approval workflow for revised change
+        await storage.createChangeApprovals(id);
       }
       
       const change = await storage.updateChangeWithHistory(id, updates, userId || 1, notes);
       if (!change) {
         return res.status(404).json({ message: "Change not found" });
       }
+
+      // Check if change should auto-approve based on approval status
+      if (change.status === 'pending') {
+        const approvalStatus = await storage.checkApprovalStatus(id);
+        if (approvalStatus.allLevelsComplete && approvalStatus.canProceed) {
+          await storage.updateChangeWithHistory(id, { status: 'approved' }, userId || 1, 'Auto-approved: All required approvals received');
+        }
+      }
+      
       res.json(change);
     } catch (error) {
       console.error('Error updating change:', error);

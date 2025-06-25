@@ -17,10 +17,15 @@ import { useToast } from "@/hooks/use-toast";
 import type { ApprovalRouting, Product, User } from "@shared/schema";
 
 const routingSchema = z.object({
-  productId: z.number().min(1, "Product is required"),
+  productId: z.number().optional(),
+  groupId: z.number().optional(),
   riskLevel: z.enum(["low", "medium", "high"], { required_error: "Risk level is required" }),
-  approverId: z.number().min(1, "Approver is required"),
+  approverIds: z.array(z.number()).min(1, "At least one approver is required"),
   approvalLevel: z.number().min(1, "Approval level is required").default(1),
+  requireAllApprovals: z.enum(["true", "false"]).default("true"),
+}).refine(data => data.productId || data.groupId, {
+  message: "Either product or group must be selected",
+  path: ["productId"]
 });
 
 interface ApprovalRoutingProps {
@@ -58,13 +63,23 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
     },
   });
 
+  const { data: groups = [] } = useQuery({
+    queryKey: ["/api/groups"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/groups");
+      return response.json();
+    },
+  });
+
   const form = useForm<z.infer<typeof routingSchema>>({
     resolver: zodResolver(routingSchema),
     defaultValues: {
-      productId: 0,
+      productId: undefined,
+      groupId: undefined,
       riskLevel: "medium",
-      approverId: 0,
+      approverIds: [],
       approvalLevel: 1,
+      requireAllApprovals: "true",
     },
   });
 

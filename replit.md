@@ -106,6 +106,22 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 25, 2025 - Advanced Change Approval Routing System Implemented ✓ COMPLETED
+- **Group and Product-Based Routing**: Enhanced approval routing to support both group and product-based workflows
+  - Approval routes can be configured for specific support groups (e.g., ASM-Olympus team) or products
+  - Priority-based routing: Group assignments take precedence over product-based routing
+  - Flexible configuration allowing either group-only, product-only, or hybrid routing approaches
+- **Multiple L1 Approvers Support**: Implemented multi-approver workflows with configurable approval logic
+  - Support for multiple approvers at each approval level (L1, L2, L3, etc.)
+  - Configurable approval requirements: "All approvers must approve" or "Any approver can approve"
+  - Individual approval tracking with separate status for each approver (pending, approved, rejected)
+  - Auto-approval when all required approvers at all levels have approved the change
+- **Enhanced Approval Workflow Engine**: Complete approval state management and routing
+  - Automatic approval workflow creation when changes are submitted
+  - Real-time approval status checking and change status updates
+  - Support for revision and resubmission triggering new approval cycles
+  - Comprehensive approval history and audit trail for compliance
+
 ### June 25, 2025 - Change Revision Workflow Implemented ✓ COMPLETED
 - **Rejected Change Revision**: Added complete revision workflow for rejected change requests
   - Agents can revise and resubmit rejected changes with updated details and revision notes
