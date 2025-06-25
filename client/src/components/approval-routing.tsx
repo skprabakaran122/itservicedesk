@@ -154,10 +154,12 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
   const handleEdit = (routing: ApprovalRouting) => {
     setEditingRouting(routing);
     form.reset({
-      productId: routing.productId,
+      productId: routing.productId || undefined,
+      groupId: routing.groupId || undefined,
       riskLevel: routing.riskLevel as "low" | "medium" | "high",
-      approverId: routing.approverId,
+      approverIds: routing.approverIds?.map(id => parseInt(id)) || [],
       approvalLevel: routing.approvalLevel,
+      requireAllApprovals: routing.requireAllApprovals || "true",
     });
     setShowForm(true);
   };
@@ -175,9 +177,16 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
     return product?.name || "Unknown Product";
   };
 
-  const getApproverName = (approverId: number) => {
-    const user = users.find((u: User) => u.id === approverId);
-    return user?.username || "Unknown User";
+  const getApproverNames = (approverIds: string[]) => {
+    return approverIds.map(id => {
+      const user = users.find((u: User) => u.id === parseInt(id));
+      return user?.name || `User ${id}`;
+    }).join(", ");
+  };
+
+  const getGroupName = (groupId: number) => {
+    const group = groups.find((g: any) => g.id === groupId);
+    return group?.name || "Unknown Group";
   };
 
   const getRiskColor = (riskLevel: string) => {
@@ -194,13 +203,15 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
     user.role === 'manager' || user.role === 'admin'
   );
 
-  // Group routings by product and risk level for better visualization
+  // Group routings by product/group and risk level for better visualization
   const groupedRoutings = routings.reduce((groups: any, routing: ApprovalRouting) => {
-    const key = `${routing.productId}-${routing.riskLevel}`;
+    const key = routing.groupId ? `group-${routing.groupId}-${routing.riskLevel}` : `product-${routing.productId}-${routing.riskLevel}`;
     if (!groups[key]) {
       groups[key] = {
         productId: routing.productId,
+        groupId: routing.groupId,
         riskLevel: routing.riskLevel,
+        type: routing.groupId ? 'group' : 'product',
         approvals: []
       };
     }

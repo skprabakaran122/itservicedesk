@@ -166,10 +166,12 @@ export type Product = typeof products.$inferSelect;
 // Approval routing configuration table
 export const approvalRouting = pgTable("approval_routing", {
   id: serial("id").primaryKey(),
-  productId: integer("product_id").notNull().references(() => products.id),
+  productId: integer("product_id").references(() => products.id),
+  groupId: integer("group_id").references(() => groups.id),
   riskLevel: varchar("risk_level", { length: 20 }).notNull(), // low, medium, high, critical
-  approverId: integer("approver_id").notNull().references(() => users.id),
-  approvalLevel: integer("approval_level").notNull().default(1), // 1 = first approver, 2 = second approver, etc.
+  approverIds: text("approver_ids").array().notNull(), // Array of user IDs for approvers
+  approvalLevel: integer("approval_level").notNull().default(1), // 1 = first level, 2 = second level, etc.
+  requireAllApprovals: varchar("require_all_approvals", { length: 10 }).notNull().default("true"), // 'true' or 'false'
   isActive: varchar("is_active", { length: 10 }).notNull().default("true"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
