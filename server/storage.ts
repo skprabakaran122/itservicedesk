@@ -6,7 +6,7 @@ export interface IStorage {
   // Ticket methods
   getTickets(): Promise<Ticket[]>;
   getTicketsForUser(userId: number): Promise<Ticket[]>;
-  getUserGroups(userId: number): Promise<string[]>;
+  getUserGroups(userId: number): Promise<Group[]>;
   getTicketsByGroups(groupNames: string[]): Promise<Ticket[]>;
   getTicket(id: number): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
