@@ -435,7 +435,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createChange(insertChange: InsertChange): Promise<Change> {
-    const [change] = await db.insert(changes).values(insertChange).returning();
+    // Convert "none" to null for assignedGroup
+    const changeData = {
+      ...insertChange,
+      assignedGroup: insertChange.assignedGroup === 'none' ? null : insertChange.assignedGroup
+    };
+    const [change] = await db.insert(changes).values(changeData).returning();
     return change;
   }
 
