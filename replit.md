@@ -106,12 +106,17 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
-### June 25, 2025 - Enhanced Change Approval Display and Multi-Approver System ✓ COMPLETED
+### June 25, 2025 - Enhanced Change Approval Display and Role-Based Approver Restrictions ✓ COMPLETED
 - **Prominent Pending Approval Display**: Added clear visibility of who approval is pending with in change details
   - Orange alert card at top of approval tracker showing current pending approvers
   - Level-based grouping with approver names and roles clearly displayed
   - "Your Action Required" badge for current user when they need to approve
   - Direct action button for users to review and approve from the pending section
+- **Role-Based Approver Restrictions**: Enforced strict role separation for change approvals
+  - Only managers and admins can be configured as approvers in approval routing
+  - Agents are automatically filtered out from approver selection interface
+  - Backend validation ensures no agents can be assigned as approvers
+  - Clear role separation: Users request, agents implement, managers/admins approve
 - **Enhanced Change Details Modal**: Improved approval workflow visibility and user experience
   - Approval tracker only shows for relevant change statuses (submitted, pending, approved, rejected)
   - Clear indication of current approval level and remaining approvers
