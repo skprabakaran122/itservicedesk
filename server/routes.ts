@@ -1764,6 +1764,46 @@ ${projectData.additionalNotes || 'None'}
   app.post("/api/changes/:id/approve", async (req, res) => {
     try {
       const changeId = parseInt(req.params.id);
+      const currentUser = (req as any).session?.user;
+      const { comments } = req.body;
+      
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Process the approval through the workflow
+      const result = await storage.processApproval(changeId, currentUser.id, 'approved', comments);
+      
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error processing approval:', error);
+      res.status(400).json({ message: error.message || "Failed to process approval" });
+    }
+  });
+
+  app.post("/api/changes/:id/reject", async (req, res) => {
+    try {
+      const changeId = parseInt(req.params.id);
+      const currentUser = (req as any).session?.user;
+      const { comments } = req.body;
+      
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Process the rejection through the workflow
+      const result = await storage.processApproval(changeId, currentUser.id, 'rejected', comments);
+      
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error processing rejection:', error);
+      res.status(400).json({ message: error.message || "Failed to process rejection" });
+    }
+  });
+
+  app.post("/api/changes/:id/approve", async (req, res) => {
+    try {
+      const changeId = parseInt(req.params.id);
       const { approverId, action, comments } = req.body;
       
       const result = await storage.processApproval(changeId, approverId, action, comments);
