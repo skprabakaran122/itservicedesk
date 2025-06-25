@@ -32,6 +32,15 @@ export function ChangeDetailsModal({
 }: ChangeDetailsModalProps) {
   const [newStatus, setNewStatus] = useState(change.status);
   const [notes, setNotes] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: change.title,
+    description: change.description,
+    priority: change.priority,
+    riskLevel: change.riskLevel,
+    rollbackPlan: change.rollbackPlan || '',
+    revisionNotes: ''
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -69,6 +78,34 @@ export function ChangeDetailsModal({
       toast({
         title: "Error",
         description: "Failed to update change request",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reviseChangeMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest("PATCH", `/api/changes/${change.id}`, {
+        ...data,
+        status: 'pending', // Reset to pending for new approval
+        userId: currentUser?.id,
+        notes: `Change revised and resubmitted for approval. Revision notes: ${data.revisionNotes}`
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/changes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/changes", change.id, "history"] });
+      toast({
+        title: "Success",
+        description: "Change revised and resubmitted for approval",
+      });
+      setIsEditing(false);
+      onClose();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to revise change",
         variant: "destructive",
       });
     },
@@ -212,6 +249,136 @@ export function ChangeDetailsModal({
       addCommentMutation.mutate(notes);
     }
   };
+
+  const handleReviseSubmit = () => {
+    if (!editForm.title.trim() || !editForm.description.trim() || !editForm.rollbackPlan.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!editForm.revisionNotes.trim()) {
+      toast({
+        title: "Revision Notes Required",
+        description: "Please explain what changes you made based on the feedback",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    reviseChangeMutation.mutate(editForm);
+  };
+
+  // Show revision form if editing rejected change
+  if (isEditing && change.status === 'rejected') {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Revise Change Request - CHG-{change.id}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <h4 className="font-semibold text-orange-800 mb-2">Change was rejected</h4>
+              <p className="text-sm text-orange-700">
+                Please review the feedback and update your change request before resubmitting for approval.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Title *</label>
+                <input
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full p-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Priority</label>
+                <select
+                  value={editForm.priority}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, priority: e.target.value }))}
+                  className="w-full p-2 border rounded-lg"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Description *</label>
+              <textarea
+                value={editForm.description}
+                onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full p-2 border rounded-lg h-24"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Risk Level</label>
+              <select
+                value={editForm.riskLevel}
+                onChange={(e) => setEditForm(prev => ({ ...prev, riskLevel: e.target.value }))}
+                className="w-full p-2 border rounded-lg"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Rollback Plan *</label>
+              <textarea
+                value={editForm.rollbackPlan}
+                onChange={(e) => setEditForm(prev => ({ ...prev, rollbackPlan: e.target.value }))}
+                className="w-full p-2 border rounded-lg h-24"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Revision Notes *</label>
+              <textarea
+                value={editForm.revisionNotes}
+                onChange={(e) => setEditForm(prev => ({ ...prev, revisionNotes: e.target.value }))}
+                placeholder="Explain what changes you made based on the feedback..."
+                className="w-full p-2 border rounded-lg h-20"
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditing(false)}
+                disabled={reviseChangeMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleReviseSubmit}
+                disabled={reviseChangeMutation.isPending}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {reviseChangeMutation.isPending ? "Submitting..." : "Resubmit for Approval"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -404,6 +571,29 @@ export function ChangeDetailsModal({
                       {addCommentMutation.isPending ? "Adding..." : "Add Comment"}
                     </Button>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Revision Button for Rejected Changes */}
+            {change.status === 'rejected' && (currentUser?.role === 'agent' || currentUser?.role === 'admin') && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2 text-orange-700">
+                    <AlertTriangle className="h-4 w-4" />
+                    Change Rejected - Action Required
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-4">
+                    This change has been rejected and needs to be revised before it can be resubmitted for approval.
+                  </p>
+                  <Button 
+                    onClick={() => setIsEditing(true)}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    Revise & Resubmit
+                  </Button>
                 </CardContent>
               </Card>
             )}

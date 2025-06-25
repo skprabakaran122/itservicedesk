@@ -307,7 +307,10 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                   <Button 
                     size="sm" 
                     className="bg-orange-600 hover:bg-orange-700 text-white"
-                    onClick={() => setSelectedChange(change)}
+                    onClick={() => {
+                      setSelectedChange(change);
+                      // We'll handle the editing state in the modal
+                    }}
                   >
                     Revise & Resubmit
                   </Button>
