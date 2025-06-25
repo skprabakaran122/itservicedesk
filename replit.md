@@ -119,9 +119,11 @@ The application follows a full-stack TypeScript architecture with:
   - Clear role separation: Users request, agents implement, managers/admins approve
 - **Approval Workflow Security**: Prevented bypassing approval process through direct status updates
   - Backend validation blocks direct status changes to "approved" unless all approvals are complete
-  - Managers must use approval workflow buttons, cannot skip approval process via status dropdown
+  - Removed direct "Approve" button from main change list - managers must use proper approval workflow
+  - Replaced main page "Approve" with "Review Approvals" button that opens approval tracker interface
   - Frontend restricts available status options to prevent approval workflow bypass attempts
   - Only Standard changes or fully approved changes can be directly marked as approved
+  - Configured approval routing to require ALL approvers (not just any one approver)
 - **Enhanced Change Details Modal**: Improved approval workflow visibility and user experience
   - Approval tracker only shows for relevant change statuses (submitted, pending, approved, rejected)
   - Clear indication of current approval level and remaining approvers
