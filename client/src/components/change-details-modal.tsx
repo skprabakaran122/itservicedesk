@@ -650,10 +650,12 @@ export function ChangeDetailsModal({
             </Card>
 
             {/* Multilevel Approval Tracker */}
-            <ChangeApprovalTracker 
-              changeId={change.id}
-              currentUser={currentUser}
-            />
+            {(change.status === 'submitted' || change.status === 'pending' || change.status === 'approved' || change.status === 'rejected') && (
+              <ChangeApprovalTracker 
+                changeId={change.id}
+                currentUser={currentUser}
+              />
+            )}
 
             {/* Change Workflow Guide */}
             <Card>

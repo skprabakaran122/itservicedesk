@@ -106,6 +106,17 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 25, 2025 - Enhanced Change Approval Display and Multi-Approver System ✓ COMPLETED
+- **Prominent Pending Approval Display**: Added clear visibility of who approval is pending with in change details
+  - Orange alert card at top of approval tracker showing current pending approvers
+  - Level-based grouping with approver names and roles clearly displayed
+  - "Your Action Required" badge for current user when they need to approve
+  - Direct action button for users to review and approve from the pending section
+- **Enhanced Change Details Modal**: Improved approval workflow visibility and user experience
+  - Approval tracker only shows for relevant change statuses (submitted, pending, approved, rejected)
+  - Clear indication of current approval level and remaining approvers
+  - Better user name display using full names instead of usernames
+
 ### June 25, 2025 - Advanced Change Approval Routing System Implemented ✓ COMPLETED
 - **Group and Product-Based Routing**: Enhanced approval routing to support both group and product-based workflows
   - Approval routes can be configured for specific support groups (e.g., ASM-Olympus team) or products
