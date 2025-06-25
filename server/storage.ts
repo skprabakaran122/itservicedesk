@@ -1375,64 +1375,97 @@ export class DatabaseStorage implements IStorage {
       return;
     }
     
-    const workflow = await this.getApprovalWorkflow(productId, riskLevel);
+    // Get the change to determine group assignment for routing priority
+    const change = await this.getChange(changeId);
+    const groupId = change?.assignedGroup ? parseInt(change.assignedGroup) : undefined;
     
+    // Get approval workflow (group-based takes precedence over product-based)
+    const workflow = await this.getApprovalWorkflow(productId, groupId, riskLevel);
+    
+    if (workflow.length === 0) {
+      console.log(`[Approval] No workflow found for product ${productId}, group ${groupId}, risk ${riskLevel}`);
+      return;
+    }
+
+    console.log(`[Approval] Initializing ${workflow.length} approval levels for change ${changeId}`);
+
+    // Create approval records for each level and each approver
     for (const routing of workflow) {
-      await this.createChangeApproval({
-        changeId,
-        approverId: routing.approverId,
-        approvalLevel: routing.approvalLevel,
-        status: 'pending'
-      });
+      const approverIds = routing.approverIds || [];
+      for (const approverId of approverIds) {
+        await this.createChangeApproval({
+          changeId,
+          approverId: parseInt(approverId),
+          approvalLevel: routing.approvalLevel,
+          status: 'pending',
+          approvalToken: generateApprovalToken()
+        });
+      }
     }
   }
 
   async processApproval(changeId: number, approverId: number, action: 'approved' | 'rejected', comments?: string): Promise<{ approved: boolean; nextLevel?: number; completed: boolean }> {
-    // Find the current approval
-    const [currentApproval] = await db.select()
-      .from(changeApprovals)
-      .where(and(
-        eq(changeApprovals.changeId, changeId),
-        eq(changeApprovals.approverId, approverId),
-        eq(changeApprovals.status, 'pending')
-      ))
-      .limit(1);
-
+    // Find the pending approval for this approver and change
+    const approvals = await this.getChangeApprovals(changeId);
+    const currentApproval = approvals.find(a => a.approverId === approverId && a.status === 'pending');
+    
     if (!currentApproval) {
-      throw new Error('No pending approval found for this user');
+      throw new Error('No pending approval found for this approver');
     }
 
-    // Update the current approval
+    // Update the approval status
     await this.updateChangeApproval(currentApproval.id, {
       status: action,
-      approvedAt: new Date(),
+      approvedAt: action === 'approved' ? new Date() : undefined,
       comments
     });
 
     if (action === 'rejected') {
-      // If rejected, update the change status and stop the workflow
+      // If rejected, update change status
       await this.updateChange(changeId, { status: 'rejected' });
       return { approved: false, completed: true };
     }
 
-    // Check if there are more approvals needed
-    const allApprovals = await this.getChangeApprovals(changeId);
-    const pendingApprovals = allApprovals.filter(a => a.status === 'pending');
+    // Get the change and routing info to determine approval requirements
+    const change = await this.getChange(changeId);
+    if (!change) {
+      throw new Error('Change not found');
+    }
+
+    const groupId = change.assignedGroup ? parseInt(change.assignedGroup) : undefined;
+    const workflow = await this.getApprovalWorkflow(change.productId, groupId, change.riskLevel);
     
-    if (pendingApprovals.length === 0) {
-      // All approvals completed, update change status to approved
+    // Check approval requirements for current level
+    const currentLevel = currentApproval.approvalLevel;
+    const currentLevelRouting = workflow.find(r => r.approvalLevel === currentLevel);
+    const requireAllApprovals = currentLevelRouting?.requireAllApprovals === 'true';
+    
+    const currentLevelApprovals = approvals.filter(a => a.approvalLevel === currentLevel);
+    const approvedAtCurrentLevel = currentLevelApprovals.filter(a => a.status === 'approved').length;
+    const totalAtCurrentLevel = currentLevelApprovals.length;
+
+    // Determine if current level is satisfied
+    const currentLevelSatisfied = requireAllApprovals 
+      ? approvedAtCurrentLevel === totalAtCurrentLevel
+      : approvedAtCurrentLevel >= 1;
+
+    if (!currentLevelSatisfied) {
+      // Still waiting for more approvals at this level
+      return { approved: true, completed: false };
+    }
+
+    // Current level is satisfied, check for next level
+    const nextLevel = currentLevel + 1;
+    const nextLevelApprovals = approvals.filter(a => a.approvalLevel === nextLevel);
+    
+    if (nextLevelApprovals.length === 0) {
+      // No more levels, change is fully approved
       await this.updateChange(changeId, { status: 'approved' });
       return { approved: true, completed: true };
     }
 
-    // Find the next approval level
-    const nextApproval = pendingApprovals.find(a => a.approvalLevel === currentApproval.approvalLevel + 1);
-    
-    return { 
-      approved: true, 
-      nextLevel: nextApproval?.approvalLevel,
-      completed: false 
-    };
+    // Move to next approval level
+    return { approved: true, nextLevel, completed: false };
   }
 
   // Overdue change monitoring methods

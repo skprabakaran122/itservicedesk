@@ -181,6 +181,8 @@ export const insertApprovalRoutingSchema = createInsertSchema(approvalRouting).o
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  approverIds: z.array(z.number()).min(1, "At least one approver is required"),
 });
 
 export type InsertApprovalRouting = z.infer<typeof insertApprovalRoutingSchema>;

@@ -165,10 +165,16 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
   };
 
   const handleSubmit = (data: z.infer<typeof routingSchema>) => {
+    // Convert approverIds to strings for database storage
+    const submissionData = {
+      ...data,
+      approverIds: data.approverIds.map(id => id.toString())
+    };
+    
     if (editingRouting) {
-      updateMutation.mutate({ id: editingRouting.id, ...data });
+      updateMutation.mutate({ id: editingRouting.id, ...submissionData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(submissionData);
     }
   };
 
@@ -396,14 +402,14 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Product (Optional)</FormLabel>
-                                <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value?.toString() || ""}>
+                                <Select onValueChange={(value) => field.onChange(value === "none" ? undefined : parseInt(value))} value={field.value?.toString() || "none"}>
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select product (optional)" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="">None</SelectItem>
+                                    <SelectItem value="none">None</SelectItem>
                                     {products.map((product: Product) => (
                                       <SelectItem key={product.id} value={product.id.toString()}>
                                         {product.name}
@@ -422,14 +428,14 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Support Group (Optional)</FormLabel>
-                                <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value?.toString() || ""}>
+                                <Select onValueChange={(value) => field.onChange(value === "none" ? undefined : parseInt(value))} value={field.value?.toString() || "none"}>
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select group (optional)" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="">None</SelectItem>
+                                    <SelectItem value="none">None</SelectItem>
                                     {groups.filter((g: any) => g.isActive === 'true').map((group: any) => (
                                       <SelectItem key={group.id} value={group.id.toString()}>
                                         {group.name}
@@ -545,10 +551,10 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
               <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
                 <div className="flex items-center gap-2 mb-2">
                   <Shield className="h-4 w-4 text-amber-600" />
-                  <span className="text-sm font-medium text-amber-800 dark:text-amber-200">Multilevel Approval for High Risk</span>
+                  <span className="text-sm font-medium text-amber-800 dark:text-amber-200">Multi-Approver Configuration</span>
                 </div>
                 <p className="text-sm text-amber-700 dark:text-amber-300">
-                  For high-risk changes, configure multiple approval levels (Level 1 → Level 2 → Level 3) to ensure proper oversight and security.
+                  Configure multiple approvers per level with flexible approval requirements. Group-based routing takes precedence over product-based routing.
                 </p>
               </div>
 
