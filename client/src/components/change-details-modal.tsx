@@ -458,6 +458,15 @@ export function ChangeDetailsModal({
                     <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Requested By</h4>
                     <p>{change.requestedBy}</p>
                   </div>
+                  {change.assignedGroup && (
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Assigned Group</h4>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-blue-500" />
+                        <p>{change.assignedGroup}</p>
+                      </div>
+                    </div>
+                  )}
                   {change.approvedBy && (
                     <div>
                       <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">Approved By</h4>
