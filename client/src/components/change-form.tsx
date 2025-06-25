@@ -376,7 +376,7 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="">No Group</SelectItem>
-                      {groups?.filter(g => g.active).map((group) => (
+                      {groups?.filter(g => g.isActive === 'true').map((group) => (
                         <SelectItem key={group.id} value={group.name}>
                           {group.name}
                         </SelectItem>

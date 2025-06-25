@@ -1201,8 +1201,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      // Use product-based filtering for agents
-      const changes = await storage.getChangesForUser(currentUser.id);
+      // Use group-based filtering for agents and managers
+      const changes = await storage.getChangesForUser(currentUser.id, currentUser.role);
       res.json(changes);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch changes" });

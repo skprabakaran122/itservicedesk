@@ -377,30 +377,47 @@ export class DatabaseStorage implements IStorage {
 
   // Change methods
   async getChanges(): Promise<Change[]> {
-    return await db.select().from(changes).orderBy(changes.createdAt);
+    const result = await db.select().from(changes).orderBy(desc(changes.createdAt));
+    return result;
   }
 
-  async getChangesForUser(userId: number): Promise<Change[]> {
-    const user = await this.getUser(userId);
-    if (!user) {
-      return [];
+  async getChangesForUser(userId: number, userRole: string): Promise<Change[]> {
+    if (userRole === 'admin') {
+      // Admins see all changes
+      return this.getChanges();
     }
-    
-    // Only admins can see all changes
-    if (user.role === 'admin') {
-      return await this.getChanges();
+
+    if (userRole === 'user') {
+      // Users see only their own changes
+      const result = await db
+        .select()
+        .from(changes)
+        .where(eq(changes.requesterId, userId))
+        .orderBy(desc(changes.createdAt));
+      return result;
     }
-    
-    // For agents, managers, and users - filter by assigned products
-    if (!user.assignedProducts || user.assignedProducts.length === 0) {
-      // Users with no assigned products see no changes
-      return [];
+
+    if (userRole === 'agent' || userRole === 'manager') {
+      // Agents and managers see changes assigned to their groups
+      const userGroups = await this.getUserGroups(userId);
+      if (userGroups.length === 0) {
+        return [];
+      }
+
+      const groupNames = userGroups.map(g => g.name);
+      const result = await db
+        .select()
+        .from(changes)
+        .where(
+          or(
+            ...groupNames.map(groupName => eq(changes.assignedGroup, groupName))
+          )
+        )
+        .orderBy(desc(changes.createdAt));
+      return result;
     }
-    
-    // Filter changes by assigned products
-    return await db.select().from(changes)
-      .where(or(...user.assignedProducts.map(product => eq(changes.product, product))))
-      .orderBy(changes.createdAt);
+
+    return [];
   }
 
   async getChange(id: number): Promise<Change | undefined> {
