@@ -143,7 +143,13 @@ export function ChangeApprovalTracker({ changeId, currentUser }: ChangeApprovalT
   };
 
   const isWorkflowComplete = () => {
-    return getAllPendingApprovals().length === 0 && approvals.some((a: ChangeApproval) => a.status === 'approved');
+    // Check if there are any approved approvals and the change should be complete
+    // For "any one approver", workflow is complete when at least one approval exists
+    const hasApprovals = approvals.some((a: ChangeApproval) => a.status === 'approved');
+    
+    // For this implementation, if ANY approver has approved, the workflow is complete
+    // (since we're using "any one approver" logic)
+    return hasApprovals;
   };
 
   const handleApprove = (approval: ChangeApproval) => {
@@ -207,29 +213,34 @@ export function ChangeApprovalTracker({ changeId, currentUser }: ChangeApprovalT
           <CardContent>
             <div className="space-y-3">
               <p className="text-sm text-orange-700 dark:text-orange-300">
-                This change is waiting for approval from the following Level {currentLevel} approvers:
+                {isLevelComplete(currentLevel) 
+                  ? `Level ${currentLevel} approval requirements have been satisfied.`
+                  : `This change is waiting for approval from the following Level ${currentLevel} approvers:`
+                }
               </p>
-              <div className="space-y-2">
-                {allPendingApprovals
-                  .filter(approval => approval.approvalLevel === currentLevel)
-                  .map((approval: ChangeApproval) => (
-                    <div key={approval.id} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
-                      <User className="h-4 w-4 text-orange-600" />
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
-                        {getUserName(approval.approverId)}
-                      </span>
-                      <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                        Level {approval.approvalLevel}
-                      </Badge>
-                      {approval.approverId === currentUser?.id && (
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                          Your Action Required
+              {!isLevelComplete(currentLevel) && (
+                <div className="space-y-2">
+                  {allPendingApprovals
+                    .filter(approval => approval.approvalLevel === currentLevel)
+                    .map((approval: ChangeApproval) => (
+                      <div key={approval.id} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
+                        <User className="h-4 w-4 text-orange-600" />
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                          {getUserName(approval.approverId)}
+                        </span>
+                        <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                          Level {approval.approvalLevel}
                         </Badge>
-                      )}
-                    </div>
+                        {approval.approverId === currentUser?.id && (
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            Your Action Required
+                          </Badge>
+                        )}
+                      </div>
                   ))}
-              </div>
-              {allPendingApprovals.some(a => a.approverId === currentUser?.id) && (
+                </div>
+              )}
+              {!isLevelComplete(currentLevel) && allPendingApprovals.some(a => a.approverId === currentUser?.id) && (
                 <Button
                   onClick={() => handleApprove(allPendingApprovals.find(a => a.approverId === currentUser?.id)!)}
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white"
