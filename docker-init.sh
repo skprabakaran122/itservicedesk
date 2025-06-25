@@ -7,11 +7,29 @@ set -e
 
 echo "🐳 Starting IT Service Desk in Docker..."
 
-# Wait for database to be ready
+# Wait for database to be ready (works for both local Docker and RDS)
 echo "⏳ Waiting for database connection..."
+RETRY_COUNT=0
+MAX_RETRIES=30
+
 until node -e "
 const { Pool } = require('pg');
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const isRDS = process.env.DB_HOST && process.env.DB_HOST.includes('.rds.amazonaws.com');
+const poolConfig = process.env.DATABASE_URL ? 
+  { 
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+  } : 
+  {
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT || 5432,
+    ssl: isRDS ? { rejectUnauthorized: false } : false
+  };
+
+const pool = new Pool(poolConfig);
 pool.query('SELECT 1').then(() => {
   console.log('✅ Database connected');
   pool.end();
@@ -20,9 +38,17 @@ pool.query('SELECT 1').then(() => {
   console.log('❌ Database not ready:', err.message);
   process.exit(1);
 });
-"; do
-  echo "⏳ Database not ready, waiting 5 seconds..."
-  sleep 5
+" || { 
+  RETRY_COUNT=$((RETRY_COUNT + 1))
+  if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+    echo "❌ Failed to connect to database after $MAX_RETRIES attempts"
+    echo "Check your RDS configuration and network connectivity"
+    exit 1
+  fi
+  echo "⏳ Database not ready (attempt $RETRY_COUNT/$MAX_RETRIES), waiting 10 seconds..."
+  sleep 10
+}; do
+  :
 done
 
 # Run database migrations
