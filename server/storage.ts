@@ -250,6 +250,37 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(tickets.createdAt));
   }
 
+  async getTicketsByGroupsExcludingClosed(groupNames: string[]): Promise<Ticket[]> {
+    if (groupNames.length === 0) {
+      return [];
+    }
+    
+    // Priority order: critical > high > medium > low
+    const priorityOrder = sql`CASE 
+      WHEN ${tickets.priority} = 'critical' THEN 1
+      WHEN ${tickets.priority} = 'high' THEN 2
+      WHEN ${tickets.priority} = 'medium' THEN 3
+      WHEN ${tickets.priority} = 'low' THEN 4
+      ELSE 5
+    END`;
+
+    // Status order: open > in_progress > pending > resolved
+    const statusOrder = sql`CASE
+      WHEN ${tickets.status} = 'open' THEN 1
+      WHEN ${tickets.status} = 'in_progress' THEN 2
+      WHEN ${tickets.status} = 'pending' THEN 3
+      WHEN ${tickets.status} = 'resolved' THEN 4
+      ELSE 5
+    END`;
+    
+    return await db.select().from(tickets)
+      .where(and(
+        or(...groupNames.map(groupName => eq(tickets.assignedGroup, groupName))),
+        not(eq(tickets.status, 'closed'))
+      ))
+      .orderBy(statusOrder, priorityOrder, desc(tickets.createdAt));
+  }
+
   async getTicket(id: number): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.id, id));
     return ticket;

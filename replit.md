@@ -106,14 +106,19 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
-### June 25, 2025 - Closed Ticket Filtering Implemented ✓ COMPLETED
+### June 25, 2025 - Smart Ticket Sorting and Closed Ticket Filtering ✓ COMPLETED
+- **Priority-Based Sorting for Agents/Managers**: Implemented intelligent ticket ordering based on status and priority
+  - Status priority: open → in_progress → pending → resolved (most urgent first)
+  - Priority ranking: critical → high → medium → low (highest priority first)
+  - Combined sorting ensures critical open tickets appear at top, followed by high priority items
+  - Creation date used as tertiary sort for tickets with same status and priority
 - **Agent/Manager Access Control**: Added filtering to exclude closed tickets from agent and manager views
   - Created getTicketsByGroupsExcludingClosed method with proper SQL filtering using NOT operator
   - Modified getTicketsForUser to apply closed ticket exclusion for agent and manager roles
   - Admins continue to see all tickets including closed ones for administrative oversight
   - Users continue to see all their own tickets regardless of status
 - **Database Query Enhancement**: Enhanced filtering logic with proper Drizzle ORM operators
-  - Added 'not' import from drizzle-orm for negative filtering conditions
+  - Added SQL CASE statements for custom sorting logic based on business rules
   - Combined group-based access with status filtering using AND/OR operators
   - Maintains efficient database queries with proper indexing on status and assigned_group
 
