@@ -1218,12 +1218,11 @@ export class DatabaseStorage implements IStorage {
   async getApprovalWorkflow(productId?: number, groupId?: number, riskLevel?: string): Promise<ApprovalRouting[]> {
     let whereConditions = [eq(approvalRouting.isActive, 'true')];
     
-    if (productId) {
-      whereConditions.push(eq(approvalRouting.productId, productId));
-    }
-    
+    // Priority: Group-based routing takes precedence over product-based routing
     if (groupId) {
       whereConditions.push(eq(approvalRouting.groupId, groupId));
+    } else if (productId) {
+      whereConditions.push(eq(approvalRouting.productId, productId));
     }
     
     if (riskLevel) {

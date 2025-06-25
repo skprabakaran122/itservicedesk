@@ -271,15 +271,22 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
           ) : (
             <div className="space-y-6">
               {Object.values(groupedRoutings).map((group: any) => (
-                <Card key={`${group.productId}-${group.riskLevel}`} className="border-l-4 border-l-blue-500">
+                <Card key={group.type === 'group' ? `group-${group.groupId}-${group.riskLevel}` : `product-${group.productId}-${group.riskLevel}`} className="border-l-4 border-l-blue-500">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div>
-                          <h3 className="font-semibold">{getProductName(group.productId)}</h3>
-                          <Badge className={getRiskColor(group.riskLevel)}>
-                            {group.riskLevel.toUpperCase()} Risk
-                          </Badge>
+                          <h3 className="font-semibold">
+                            {group.type === 'group' ? getGroupName(group.groupId) : getProductName(group.productId)}
+                          </h3>
+                          <div className="flex gap-2">
+                            <Badge className={getRiskColor(group.riskLevel)}>
+                              {group.riskLevel.toUpperCase()} Risk
+                            </Badge>
+                            <Badge variant="outline">
+                              {group.type === 'group' ? 'Group-based' : 'Product-based'}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                       <Button
@@ -289,9 +296,11 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
                           setEditingRouting(null);
                           form.reset({
                             productId: group.productId,
+                            groupId: group.groupId,
                             riskLevel: group.riskLevel,
                             approvalLevel: Math.max(...group.approvals.map((a: ApprovalRouting) => a.approvalLevel)) + 1,
-                            approverId: 0
+                            approverIds: [],
+                            requireAllApprovals: "true"
                           });
                           setShowForm(true);
                         }}
@@ -304,39 +313,41 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
                   <CardContent>
                     <div className="space-y-3">
                       {group.approvals.map((routing: ApprovalRouting, index: number) => (
-                        <div key={routing.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                                <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                                  {routing.approvalLevel}
-                                </span>
-                              </div>
+                        <div key={routing.id} className="space-y-2">
+                          <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Level {routing.approvalLevel} Approvers</div>
+                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <Users className="h-4 w-4 text-gray-400" />
                               <div>
-                                <div className="font-medium">{getApproverName(routing.approverId)}</div>
-                                <div className="text-sm text-gray-500">Level {routing.approvalLevel} Approver</div>
+                                <div className="font-medium">{getApproverNames(routing.approverIds || [])}</div>
+                                <div className="text-sm text-gray-500">
+                                  Level {routing.approvalLevel} • 
+                                  {routing.requireAllApprovals === 'true' ? ' All must approve' : ' Any can approve'}
+                                </div>
                               </div>
                             </div>
-                            <Badge variant={routing.isActive === 'true' ? 'default' : 'secondary'}>
-                              {routing.isActive === 'true' ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(routing)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => deleteMutation.mutate(routing.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={routing.isActive === 'true' ? 'default' : 'secondary'}>
+                                {routing.isActive === 'true' ? 'Active' : 'Inactive'}
+                              </Badge>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(routing)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteMutation.mutate(routing.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -350,7 +361,7 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
                           {group.approvals.map((routing: ApprovalRouting, index: number) => (
                             <div key={routing.id} className="flex items-center gap-2">
                               <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 rounded text-xs">
-                                L{routing.approvalLevel}: {getApproverName(routing.approverId)}
+                                L{routing.approvalLevel}: {getApproverNames(routing.approverIds || [])}
                               </span>
                               {index < group.approvals.length - 1 && (
                                 <span className="text-blue-400">→</span>
@@ -378,112 +389,158 @@ export function ApprovalRoutingManager({ currentUser }: ApprovalRoutingProps) {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="productId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Product</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select product" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {products.map((product: Product) => (
-                          <SelectItem key={product.id} value={product.id.toString()}>
-                            {product.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="productId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Product (Optional)</FormLabel>
+                                <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value?.toString() || ""}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select product (optional)" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="">None</SelectItem>
+                                    {products.map((product: Product) => (
+                                      <SelectItem key={product.id} value={product.id.toString()}>
+                                        {product.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
-              <FormField
-                control={form.control}
-                name="riskLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Risk Level</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select risk level" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="low">Low Risk</SelectItem>
-                        <SelectItem value="medium">Medium Risk</SelectItem>
-                        <SelectItem value="high">High Risk</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                          <FormField
+                            control={form.control}
+                            name="groupId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Support Group (Optional)</FormLabel>
+                                <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value?.toString() || ""}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select group (optional)" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="">None</SelectItem>
+                                    {groups.filter((g: any) => g.isActive === 'true').map((group: any) => (
+                                      <SelectItem key={group.id} value={group.id.toString()}>
+                                        {group.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="approvalLevel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Approval Level</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select level" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="1">Level 1 (Primary)</SelectItem>
-                          <SelectItem value="2">Level 2 (Secondary)</SelectItem>
-                          <SelectItem value="3">Level 3 (Final)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormField
+                          control={form.control}
+                          name="riskLevel"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Risk Level</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select risk level" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="low">Low</SelectItem>
+                                  <SelectItem value="medium">Medium</SelectItem>
+                                  <SelectItem value="high">High</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                <FormField
-                  control={form.control}
-                  name="approverId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Approver</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select approver" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {approverUsers.map((user: User) => (
-                            <SelectItem key={user.id} value={user.id.toString()}>
-                              {user.username} ({user.role})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="approvalLevel"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Approval Level</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="requireAllApprovals"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Approval Requirement</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select requirement" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="true">All approvers must approve</SelectItem>
+                                    <SelectItem value="false">Any approver can approve</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="approverIds"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Approvers</FormLabel>
+                              <div className="space-y-2">
+                                {approverUsers.map((user: User) => (
+                                  <div key={user.id} className="flex items-center space-x-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`approver-${user.id}`}
+                                      checked={field.value.includes(user.id)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          field.onChange([...field.value, user.id]);
+                                        } else {
+                                          field.onChange(field.value.filter(id => id !== user.id));
+                                        }
+                                      }}
+                                      className="rounded border-gray-300"
+                                    />
+                                    <label htmlFor={`approver-${user.id}`} className="text-sm">
+                                      {user.name} ({user.role})
+                                    </label>
+                                  </div>
+                                ))}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
               <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
                 <div className="flex items-center gap-2 mb-2">
