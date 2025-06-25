@@ -102,6 +102,17 @@ export function ChangeForm({ onClose, currentUser }: ChangeFormProps) {
   const [startDateTime, setStartDateTime] = useState<string>('');
   const [changeType, setChangeType] = useState<string>('normal');
 
+  const { data: groups = [] } = useQuery({
+    queryKey: ["/api/groups"],
+    queryFn: async () => {
+      const response = await fetch('/api/groups');
+      if (!response.ok) {
+        throw new Error('Failed to fetch groups');
+      }
+      return response.json();
+    }
+  });
+
   // Set minimum datetime based on change type
   useEffect(() => {
     const currentISTTime = getCurrentISTDateTime();
