@@ -211,7 +211,8 @@ export function TicketDetailsModal({
   };
 
   const getUserName = (userId: number) => {
-    return `User ${userId}`;
+    const user = users.find(u => u.id === userId);
+    return user ? user.name : `User ${userId}`;
   };
 
   const canUserReopenTicket = () => {
@@ -610,7 +611,15 @@ export function TicketDetailsModal({
                                   ? entry.action 
                                   : getActionDescription(entry.action || '', entry.field || undefined)
                                 }
-                                {entry.oldValue && entry.newValue && !entry.action?.startsWith('assigned to ') && entry.action !== 'unassigned' && (
+                                {entry.field === 'assignedTo' && entry.oldValue && entry.newValue && (
+                                  <span className="text-xs block text-gray-500 mt-1">
+                                    {entry.oldValue ? 
+                                      (users.find(u => u.id.toString() === entry.oldValue)?.name || `User ${entry.oldValue}`) :
+                                      'Unassigned'
+                                    } → {users.find(u => u.id.toString() === entry.newValue)?.name || `User ${entry.newValue}`}
+                                  </span>
+                                )}
+                                {entry.oldValue && entry.newValue && entry.field !== 'assignedTo' && !entry.action?.startsWith('assigned to ') && entry.action !== 'unassigned' && (
                                   <span className="text-xs block text-gray-500 mt-1">
                                     {entry.oldValue} → {entry.newValue}
                                   </span>
