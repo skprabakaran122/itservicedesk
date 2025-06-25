@@ -44,6 +44,14 @@ export function TicketDetailsModal({
     queryFn: () => fetch('/api/groups').then(res => res.json())
   });
 
+  const { data: users = [] } = useQuery({
+    queryKey: ["/api/users"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/users");
+      return response.json();
+    },
+  });
+
   const { data: history = [] } = useQuery<TicketHistory[]>({
     queryKey: ["/api/tickets", ticket.id, "history"],
     queryFn: async () => {
@@ -426,6 +434,51 @@ export function TicketDetailsModal({
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* User Assignment Section - Only show for agents/managers */}
+                    {(currentUser?.role === 'agent' || currentUser?.role === 'manager') && (
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Assigned To</label>
+                        <Select value={ticket.assignedTo?.toString() || ""} onValueChange={async (value) => {
+                          try {
+                            const updateData: any = { assignedTo: value ? parseInt(value) : null };
+                            
+                            await apiRequest("PATCH", `/api/tickets/${ticket.id}`, updateData);
+                            toast({ title: "Success", description: "User assignment updated" });
+                            queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+                          } catch (error) {
+                            toast({ title: "Error", description: "Failed to update user assignment", variant: "destructive" });
+                          }
+                        }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select agent" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Unassigned</SelectItem>
+                            {users
+                              .filter(user => {
+                                // Show agents and managers who are in the same group as the ticket
+                                if (!['agent', 'manager'].includes(user.role)) return false;
+                                if (!ticket.assignedGroup) return true; // If no group assigned, show all agents/managers
+                                
+                                // Check if user is in the same group as the ticket
+                                const userGroups = groups.filter(group => 
+                                  group.members && 
+                                  Array.isArray(group.members) && 
+                                  (group.members.includes(user.id) || group.members.includes(user.id.toString()))
+                                ).map(group => group.name);
+                                
+                                return userGroups.includes(ticket.assignedGroup);
+                              })
+                              .map(user => (
+                                <SelectItem key={user.id} value={user.id.toString()}>
+                                  {user.name} ({user.role})
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   
                   <div>
                     <label className="block text-sm font-medium mb-2">

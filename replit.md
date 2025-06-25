@@ -106,6 +106,17 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 25, 2025 - User Assignment for Agents and Managers Added ✓ COMPLETED
+- **Ticket Assignment Functionality**: Added user assignment capability for agents and managers within their support groups
+  - New "Assigned To" dropdown in ticket details modal for agent and manager roles
+  - Users filtered by group membership - only agents/managers in the same group as the ticket are shown
+  - Assignment updates trigger real-time API calls with proper error handling and success notifications
+  - Support for unassigning tickets by selecting "Unassigned" option
+- **Group-Based User Filtering**: Smart filtering ensures agents can only assign tickets to team members in their group
+  - Prevents cross-group assignments that would violate access control policies
+  - Maintains consistency between group-based ticket visibility and assignment capabilities
+  - Includes role validation to show only agents and managers in assignment dropdown
+
 ### June 25, 2025 - Smart Ticket Sorting and Closed Ticket Filtering ✓ COMPLETED
 - **Priority-Based Sorting for Agents/Managers**: Implemented intelligent ticket ordering based on status and priority
   - Status priority: open → in_progress → pending → resolved (most urgent first)
