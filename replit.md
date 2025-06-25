@@ -106,6 +106,13 @@ The application follows a full-stack TypeScript architecture with:
 
 ## Recent Changes
 
+### June 25, 2025 - Change Management Role-Based Permissions Fixed ✓ COMPLETED
+- **Approval Permission Control**: Restricted change approval/rejection buttons to admin and manager roles only
+  - Agents can no longer approve or reject change requests (only admins and managers can)
+  - Agents retain ability to start implementation and mark changes as complete/failed for assigned changes
+  - Clear role separation: Managers approve, agents implement, users request
+  - Fixed inappropriate approval access that was previously available to all authenticated users
+
 ### June 25, 2025 - Group-Based Change Management Access Control ✓ COMPLETED
 - **Change Management Group Filtering**: Implemented group-based access control for change requests matching ticket system
   - Agents and managers now see only changes assigned to groups they are members of
