@@ -212,6 +212,12 @@ export function ChangesList({ changes, getStatusColor, getPriorityColor, current
                   <span>{change.product}</span>
                 </div>
               )}
+              {change.assignedGroup && (
+                <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                  <User className="h-4 w-4" />
+                  <span>Group: {change.assignedGroup}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <Clock className="h-4 w-4" />
                 <span>{formatDateIST(change.createdAt, 'MMM dd, yyyy HH:mm')}</span>
